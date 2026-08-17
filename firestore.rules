@@ -1,14 +1,21 @@
 rules_version = '2';
 
-// セキュリティ方針(docs/firestore-design.md参照):
+// セキュリティ方針(docs/firestore-design.md「セキュリティ方針」参照):
 // Firebase Authを使わない前提のため、以下の対策の組み合わせで
 // 「合言葉を知らない第三者が到達できない」状態を作る。
-// 1. list禁止・get(個別ドキュメント取得)のみ許可
+// 1. `groups`コレクション直下でのみlist禁止・get(個別ドキュメント取得)のみ許可する。
+//    trips以下の各サブコレクションは、そのパスに到達する時点で正しい合言葉を
+//    すでに知っている必要があるため、list(コレクションクエリ)も許可する
+//    (候補地一覧・しおり一覧など、アプリの表示機能そのものがこれに依存するため)。
 // 2. 合言葉は6〜8文字
 // 3. App Checkで正規リクエストであることを検証
 //
-// 削除機能は要件・画面設計のどこにも存在しないため、write系はcreate/updateのみ許可し、
-// deleteは一律禁止する(必要になった時点で緩める)。
+// 削除権限の方針(docs/firestore-design.md「削除権限の方針」参照):
+// 認証を導入しない前提(要件7-1)のため「追加した本人だけ削除可」という制限は
+// 技術的に作れない。身内の信頼関係を前提にしたアプリ全体の設計方針と一貫性を取り、
+// `groups/{groupCode}/trips/{tripId}` 配下のサブコレクション各ドキュメント
+// ({subcollection}/{docId})は合言葉を知っている人なら誰でも削除できる。
+// 一方、`groups`・`trips`自体の削除は誤操作の影響が大きいため引き続き禁止する。
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -23,19 +30,16 @@ service cloud.firestore {
       allow create, update: if isAppCheckValid();
       allow delete: if false;
 
-      // trips配下の全サブコレクション(planningNotes/destinations/scheduleEntries/
-      // lodgingCandidates/confirmedStays/itineraryItems)に共通のget許可・list禁止方針を適用する。
       match /trips/{tripId} {
-        allow get: if isAppCheckValid();
-        allow list: if false;
+        allow get, list: if isAppCheckValid();
         allow create, update: if isAppCheckValid();
         allow delete: if false;
 
+        // 候補地・企画メモ・宿泊候補・確定宿泊・しおり項目など。
         match /{subcollection}/{docId} {
-          allow get: if isAppCheckValid();
-          allow list: if false;
+          allow get, list: if isAppCheckValid();
           allow create, update: if isAppCheckValid();
-          allow delete: if false;
+          allow delete: if isAppCheckValid();
         }
       }
     }

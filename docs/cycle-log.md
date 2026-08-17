@@ -61,3 +61,20 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
     セキュリティ方針を緩める実装はevolveの禁止事項に該当するため実装せず、
     `docs/ROADMAP.md`「新規タスク・画面提案」に人間確認待ちとして記載した。
     `docs/firestore-design.md`の該当編集自体は未コミットのまま(このコミットに含めていない)。
+
+## 2026-08-17 23:00
+- 実装: 上記の要確認事項について、ユーザーから「`docs/firestore-design.md`を更新した
+  (削除権限の方針を新設)。指摘は正しく、正規の設計反映」と明示的な確認を得た。
+  ファイルを確認したところ、根拠不明だった削除方針も「削除権限の方針(確定)」として
+  具体的な理由(認証なし前提のため本人限定削除は技術的に不可能、故に全員許可)とともに
+  明記されていたため、人間による正規の設計変更と判断し実装した。
+  `firestore.rules`を(1)`groups`直下のみlist禁止・trips配下は`list`許可、
+  (2)`groups`/`trips`自体のdeleteは禁止のまま、(3)`{subcollection}/{docId}`の
+  deleteはisAppCheckValid()条件で許可、の内容に更新し、各方針への参照コメントを付与。
+  `npm run firebase:deploy:rules`で実プロジェクト(trip-planner-cd9b7)にデプロイ済み。
+- 動作確認: `firebase deploy --only firestore:rules`が成功しルールファイルがコンパイル・
+  反映されたことをCLI出力で確認。実際のクライアントからの読み書き確認はApp Check未有効化
+  のため未実施(0.基盤のblocked項目参照)。
+- レビュー: OK。`docs/firestore-design.md`の最新記載と`firestore.rules`の内容が一致。
+- 次回予定: `src/firestore.js`、または1.A参加画面の実機能に着手。
+- blocked / partial: App Check有効化のみ人間作業待ち。
