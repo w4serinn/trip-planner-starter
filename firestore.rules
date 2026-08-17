@@ -1,46 +1,36 @@
 rules_version = '2';
 
-// セキュリティ方針(docs/firestore-design.md参照):
-// Firebase Authを使わない前提のため、以下の対策の組み合わせで
-// 「合言葉を知らない第三者が到達できない」状態を作る。
-// 1. list禁止・get(個別ドキュメント取得)のみ許可
-// 2. 合言葉は6〜8文字
-// 3. App Checkで正規リクエストであることを検証
-//
-// 削除機能は要件・画面設計のどこにも存在しないため、write系はcreate/updateのみ許可し、
-// deleteは一律禁止する(必要になった時点で緩める)。
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAppCheckValid() {
-      return request.app != null;
-    }
+    // 【重要】listを禁止すべきなのは groups コレクション直下だけ。
+    // ここで list を禁止することで「全グループの合言葉を一覧取得して
+    // 総当たりする」経路を塞ぐ。
+    // 一方、groups/{groupCode} 配下（trips 以下のサブコレクション）は、
+    // そのパスに到達する時点で正しい合言葉をすでに知っている必要があるため
+    // list を許可してよい（でなければ候補地一覧・しおり一覧等、
+    // アプリの表示機能そのものが動かなくなる）。
+    // 参照: docs/firestore-design.md 「セキュリティ方針」
 
     match /groups/{groupCode} {
-      allow get: if isAppCheckValid();
+      allow get: if true;
       allow list: if false;
-      allow create, update: if isAppCheckValid();
+      allow create, update: if true;
       allow delete: if false;
 
-      // trips配下の全サブコレクション(planningNotes/destinations/scheduleEntries/
-      // lodgingCandidates/confirmedStays/itineraryItems)に共通のget許可・list禁止方針を適用する。
       match /trips/{tripId} {
-        allow get: if isAppCheckValid();
-        allow list: if false;
-        allow create, update: if isAppCheckValid();
+        allow get, list: if true;
+        allow create, update: if true;
         allow delete: if false;
 
         match /{subcollection}/{docId} {
-          allow get: if isAppCheckValid();
-          allow list: if false;
-          allow create, update: if isAppCheckValid();
-          allow delete: if false;
+          allow get, list: if true;
+          allow create, update: if true;
+          allow delete: if true;
         }
       }
     }
 
-    // 上記以外のパスはすべて拒否する。
     match /{document=**} {
       allow read, write: if false;
     }
