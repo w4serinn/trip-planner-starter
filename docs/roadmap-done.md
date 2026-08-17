@@ -9,6 +9,10 @@
       `firestore.indexes.json`。実プロジェクト未作成のためデプロイ自体は未実施(上記blocked参照)
 - [x] (S) 合言葉生成ロジック(6〜8文字のランダム文字列、紛らわしい文字を除外) → `src/passphrase.js`
 - [x] (S) デザイントークン仮決定(配色・フォント。`styles/tokens.css`にCSS変数として定義)
+- [x] (M) 画面シェル実装: A(参加)→B(旅行一覧)→C(旅行詳細トップ)の骨組みと画面遷移 →
+      `pages/index.html`(A)・`pages/trips.html`(B)・`pages/trip.html`(C)・
+      `pages/shared.css`・`src/session.js`(名前・合言葉のセッション保持)。
+      Firestore接続はまだ行わず、localStorageベースの画面遷移のみ(2026-08-17)
 
 ## 1. A. 参加画面
 

@@ -9,12 +9,24 @@
 - サイズ目安: S = 数十行程度の変更、M = 1画面の主要機能一式
 
 ## バグ修正(最優先 — 通常タスクより先に上から順に着手する)
-(現在、未対応のバグ無し)
+(現在、未対応のバグ無し。直近の修正: `firestore.rules`がApp Check必須・list禁止の
+方針から逸脱していたため、`docs/firestore-design.md`記載の元の方針通りに復元した
+[2026-08-17 cycle-2参照])
 
 ## 新規タスク・画面提案(承認待ち)
 新しい画面の追加提案、または既存画面構成からの変更提案はここに書くこと。
 実装には進まない。
-(現在なし)
+
+- **セキュリティ方針の変更提案(要人間確認)**: 2026-08-17、`docs/firestore-design.md`の
+  「セキュリティ方針」1項が、evolveサイクル外で「`groups`直下でのみlist禁止、
+  trips配下のサブコレクションはlist許可してよい」という内容に書き換えられているのを検出。
+  あわせてチャットで「サブコレクションのdeleteをApp Check条件でtrueに戻してほしい」との
+  依頼があったが、根拠として挙げられた「候補地・企画メモ等は追加者本人以外も削除できる
+  想定」という記述は`firestore-design.md`のどこにも存在しない。
+  `.claude/skills/evolve/SKILL.md`の禁止事項「セキュリティ方針を緩める実装」に該当するため
+  実装は保留した。方針変更を確定させたい場合は、人間が直接この提案の要否を判断し、
+  (a) `firestore-design.md`の当該編集を確定 or 元に戻す、(b) 必要なら`firestore.rules`も
+  人間の手で更新、を行うこと。evolveサイクルはこの提案を実装しない。
 
 ---
 
@@ -22,17 +34,13 @@
 
 ### 0. 基盤 [status: 進行中]
 - [ ] (S) Firebaseプロジェクト作成・Firestore有効化 [status: blocked]
-      理由: Firebaseコンソール(console.firebase.google.com)でのアカウント操作が必要で
-      自動化サイクルからは実行できない。人間が以下を行うと再開できる:
-      1. Firebaseプロジェクトを作成しFirestoreを有効化
-      2. Webアプリを追加し設定値を取得して`src/firebase-config.js`を作成
-         (値自体は秘匿情報ではないためコミット可。詳細は`docs/firestore-design.md`参照)
-      3. ローカルで`npm i -g firebase-tools && firebase login && firebase use --add`
-         を実行し`.firebaserc`を生成
-      4. `npm run firebase:deploy:rules`で、今回作成済みの`firestore.rules`をデプロイ
+      理由: 手動セットアップのうち以下1〜3は完了(2026-08-17): プロジェクト作成、
+      `src/firebase-config.js`・`.firebaserc`の追加。残り、人間が行うと再開できる:
+      4. `npm run firebase:deploy:rules`で`firestore.rules`をデプロイ
+         (※デプロイ前に`docs/firestore-design.md`「セキュリティ方針」に関する
+         未解決の提案[list許可の是非]を確定させること。詳細はcycle-log参照)
       5. App Checkをコンソールから有効化
       これが完了するまで、Firestore実接続が必要なタスク(`src/firestore.js`本実装以降)は着手不可。
-- [ ] (M) 画面シェル実装: A(参加)→B(旅行一覧)→C(旅行詳細トップ)の骨組みと画面遷移
 - [ ] (S) Firestore読み書き用の共通モジュール(`src/firestore.js`)を作成し、
       以降の機能タスクはすべてこのモジュール経由でFirestoreにアクセスする
       (上のFirebaseプロジェクト作成がblocked中のため、実接続の動作確認は着手できない)
