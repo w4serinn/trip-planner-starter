@@ -31,9 +31,6 @@
       これが完了するまで、Firestore実接続が必要なタスク(`src/firestore.js`本実装以降)は着手不可。
       (App Check未有効化の間は、デプロイ済みルールの`isAppCheckValid()`が常にfalseとなり
       全アクセスが拒否される想定。fail-closedなので安全側)
-- [ ] (S) Firestore読み書き用の共通モジュール(`src/firestore.js`)を作成し、
-      以降の機能タスクはすべてこのモジュール経由でFirestoreにアクセスする
-      (上のFirebaseプロジェクト作成がblocked中のため、実接続の動作確認は着手できない)
 - [ ] (S) 自動テスト実行環境(vitest等)の導入検討。`src/passphrase.js`のような
       純粋関数が増えてきたため、node手動確認より自動テストの方が壊れにくい
 

@@ -1,0 +1,38 @@
+// Firestoreへの読み書き用共通モジュール。コレクション構造はdocs/firestore-design.mdを参照。
+// UIのDOM操作コードはこのモジュールを経由し、Firebase SDKを直接呼び出さないこと。
+import { db } from './firebase-config.js';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+
+export async function getDocument(path) {
+  const snapshot = await getDoc(doc(db, path));
+  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+}
+
+export async function setDocument(path, data) {
+  await setDoc(doc(db, path), data);
+}
+
+export async function updateDocument(path, data) {
+  await updateDoc(doc(db, path), data);
+}
+
+export async function addDocument(collectionPath, data) {
+  const ref = await addDoc(collection(db, collectionPath), data);
+  return ref.id;
+}
+
+export async function listCollection(collectionPath) {
+  const snapshot = await getDocs(collection(db, collectionPath));
+  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+}
+
+export { serverTimestamp };

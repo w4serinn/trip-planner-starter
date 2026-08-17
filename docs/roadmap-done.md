@@ -13,6 +13,10 @@
       `pages/index.html`(A)・`pages/trips.html`(B)・`pages/trip.html`(C)・
       `pages/shared.css`・`src/session.js`(名前・合言葉のセッション保持)。
       Firestore接続はまだ行わず、localStorageベースの画面遷移のみ(2026-08-17)
+- [x] (S) Firestore読み書き用の共通モジュール(`src/firestore.js`)を作成。
+      パスベースの汎用CRUD(`getDocument`/`setDocument`/`updateDocument`/
+      `addDocument`/`listCollection`)を提供し、以降の機能タスクはこれを経由して
+      Firestoreにアクセスする(2026-08-17)
 
 ## 1. A. 参加画面
 

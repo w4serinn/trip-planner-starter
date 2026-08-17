@@ -78,3 +78,23 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - レビュー: OK。`docs/firestore-design.md`の最新記載と`firestore.rules`の内容が一致。
 - 次回予定: `src/firestore.js`、または1.A参加画面の実機能に着手。
 - blocked / partial: App Check有効化のみ人間作業待ち。
+
+## 2026-08-17 23:30
+- 実装: 0.基盤 - Firestore読み書き用共通モジュール`src/firestore.js`を作成。
+  `getDocument`/`setDocument`/`updateDocument`/`addDocument`/`listCollection`の
+  パスベース汎用関数を提供(Firebase SDK v9 modular)。UIコードは今後すべてこれ経由で
+  Firestoreにアクセスする。
+- 動作確認: `npm run lint`成功。Firestoreエミュレータでの検証を試みたが、
+  この環境にJavaが入っておらず`firebase emulators:start`が起動できなかったため断念
+  (firebase.jsonへのemulators設定追加も一旦revert)。代わりに実プロジェクト
+  (trip-planner-cd9b7)に対し、`getDocument`/`setDocument`/`listCollection`の3関数を
+  それぞれ呼び出し、App Check未有効化により想定通り`permission-denied`で拒否される
+  ことを確認(SDK初期化・パス解決・エラー伝播が正しく動作していることの間接確認)。
+  ※読み書きが成功するケースの動作確認は、App Check有効化後に別途必要。
+- レビュー: OK。firestore-design.mdのコレクション構造に沿ったパス指定が可能な
+  汎用APIになっている(特定コレクション名をハードコードしていない)。
+- 次回予定: 自動テスト実行環境(vitest)の導入検討、または1.A参加画面の実機能着手
+  (App Check有効化後の方が望ましいが、フォームUI部分は先行実装可能)。
+- blocked / partial: App Check有効化のみ人間作業待ち(継続)。Firestoreエミュレータでの
+  検証はJava未インストールのため次回以降も引き続き未対応(必要になれば`docs/ROADMAP.md`に
+  タスク化を検討)。
