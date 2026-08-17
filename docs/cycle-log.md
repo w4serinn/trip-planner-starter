@@ -98,3 +98,59 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - blocked / partial: App Check有効化のみ人間作業待ち(継続)。Firestoreエミュレータでの
   検証はJava未インストールのため次回以降も引き続き未対応(必要になれば`docs/ROADMAP.md`に
   タスク化を検討)。
+
+## 2026-08-17 23:50(手動チャット、evolveサイクル外・ユーザー明示指示による実装)
+- 実装:
+  1. App Check初期化コード → `src/firebase-config.js`に`initializeAppCheck`+
+     `ReCaptchaV3Provider`(サイトキー: 6LcCmIotAAAAAFWN5pOZSWxDizlmBj_FQzA-elwW)を追加。
+  2. Vite導入 → `npm install -D vite`(`package.json`の`dev`/`build`スクリプト追加、
+     `vite.config.js`でA/B/C画面をマルチページ登録、GitHub Pages向け
+     `base: '/trip-planner-starter/'`設定)。D〜Hはまだ画面自体が未実装のため未登録。
+- 動作確認:
+  - `npm run check`(eslint+stylelint)成功。
+  - Vite最新版(8.2.1、rolldownベース)は、このWindows/Node20.14.0環境で
+    ネイティブバインディング欠落エラー(`Cannot find native binding`)により
+    `npm run dev`が起動不可だったため、安定版の`vite@^6`(6.4.3)に切り替えて解決。
+  - `npm run dev`でVite dev serverが起動し、`base`設定通り
+    `http://localhost:5173/trip-planner-starter/`配下で配信されることを確認。
+  - Playwrightで一時テストページを読み込み、以前ブラウザで失敗していた
+    `firebase/app`等のbare importが正常に解決されることを確認(Vite導入の主目的達成)。
+  - App Checkの`getToken()`を呼び出したところ、reCAPTCHAの各種リクエスト
+    (`recaptcha/api.js`・`recaptcha/api2/anchor`等)は正常に発火したが、
+    `appCheck/recaptcha-error`で失敗。ネットワークエラーは無く、reCAPTCHA管理
+    コンソール側でこのサイトキーに`localhost`等の許可ドメインが未登録である
+    可能性が高い(コード側の不具合ではないと判断)。`docs/ROADMAP.md`のFirebase
+    プロジェクト作成blocked項目に、許可ドメイン追加を人間作業として追記した。
+  - 一時テストファイル(`pages/_tmp_appcheck_test.html`)は動作確認後に削除。
+- レビュー: OK。`docs/firestore-design.md`のApp Check方針・`docs/screens.md`の
+  画面構成から逸脱なし。UIの見た目変更は無いためレスポンシブ確認は対象外。
+- 次回予定: reCAPTCHA許可ドメイン設定・App Check有効化(人間作業)完了後、
+  実際の読み書き成功パターンを検証。並行して自動テスト導入検討や1.A参加画面の
+  実機能に着手可能。
+- blocked / partial: App Check有効化・reCAPTCHA許可ドメイン設定は人間作業待ち。
+
+## 2026-08-17 (続き、手動チャット→evolveサイクルへ引き継ぎ)
+- 実装: 前回報告した`appCheck/recaptcha-error`について、reCAPTCHA管理コンソールでの
+  サイトキー保存忘れ(ユーザー申告)を修正後に再検証。コードの変更は無し(検証の継続)。
+- 動作確認:
+  1. 保存修正直後の再検証では、`window.grecaptcha.execute()`を直接呼び出して詳細を
+     取得したところ`Error: Invalid site key or not loaded in api.js`という、
+     Firebase SDKの一般的な`recaptcha-error`より具体的なエラーを確認。
+  2. さらに再検証したところ、Firebase App Checkの`exchangeRecaptchaV3Token`
+     エンドポイント(`content-firebaseappcheck.googleapis.com`)が**403**を返し、
+     App Check SDKが「Attempts allowed again after 01d:00m:00s」という24時間の
+     リトライ抑制(スロットル)状態に入ったことを確認。この403は、reCAPTCHA
+     許可ドメインの問題(cycle-log前回エントリの推測)ではなく、**Firebase Console
+     のApp Check設定で、このWebアプリにreCAPTCHA v3プロバイダ・サイトキーが
+     正しく登録されていない**可能性を強く示している。
+  3. SDK側の24時間スロットルに触れたため、これ以上の連続検証は同じ原因の
+     再試行になると判断し打ち切り(SKILL.md 3節の「2回連続で同じ原因の不具合が
+     解決できない場合」に該当)。一時テストファイルは削除済み。
+- レビュー: OK。コード変更なし。
+- 次回予定: Firebase Console → Project Settings → App Check → Apps で、対象Webアプリに
+  reCAPTCHA v3サイトキーが登録されているか人間に確認していただいた上で、
+  再度`getToken()`・Firestore読み書きの成功パターンを検証する。
+- blocked / partial: App CheckのFirebase Console側登録(サイトキーの紐付け)が
+  未確認・要人間対応。加えてApp Check SDKが403を検知した際24時間のリトライ抑制に
+  入る挙動があるため、設定修正後の再検証は新しいブラウザコンテキスト
+  (今回はPlaywrightの一時プロファイルのため次回は影響しない見込み)で行うこと。

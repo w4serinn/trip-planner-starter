@@ -17,6 +17,13 @@
       パスベースの汎用CRUD(`getDocument`/`setDocument`/`updateDocument`/
       `addDocument`/`listCollection`)を提供し、以降の機能タスクはこれを経由して
       Firestoreにアクセスする(2026-08-17)
+- [x] (S) App Check初期化コード → `src/firebase-config.js`に`initializeAppCheck`+
+      `ReCaptchaV3Provider`(サイトキー: 6LcCmIotAAAAAFWN5pOZSWxDizlmBj_FQzA-elwW)を追加。
+      人間の指示により実装(2026-08-17)
+- [x] (M) Vite導入(軽量バンドラー) → `npm install -D vite`、`package.json`に
+      `dev`/`build`スクリプト追加、`vite.config.js`(A/B/C画面をマルチページ登録、
+      GitHub Pages向け`base: '/trip-planner-starter/'`)を追加。ブラウザでの
+      `firebase/app`等のbare import解決を確認。人間の指示により実装(2026-08-17)
 
 ## 1. A. 参加画面
 

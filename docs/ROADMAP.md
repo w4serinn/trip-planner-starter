@@ -24,10 +24,17 @@
 
 ### 0. 基盤 [status: 進行中]
 - [ ] (S) Firebaseプロジェクト作成・Firestore有効化 [status: blocked]
-      理由: 手動セットアップのうち以下1〜4は完了(2026-08-17): プロジェクト作成、
-      `src/firebase-config.js`・`.firebaserc`の追加、`firestore.rules`のデプロイ。
+      理由: 手動セットアップのうち以下1〜4・6は完了(2026-08-17): プロジェクト作成、
+      `src/firebase-config.js`・`.firebaserc`の追加、`firestore.rules`のデプロイ、
+      App Check初期化コード(reCAPTCHA v3、サイトキー設定済み)の実装。
+      手順5(App Check有効化)・7(reCAPTCHA許可ドメイン追加)は人間により完了報告済み。
       残り、人間が行うと再開できる:
-      5. App Checkをコンソールから有効化
+      8. **Firebase Console の Project Settings → App Check → Apps で、対象のWebアプリに
+         reCAPTCHA v3プロバイダとしてこのサイトキーが登録されているか確認・登録する**。
+         手順5・7の完了後も動作確認したところ、`exchangeRecaptchaV3Token`エンドポイントが
+         403を返し、App Check SDKが以後24時間のリトライ抑制状態に入った(詳細はcycle-log
+         2026-08-17 (続き)参照)。reCAPTCHA許可ドメインの問題ではなく、Firebase Console側の
+         App Check登録(サイトキーの紐付け)が未設定・不一致の可能性が高い。
       これが完了するまで、Firestore実接続が必要なタスク(`src/firestore.js`本実装以降)は着手不可。
       (App Check未有効化の間は、デプロイ済みルールの`isAppCheckValid()`が常にfalseとなり
       全アクセスが拒否される想定。fail-closedなので安全側)
