@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// セキュリティ方針(docs/firestore-design.md参照):
+// Firebase Authを使わない前提のため、以下の対策の組み合わせで
+// 「合言葉を知らない第三者が到達できない」状態を作る。
+// 1. list禁止・get(個別ドキュメント取得)のみ許可
+// 2. 合言葉は6〜8文字
+// 3. App Checkで正規リクエストであることを検証
+//
+// 削除機能は要件・画面設計のどこにも存在しないため、write系はcreate/updateのみ許可し、
+// deleteは一律禁止する(必要になった時点で緩める)。
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAppCheckValid() {
+      return request.app != null;
+    }
+
+    match /groups/{groupCode} {
+      allow get: if isAppCheckValid();
+      allow list: if false;
+      allow create, update: if isAppCheckValid();
+      allow delete: if false;
+
+      // trips配下の全サブコレクション(planningNotes/destinations/scheduleEntries/
+      // lodgingCandidates/confirmedStays/itineraryItems)に共通のget許可・list禁止方針を適用する。
+      match /trips/{tripId} {
+        allow get: if isAppCheckValid();
+        allow list: if false;
+        allow create, update: if isAppCheckValid();
+        allow delete: if false;
+
+        match /{subcollection}/{docId} {
+          allow get: if isAppCheckValid();
+          allow list: if false;
+          allow create, update: if isAppCheckValid();
+          allow delete: if false;
+        }
+      }
+    }
+
+    // 上記以外のパスはすべて拒否する。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

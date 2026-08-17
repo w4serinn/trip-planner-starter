@@ -20,15 +20,24 @@
 
 ## タスク一覧と進行状況
 
-### 0. 基盤 [status: 未着手]
-- [ ] (S) Firebaseプロジェクト作成・Firestore有効化
-- [ ] (S) Firestoreセキュリティルール実装（`docs/firestore-design.md`のセキュリティ方針
-      通り: get許可・list禁止、App Check有効化）
-- [ ] (S) 合言葉生成ロジック(6〜8文字のランダム文字列、紛らわしい文字を除外)
+### 0. 基盤 [status: 進行中]
+- [ ] (S) Firebaseプロジェクト作成・Firestore有効化 [status: blocked]
+      理由: Firebaseコンソール(console.firebase.google.com)でのアカウント操作が必要で
+      自動化サイクルからは実行できない。人間が以下を行うと再開できる:
+      1. Firebaseプロジェクトを作成しFirestoreを有効化
+      2. Webアプリを追加し設定値を取得して`src/firebase-config.js`を作成
+         (値自体は秘匿情報ではないためコミット可。詳細は`docs/firestore-design.md`参照)
+      3. ローカルで`npm i -g firebase-tools && firebase login && firebase use --add`
+         を実行し`.firebaserc`を生成
+      4. `npm run firebase:deploy:rules`で、今回作成済みの`firestore.rules`をデプロイ
+      5. App Checkをコンソールから有効化
+      これが完了するまで、Firestore実接続が必要なタスク(`src/firestore.js`本実装以降)は着手不可。
 - [ ] (M) 画面シェル実装: A(参加)→B(旅行一覧)→C(旅行詳細トップ)の骨組みと画面遷移
 - [ ] (S) Firestore読み書き用の共通モジュール(`src/firestore.js`)を作成し、
       以降の機能タスクはすべてこのモジュール経由でFirestoreにアクセスする
-- [ ] (S) デザイントークン仮決定(配色・フォント。`styles/tokens.css`にCSS変数として定義)
+      (上のFirebaseプロジェクト作成がblocked中のため、実接続の動作確認は着手できない)
+- [ ] (S) 自動テスト実行環境(vitest等)の導入検討。`src/passphrase.js`のような
+      純粋関数が増えてきたため、node手動確認より自動テストの方が壊れにくい
 
 ### 1. A. 参加画面 [status: 未着手]（Must）
 - [ ] (S) 名前＋合言葉の入力フォーム

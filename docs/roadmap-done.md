@@ -4,6 +4,11 @@
 (evolve-SKILL.md 5節の手順に従い、完了した行単位で移動する。書き戻しはしない)
 
 ## 0. 基盤
+- [x] (S) Firestoreセキュリティルール実装（`docs/firestore-design.md`のセキュリティ方針
+      通り: get許可・list禁止、App Check有効化）→ `firestore.rules`/`firebase.json`/
+      `firestore.indexes.json`。実プロジェクト未作成のためデプロイ自体は未実施(上記blocked参照)
+- [x] (S) 合言葉生成ロジック(6〜8文字のランダム文字列、紛らわしい文字を除外) → `src/passphrase.js`
+- [x] (S) デザイントークン仮決定(配色・フォント。`styles/tokens.css`にCSS変数として定義)
 
 ## 1. A. 参加画面
 
