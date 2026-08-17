@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.claude/settings.local.json
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# ローカル環境変数(あれば)
+.env
+.env.local
