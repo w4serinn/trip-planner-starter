@@ -16,6 +16,14 @@ const firebaseConfig = {
 // このアプリ経由の正規リクエストであることを検証する。サイトキーは秘匿情報ではない。
 const RECAPTCHA_V3_SITE_KEY = "6LcCmIotAAAAAFWN5pOZSWxDizlmBj_FQzA-elwW";
 
+// 開発時(vite dev)のみDebugトークンを有効にし、reCAPTCHAの実判定を待たずに動作確認
+// できるようにする。本番ビルドではReCaptchaV3Providerによる実判定のまま。
+// トークンはconsoleに出力されるので、Firebaseコンソールの
+// 「App Check」→「アプリ」→「デバッグトークンを管理」に登録すること。
+if (import.meta.env.DEV) {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+}
+
 export const app = initializeApp(firebaseConfig);
 export const appCheck = initializeAppCheck(app, {
     provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
