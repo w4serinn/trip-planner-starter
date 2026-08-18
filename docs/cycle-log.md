@@ -350,3 +350,21 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   D〜F画面と同じ楽観的更新パターンを踏襲しモバイル幅も問題なし。
 - 次回予定: 「7. G. 宿泊画面」の残りShould項目(確定宿泊)、または「8. H. しおり画面」に着手。
 - blocked / partial: なし。commit `eb0a567`をpush済み。
+
+## 2026-08-18 17:20
+- 実装: 「7. G. 宿泊画面」の残りShould項目(確定宿泊の追加・一覧表示)を実装し、
+  G画面のMust/Should全項目が完了。`pages/lodging.html`・`lodging.js`に「確定宿泊」
+  セクションを追加。`groups/{code}/trips/{tripId}/confirmedStays`へ`url`・`note`・
+  `checkIn`・`checkOut`・`addedBy`を`addDocument`し、複数件・日程が飛び飛びでも
+  登録できる。`checkIn`昇順の期間順で一覧表示し、チェックアウトがチェックイン以前の
+  入力はバリデーションで拒否。
+- 動作確認: Playwrightで日程が飛び飛びの確定宿泊2件(9/19-22、9/25-26)を追加し、
+  期間順で正しく並ぶこと、既存の宿泊候補セクションと同一画面で共存して動作すること、
+  日付バリデーション、リロード後の永続化を実Firestoreで確認。`npm run check`
+  (lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`の`confirmedStays`スキーマ(url・note・
+  checkIn・checkOut・addedBy、addedAtは無し)から逸脱なし。`docs/screens.md`の
+  「候補リスト＋確定宿泊を1画面にまとめる」通りの構成。既存パターン再利用のため
+  モバイル幅も問題なし。
+- 次回予定: 「8. H. しおり画面」に着手。
+- blocked / partial: なし。commit `056cb8f`をpush済み。
