@@ -1,6 +1,7 @@
 // C. 旅行詳細トップ画面
-// 旅行名の表示・編集、集合情報・割り勘リンクの直接編集を行う。
-// D〜H各機能画面へのカードリンクは別タスク(docs/ROADMAP.md「3. C. 旅行詳細トップ画面」)で実装する。
+// 旅行名の表示・編集、集合情報・割り勘リンクの直接編集、D〜H各機能画面へのカードリンクを行う。
+// D〜Hのカードは、各画面(4〜8章)を実装したサイクルで対応するものから順に追加する
+// (docs/ROADMAP.md「3. C. 旅行詳細トップ画面」参照)。
 import { loadSession } from '../src/session.js';
 import { getDocument, updateDocument } from '../src/firestore.js';
 
@@ -15,6 +16,21 @@ if (!tripId) {
 }
 
 const tripPath = `groups/${session.groupCode}/trips/${tripId}`;
+
+// 実装済みの機能画面のみカードを表示する。未実装の画面(E〜H)は、それぞれの
+// 画面実装サイクルで追加する。
+const featureLinks = [
+  { label: '企画メモ', href: `notes.html?tripId=${encodeURIComponent(tripId)}` },
+];
+
+const featureLinksNav = document.getElementById('feature-links');
+for (const feature of featureLinks) {
+  const link = document.createElement('a');
+  link.className = 'card card-link';
+  link.href = feature.href;
+  link.textContent = feature.label;
+  featureLinksNav.appendChild(link);
+}
 
 const tripNameHeading = document.getElementById('trip-name');
 const editNameButton = document.getElementById('edit-name-button');

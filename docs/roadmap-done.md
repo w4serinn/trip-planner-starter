@@ -104,6 +104,19 @@
       `npm run check`(lint・test)成功。
 
 ## 4. D. 企画メモ画面
+- [x] (S) メモの追加(投稿者名・本文・日時) → `pages/notes.html`・`notes.js`を新規作成し
+      `vite.config.js`に登録。`groups/{code}/trips/{tripId}/planningNotes`へ
+      `author`・`content`・`createdAt`(serverTimestamp)を`addDocument`
+- [x] (S) メモの一覧表示(新しい順) → `listCollection`取得後にcreatedAt降順ソートして表示
+
+      C画面(`trip.js`)に`featureLinks`配列でカードリンクを追加し
+      `notes.html?tripId={tripId}`へ遷移、D画面の「戻る」で`trip.html?id={tripId}`に復帰。
+      投稿直後は再取得(`listCollection`)せずローカルの一覧に楽観的に追加する実装にした
+      (初回一覧取得の応答が投稿後の更新より遅れて届くと一覧が巻き戻る競合を
+      Playwrightのテストで検出したため、初回取得完了まで投稿ボタンを無効化しつつ
+      再取得自体をやめる設計に変更)。Playwrightで参加→旅行作成→カードリンクから
+      D画面へ遷移→2件追加(新しい順で表示)→空メモのバリデーション→戻るリンク→
+      リロード後の永続化を実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 5. E. 行き先決め画面
 
