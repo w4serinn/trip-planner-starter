@@ -31,6 +31,9 @@
       独立したプラットフォーム層のゲート)だったと判明。App Check自体は
       `docs/firestore-design.md`「App Check導入の見送り」の通り撤回・Enforce解除し、
       Firestoreへの読み書きが成功することを確認済み(詳細は「1. A. 参加画面」参照)
+- [x] (S) 自動テスト実行環境(vitest)を導入 → `npm install -D vitest`、`package.json`に
+      `test`スクリプト追加・`check`に組み込み。`src/passphrase.js`に対する
+      `src/passphrase.test.js`(文字数・文字種・範囲外エラーの5テスト)を追加(2026-08-18)
 
 ## 1. A. 参加画面
 - [x] (S) 名前＋合言葉の入力フォーム
