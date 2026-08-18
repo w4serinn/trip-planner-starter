@@ -22,10 +22,19 @@
 
 ## タスク一覧と進行状況
 
-### 2. B. 旅行一覧画面 [status: 未着手]（Must）
-- [ ] (S) グループ内の旅行一覧をカード表示(過去分含む)
-- [ ] (S) 新規旅行の作成(`trips`サブコレクションへの追加)
-- [ ] (S) 旅行カードタップでC(旅行詳細トップ)へ遷移
+### 2. B. 旅行一覧画面 [status: 実装済み・実機確認待ち(partial)]（Must）
+- [ ] (S) グループ内の旅行一覧をカード表示(過去分含む) → `pages/trips.js`で
+      `listCollection`を使い実装済み(createdAt降順ソート)
+- [ ] (S) 新規旅行の作成(`trips`サブコレクションへの追加) → `addDocument`で
+      `name: '新しい旅行'`のトリップを作成しC画面へ遷移する形で実装済み
+- [ ] (S) 旅行カードタップでC(旅行詳細トップ)へ遷移 → `trip.html?id={tripId}`への
+      リンクとして実装済み
+      理由: `npm run check`(lint・test)は成功。ブラウザでの実機能確認(Firestore実書き込み)
+      には参加可能なグループが必要だが、私が新規作成できるグループには
+      `firestore.rules`の`creatorSecret`照合(人間のみが知る値)が必要なため、
+      検証用グループコードの提供を人間に依頼中。コード自体は`pages/trips.html`・
+      `pages/trips.js`にworking treeの変更として存在(未commit)。
+      コードの提供を受け次第、動作確認・commit・pushを完了させる。
 
 ### 3. C. 旅行詳細トップ画面 [status: 未着手]（Must基盤 / Should要素含む）
 - [ ] (S) 旅行名の表示・編集

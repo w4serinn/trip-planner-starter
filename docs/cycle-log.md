@@ -184,3 +184,34 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - 次回予定: 0.基盤が全完了したため、「2. B. 旅行一覧画面」(グループ内の旅行一覧表示・
   新規旅行作成・C画面への遷移)に着手。
 - blocked / partial: なし。commit `e57805c`をpush済み。
+
+## 2026-08-18 (手動チャット→evolveサイクルへ引き継ぎ、続き)
+- 実装: 人間の明示的な指示・設計変更(グループ作成をローカル管理スクリプト方式 →
+  Firestoreルールの`get()`で`config/adminSecret`と照合する方式に再検討)を反映。
+  `tmp/`配下の更新済み設計ドキュメントを`docs/firestore-design.md`・`docs/screens.md`・
+  `docs/ROADMAP.md`/`roadmap-done.md`に同期し、`firestore.rules`(`config/{doc}`全面禁止、
+  `groups`の`create`を`creatorSecret`照合条件に変更)をデプロイ。`pages/index.html`・
+  `index.js`に「作成用合言葉」入力欄を追加。
+- 動作確認: Playwrightで誤った合言葉での作成拒否・参加フロー継続を確認。正しい合言葉での
+  成功パターンは人間が実機確認済み(`config/adminSecret`を`groups`配下のサブコレクションに
+  誤配置していた不具合を発見・修正)。`npm run check`成功。
+- レビュー: OK。
+- 次回予定: 「2. B. 旅行一覧画面」に着手。
+- blocked / partial: なし。commit 2件(`c504dcb`・`20f56b0`)をpush済み。
+
+## 2026-08-18 14:10
+- 実装: 「2. B. 旅行一覧画面」の3サブタスク(旅行一覧のカード表示・新規旅行作成・
+  カードタップでのC画面遷移)を実装。`pages/trips.js`で`listCollection`による一覧取得
+  (createdAt降順ソート)、`addDocument`による`trips`サブコレクションへの新規作成
+  (`name: '新しい旅行'`のデフォルト名でC画面へ遷移)、各旅行カードを`trip.html?id={tripId}`
+  へのリンクとして実装。
+- 動作確認: `npm run check`(lint・test)は成功。ただしブラウザでのFirestore実書き込み確認は
+  未完了。検証用に参加できるグループが必要だが、既存のテスト用グループ(前サイクルまでに
+  作成した`KZF9RK2M`等)は人間により削除済みで、新規グループは`creatorSecret`
+  (人間のみが知る値)を私が知らないため作成できず、検証用グループコードの提供を
+  チャットで依頼したが本サイクル開始時点で未回答だった。
+- レビュー: 未実施(実機確認前のため次回に持ち越し)。
+- 次回予定: 人間から検証用グループコードを受け取り次第、`pages/trips.js`の実機能確認を
+  完了させ、commit・pushする。
+- blocked / partial: あり。`pages/trips.html`・`pages/trips.js`の変更はworking treeに
+  留め置き(未commit)。`docs/ROADMAP.md`「2. B. 旅行一覧画面」を`partial`として記載。
