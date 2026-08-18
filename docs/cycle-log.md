@@ -313,3 +313,23 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   D画面と同じ楽観的更新パターンを踏襲しモバイル幅も問題なし。
 - 次回予定: 「6. F. 日程調整画面」に着手。
 - blocked / partial: なし。commit `d7e9c5d`をpush済み。
+
+## 2026-08-18 17:07
+- 実装: 「6. F. 日程調整画面」(日付ごとの○×△入力UI・メンバーごとの回答一覧表示・
+  全員回答済みの日のハイライト)を実装。`pages/schedule.html`・`schedule.js`を新規作成し
+  `vite.config.js`に登録。`<input type="date">`で候補日を追加すると
+  `groups/{code}/trips/{tripId}/scheduleEntries/{date}`をドキュメントID=日付で作成し、
+  各候補日に○/△/×の3ボタンで自分の回答を`responses.{sanitizeMapKey(名前)}`に保存する。
+  `groups/{code}`の`members.length`と回答者数を比較し、全員回答済みなら
+  `.schedule-complete`(左ボーダー強調)＋「全員回答済み」バッジを表示。
+  `src/firestore.js`に`setDocumentMerged`(`setDoc`+`merge:true`)を追加し、
+  docs/firestore-design.mdの設計判断通り複数人の同時書き込みに強いマージ書き込みを
+  使うようにした。C画面(`trip.js`)の`featureLinks`に「日程調整」を追加。
+- 動作確認: Playwrightでグループの全メンバー(8名)が同一候補日に順に回答し、
+  全員回答済みハイライトが表示されることを実Firestoreで確認。重複日付の追加拒否、
+  日付ラベルの日本語表示、戻るリンクも確認。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`の`scheduleEntries`スキーマ
+  (ドキュメントID=日付・responsesマップ)から逸脱なし。`docs/screens.md`のF画面の役割・
+  C→F→C遷移とも一致。3ボタンの`.button-row`は既存パターン再利用のためモバイル幅も問題なし。
+- 次回予定: 「7. G. 宿泊画面」に着手。
+- blocked / partial: なし。commit `a726dc9`をpush済み。
