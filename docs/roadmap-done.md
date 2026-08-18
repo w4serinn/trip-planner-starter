@@ -167,7 +167,16 @@
       楽観的にローカル更新する設計。C画面(`trip.js`)の`featureLinks`に「宿泊」を追加。
       Playwrightで参加→旅行作成→カードリンク遷移→候補2件追加(リンク・メモ表示)→
       空URLバリデーション→リロード後の永続化→戻るリンクを実Firestoreで確認(2026-08-18)。
-      `npm run check`(lint・test)成功。確定宿泊(confirmedStays)は別タスクとして残す。
+      `npm run check`(lint・test)成功。
+- [x] (M) 確定宿泊の追加(URL・メモ・チェックイン/アウト日)、複数件・飛び飛びの日程に対応
+      （Should） → 同じ`pages/lodging.html`・`lodging.js`に「確定宿泊」セクションを追加。
+      `groups/{code}/trips/{tripId}/confirmedStays`へ`url`・`note`・`checkIn`・`checkOut`・
+      `addedBy`を`addDocument`。チェックアウト＜チェックインはバリデーションで拒否
+- [x] (S) 確定宿泊の一覧表示(期間順)（Should） → `checkIn`昇順でソートして表示
+
+      Playwrightで日程が飛び飛びの確定宿泊2件を追加し、期間順(チェックインの早い順)で
+      正しく並ぶこと、宿泊候補セクションと共存して動作すること、リロード後の永続化を
+      実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 8. H. しおり画面
 

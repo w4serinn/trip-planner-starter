@@ -1,8 +1,8 @@
-// G. 宿泊画面(宿泊候補部分)
-// 宿泊候補の追加(URL・メモ)と一覧表示を行う。投票機能は持たない
-// (docs/requirements.md 7-3参照。決定は口頭・Discord等で行う想定)。
-// 確定宿泊(confirmedStays)は別タスクで実装する。
-// データモデルはdocs/firestore-design.md「lodgingCandidates」参照。
+// G. 宿泊画面
+// 宿泊候補の追加(URL・メモ)・一覧表示(投票機能は持たない。docs/requirements.md 7-3参照。
+// 決定は口頭・Discord等で行う想定)と、確定宿泊の追加(URL・メモ・チェックイン/アウト日、
+// 複数件・飛び飛びの日程に対応)・一覧表示(期間順)を行う。
+// データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」参照。
 import { loadSession } from '../src/session.js';
 import { addDocument, listCollection, serverTimestamp } from '../src/firestore.js';
 
@@ -114,3 +114,121 @@ candidateForm.addEventListener('submit', async (event) => {
 });
 
 loadCandidates();
+
+// --- 確定宿泊 ---
+const confirmedStaysPath = `groups/${session.groupCode}/trips/${tripId}/confirmedStays`;
+
+const stayForm = document.getElementById('stay-form');
+const stayUrlInput = document.getElementById('stay-url');
+const stayNoteInput = document.getElementById('stay-note');
+const stayCheckInInput = document.getElementById('stay-checkin');
+const stayCheckOutInput = document.getElementById('stay-checkout');
+const stayErrorText = document.getElementById('stay-error-text');
+const stayList = document.getElementById('stay-list');
+const staySubmitButton = stayForm.querySelector('button[type="submit"]');
+
+staySubmitButton.disabled = true;
+
+let currentStays = [];
+
+function formatDateLabel(dateString) {
+  const date = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateString;
+  return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function renderStays(stays) {
+  stayList.innerHTML = '';
+
+  if (stays.length === 0) {
+    stayList.innerHTML = '<p class="empty-state">まだ確定宿泊がありません。</p>';
+    return;
+  }
+
+  // 期間順(チェックインの早い順)に表示する。
+  const sorted = [...stays].sort((a, b) => a.checkIn.localeCompare(b.checkIn));
+
+  for (const stay of sorted) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const period = document.createElement('h3');
+    period.textContent = `${formatDateLabel(stay.checkIn)} 〜 ${formatDateLabel(stay.checkOut)}`;
+    card.appendChild(period);
+
+    const link = document.createElement('a');
+    link.className = 'candidate-link';
+    link.href = stay.url;
+    link.textContent = stay.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    card.appendChild(link);
+
+    if (stay.note) {
+      const note = document.createElement('p');
+      note.textContent = stay.note;
+      card.appendChild(note);
+    }
+
+    const meta = document.createElement('p');
+    meta.className = 'subtitle';
+    meta.textContent = `追加: ${stay.addedBy}`;
+    card.appendChild(meta);
+
+    stayList.appendChild(card);
+  }
+}
+
+async function loadStays() {
+  try {
+    currentStays = await listCollection(confirmedStaysPath);
+    renderStays(currentStays);
+  } catch (error) {
+    console.error(error);
+    stayErrorText.textContent = '確定宿泊の取得に失敗しました。時間をおいて再度お試しください。';
+  } finally {
+    staySubmitButton.disabled = false;
+  }
+}
+
+stayForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  stayErrorText.textContent = '';
+
+  const url = stayUrlInput.value.trim();
+  const note = stayNoteInput.value.trim();
+  const checkIn = stayCheckInInput.value;
+  const checkOut = stayCheckOutInput.value;
+  if (!url || !checkIn || !checkOut) {
+    stayErrorText.textContent = 'URL・チェックイン・チェックアウトを入力してください。';
+    return;
+  }
+  if (checkOut < checkIn) {
+    stayErrorText.textContent = 'チェックアウトはチェックイン以降の日付にしてください。';
+    return;
+  }
+
+  staySubmitButton.disabled = true;
+  try {
+    const id = await addDocument(confirmedStaysPath, {
+      url,
+      note,
+      checkIn,
+      checkOut,
+      addedBy: session.name,
+    });
+    stayUrlInput.value = '';
+    stayNoteInput.value = '';
+    stayCheckInInput.value = '';
+    stayCheckOutInput.value = '';
+    currentStays = [...currentStays, { id, url, note, checkIn, checkOut, addedBy: session.name }];
+    renderStays(currentStays);
+  } catch (error) {
+    console.error(error);
+    stayErrorText.textContent = '確定宿泊の追加に失敗しました。時間をおいて再度お試しください。';
+  } finally {
+    staySubmitButton.disabled = false;
+  }
+});
+
+loadStays();

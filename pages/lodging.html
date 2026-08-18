@@ -29,7 +29,31 @@
 
     <div id="candidate-list"></div>
 
-    <p class="subtitle">確定宿泊の管理は次のサイクル以降で追加予定です。</p>
+    <h2>確定宿泊</h2>
+    <p class="subtitle">実際に泊まる宿を、期間を分けて複数登録できます(日程が飛び飛びでも構いません)。</p>
+
+    <form id="stay-form" novalidate>
+      <div class="field">
+        <label for="stay-url">URL</label>
+        <input type="url" id="stay-url" name="url" required placeholder="https://www.airbnb.jp/..." />
+      </div>
+      <div class="field">
+        <label for="stay-note">メモ</label>
+        <input type="text" id="stay-note" name="note" />
+      </div>
+      <div class="field">
+        <label for="stay-checkin">チェックイン</label>
+        <input type="date" id="stay-checkin" name="checkIn" required />
+      </div>
+      <div class="field">
+        <label for="stay-checkout">チェックアウト</label>
+        <input type="date" id="stay-checkout" name="checkOut" required />
+      </div>
+      <p class="error-text" id="stay-error-text"></p>
+      <button type="submit">確定宿泊を追加</button>
+    </form>
+
+    <div id="stay-list"></div>
   </main>
   <script type="module" src="lodging.js"></script>
 </body>
