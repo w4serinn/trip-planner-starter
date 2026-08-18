@@ -1,8 +1,9 @@
 // SPAシェルのエントリーポイント。
-// この段階(docs/ROADMAP.md「10. 基盤(SPA化)」)ではルーター・タブバーの骨組みのみを
-// 実装し、各ビューの実際のロジック(A・B画面は「11」、C〜Hタブは「12」)は
-// 別タスクで実装する。
+// A・B画面は実装済み(docs/ROADMAP.md「11. A・B画面のSPA移行」)。
+// C〜Hタブの実際のロジックは「12」で実装し、それまでは骨組み(準備中表示)のまま。
 import { registerRoute, startRouter } from './router.js';
+import { mount as mountJoin } from './views/join.js';
+import { mount as mountTrips } from './views/trips.js';
 
 const tabbar = document.getElementById('tabbar');
 
@@ -37,12 +38,12 @@ function registerTripTab(key, label, suffix) {
 
 registerRoute('#/', (outlet) => {
   tabbar.hidden = true;
-  outlet.innerHTML = '<p class="subtitle">A. 参加画面(準備中)</p>';
+  return mountJoin(outlet);
 });
 
 registerRoute('#/trips', (outlet) => {
   tabbar.hidden = true;
-  outlet.innerHTML = '<p class="subtitle">B. 旅行一覧画面(準備中)</p>';
+  return mountTrips(outlet);
 });
 
 for (const tab of TABS) {
