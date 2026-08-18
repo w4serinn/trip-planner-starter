@@ -502,3 +502,25 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   役割と一致。
 - 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の残タスク(D〜Hのタブ化)に着手。
 - blocked / partial: なし。commit `d3061a0`をpush済み。
+
+## 2026-08-18 19:45
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の続き。D(企画メモ)・E(行き先決め)を
+  タブ化した。`src/views/notes.js`(`pages/notes.js`を移植)・
+  `src/views/destinations.js`(`pages/destinations.js`を移植)を新規作成し、
+  `src/app.js`の`TABS`にそれぞれ`mount`関数を登録した。ロジック・データモデルは
+  MPA版から変更なし(移植のみ)。5画面のうち残りF(日程調整)・G(宿泊)・H(しおり)は
+  次サイクル以降。
+- 動作確認: Playwrightで参加→旅行作成→企画メモタブでの投稿→行き先決めタブでの候補地
+  追加・★投票(3点)→平均スコア表示確認→概要タブ経由で企画メモタブへ戻っても投稿内容が
+  保持されることを実Firestoreで確認。375px幅でのレイアウト崩れなし。console/pageerrorは
+  0件。`npm run check`(lint・test)成功。検証で作成したサブコレクション文書
+  (planningNotes/destinations各1件)は削除済み。親の旅行ドキュメント自体は
+  `firestore.rules`の方針上delete不可のため、名前を
+  「[検証用/削除不可] evolveのD・E画面SPA動作確認で作成」に更新して共有テストグループ
+  `FMXRZYW7`内に残置(誤解防止のための処置。過去のtmp/フォルダ同様、これは自動生成物であり
+  人間の作業物ではない)。
+- レビュー: OK。`docs/firestore-design.md`のplanningNotes・destinationsのフィールド構造
+  から逸脱なし。`docs/screens.md`のタブ遷移方針とも一致。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の残タスク(F日程調整・G宿泊・Hしおりの
+  タブ化)に着手。
+- blocked / partial: なし。

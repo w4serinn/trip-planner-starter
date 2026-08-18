@@ -285,3 +285,17 @@
       他タブへ移動後に戻っても値が保持されていること→「戻る」リンクでの旅行一覧への
       復帰を実Firestoreで確認。375px幅でのレイアウトも問題なし(2026-08-18)。
       `npm run check`(lint・test)成功。
+- [x] (S) D(企画メモ)タブへの移行 → `src/views/notes.js`を新規作成し`pages/notes.js`の
+      ロジック(投稿フォーム・新しい順一覧・楽観的更新)をそのまま移植。`src/app.js`の
+      `TABS`に`mount: mountNotes`を登録
+- [x] (S) E(行き先決め)タブへの移行 → `src/views/destinations.js`を新規作成し
+      `pages/destinations.js`のロジック(候補地追加・★1〜5投票・平均スコア順位表示・
+      投票者一覧)をそのまま移植。`src/app.js`の`TABS`に`mount: mountDestinations`を登録
+
+      Playwrightで参加→旅行作成→企画メモタブでメモ投稿→行き先決めタブで候補地追加・
+      投票(3点)→平均スコア表示確認→概要タブ経由での企画メモタブ再訪問後もメモが
+      保持されていることを実Firestoreで確認。375px幅でのレイアウトも問題なし
+      (2026-08-18)。`npm run check`(lint・test)成功。検証で作成したFirestoreドキュメントは
+      サブコレクション分を削除済み。旅行ドキュメント自体はセキュリティ方針上delete不可の
+      ため、名前を「[検証用/削除不可] evolveのD・E画面SPA動作確認で作成」に更新して
+      残置(共有テスト用グループ`FMXRZYW7`内)

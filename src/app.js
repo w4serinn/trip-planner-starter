@@ -1,10 +1,12 @@
 // SPAシェルのエントリーポイント。
-// A・B・C(概要タブ)は実装済み(docs/ROADMAP.md「11」「12」)。
-// D〜Hタブの実際のロジックは「12」の残タスクで実装し、それまでは骨組み(準備中表示)のまま。
+// A・B・C(概要タブ)・D(企画メモ)・E(行き先決め)は実装済み(docs/ROADMAP.md「11」「12」)。
+// F〜Hタブの実際のロジックは「12」の残タスクで実装し、それまでは骨組み(準備中表示)のまま。
 import { registerRoute, startRouter } from './router.js';
 import { mount as mountJoin } from './views/join.js';
 import { mount as mountTrips } from './views/trips.js';
 import { mount as mountTripOverview } from './views/tripOverview.js';
+import { mount as mountNotes } from './views/notes.js';
+import { mount as mountDestinations } from './views/destinations.js';
 
 const tabbar = document.getElementById('tabbar');
 const backToTrips = document.getElementById('back-to-trips');
@@ -12,8 +14,8 @@ const backToTrips = document.getElementById('back-to-trips');
 const TABS = [
   { key: 'overview', label: '概要', suffix: '', mount: mountTripOverview },
   { key: 'scratch', label: '雑多メモ', suffix: '/scratch' },
-  { key: 'notes', label: '企画メモ', suffix: '/notes' },
-  { key: 'destinations', label: '行き先決め', suffix: '/destinations' },
+  { key: 'notes', label: '企画メモ', suffix: '/notes', mount: mountNotes },
+  { key: 'destinations', label: '行き先決め', suffix: '/destinations', mount: mountDestinations },
   { key: 'schedule', label: '日程調整', suffix: '/schedule' },
   { key: 'lodging', label: '宿泊', suffix: '/lodging' },
   { key: 'itinerary', label: 'しおり', suffix: '/itinerary' },
