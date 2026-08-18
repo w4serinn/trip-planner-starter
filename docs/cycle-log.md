@@ -295,3 +295,21 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   モバイル幅も問題なし。
 - 次回予定: 「5. E. 行き先決め画面」に着手。
 - blocked / partial: なし。commit `198fc90`をpush済み。
+
+## 2026-08-18 17:01
+- 実装: 「5. E. 行き先決め画面」(候補地の追加・★1〜5投票UI・自分の投票状態の表示・
+  平均スコアによる自動ランキング・投票者一覧の表示)を実装。`pages/destinations.html`・
+  `destinations.js`を新規作成し`vite.config.js`に登録。候補地ごとに★ボタン5個を表示し、
+  クリックで`updateDocument`により`votes.{sanitizeMapKey(名前)}`を更新、平均スコア降順で
+  ランキング表示する。`src/firestore.js`に`sanitizeMapKey`を追加し、マップキーに使う
+  名前から`.`等を置換(SKILL.mdの注意事項に対応)。C画面(`trip.js`)の`featureLinks`に
+  「行き先決め」を追加。
+- 動作確認: Playwrightで2ユーザー(たろう・はなこ)による複数候補地への投票・平均スコア
+  再計算(3点と5点の投票で平均4.0に更新)・ランキングの入れ替わり・投票者一覧の表示・
+  各ユーザー自身の投票状態(★の塗り分け)・リロード後の永続化・戻るリンクを
+  実Firestoreで確認。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`の`destinations`スキーマ(name・note・addedBy・
+  addedAt・votes)から逸脱なし。`docs/screens.md`のE画面の役割・C→E→C遷移とも一致。
+  D画面と同じ楽観的更新パターンを踏襲しモバイル幅も問題なし。
+- 次回予定: 「6. F. 日程調整画面」に着手。
+- blocked / partial: なし。commit `d7e9c5d`をpush済み。
