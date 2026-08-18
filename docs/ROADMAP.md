@@ -57,3 +57,8 @@
 - [ ] (S) レスポンシブ確認(モバイル中心)
 - [ ] (S) 受け入れ条件(`docs/requirements.md` 10章)の一連の流れを通しで確認
 - [ ] (M) GitHub Pagesへのデプロイ設定・GitHub Actions自動デプロイ
+- [ ] (S) `src/firebase-config.js`から未使用の`initializeAppCheck`(reCAPTCHA v3)関連コードを削除。
+      `docs/firestore-design.md`「App Check導入の見送り」の通り`firestore.rules`は
+      すでに`request.app`を見ておらず、この初期化コードは実行されるたびに裏で
+      reCAPTCHA判定を試みて失敗し、console に403エラーを出すだけの無駄になっている
+      (2026-08-18、人間からの指摘によりタスク化)
