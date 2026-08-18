@@ -69,8 +69,10 @@
       照合する方式に変更(`allow create: if request.resource.data.creatorSecret == get(...)`)。
       `config/adminSecret`自体はget/list/write全て禁止のままクライアントから直接読めない。
       不一致時は`permission-denied`エラーを検知し「作成用合言葉が正しくありません。」と表示。
-      Playwrightで誤った合言葉での作成拒否・参加フロー継続動作を確認(正しい合言葉での成功
-      パターンは値を知らないため人間が確認)。`npm run check`成功。
+      Playwrightで誤った合言葉での作成拒否・参加フロー継続動作を確認。正しい合言葉での
+      作成成功も人間が実機で確認済み(`config/adminSecret`を誤って`groups`配下の
+      サブコレクションとして作成していたのが最初の不具合原因。ルート直下に作り直して解消)。
+      `npm run check`成功。
 
 ## 2. B. 旅行一覧画面
 
