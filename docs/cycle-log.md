@@ -390,3 +390,22 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   (レスポンシブ確認・受け入れ条件の通し確認・GitHub Pagesデプロイ・App Check未使用
   コード削除)に着手。
 - blocked / partial: なし。commit `85407c8`をpush済み。
+
+## 2026-08-18 17:28
+- 実装: 「9. 仕上げ」のうち3項目(GitHub Pagesデプロイを除く)を実施。
+  1. `src/firebase-config.js`から未使用の`initializeAppCheck`(reCAPTCHA v3)関連コードを
+     全て削除(import・サイトキー・Debug Provider初期化・`appCheck`export)。
+     `eslint.config.js`の未使用`self`グローバルも削除。
+  2. レスポンシブ確認: Playwrightで375px幅ビューポートを使い、A〜H全8画面で
+     横スクロールが発生しないことを確認。
+  3. 受け入れ条件の通し確認: 2名(たろう・はなこ)で要件10.2の一連の流れ
+     (参加→旅行作成→企画メモ→行き先投票→日程回答→宿泊候補→確定宿泊複数登録)を実施。
+- 動作確認: 上記3点いずれも実Firestoreで確認。特に、たろうの入力が全画面ではなこから
+  見えること、はなこの追加投票がたろうの画面にリロード後反映され平均スコアが
+  再計算されること(4.0→4.5)を確認。App Check削除後はブラウザconsoleに403エラー・
+  デバッグトークンログが一切出なくなったことも確認。`npm run check`(lint・test)成功。
+- レビュー: OK。スキーマ・セキュリティ方針・画面構成のいずれからも逸脱なし
+  (コード削除のみで機能追加は無し)。
+- 次回予定: 「9. 仕上げ」最後の項目「GitHub Pagesへのデプロイ設定・GitHub Actions
+  自動デプロイ」に着手。これが完了すればROADMAP上のMust/Should範囲が全て完了となる。
+- blocked / partial: なし。commit `c99a633`をpush済み。
