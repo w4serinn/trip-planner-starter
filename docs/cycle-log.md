@@ -524,3 +524,23 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の残タスク(F日程調整・G宿泊・Hしおりの
   タブ化)に着手。
 - blocked / partial: なし。
+
+## 2026-08-18 20:15
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の続き。F(日程調整)・G(宿泊)をタブ化した。
+  `src/views/schedule.js`(`pages/schedule.js`を移植)・`src/views/lodging.js`
+  (`pages/lodging.js`を移植)を新規作成し、`src/app.js`の`TABS`にそれぞれ`mount`関数を
+  登録した。ロジック・データモデルはMPA版から変更なし(移植のみ)。残りはH(しおり)のみ。
+- 動作確認: Playwrightで参加→旅行作成→日程調整タブでの候補日追加・○回答→宿泊タブでの
+  候補追加・確定宿泊追加(チェックイン/アウト日程含む)→概要タブ経由で日程調整タブへ
+  戻っても回答内容が保持されることを実Firestoreで確認。宿泊タブはフォーム密度が高いため
+  375px幅での横スクロール発生有無を個別に確認、崩れなし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成したサブコレクション文書
+  (scheduleEntries/lodgingCandidates/confirmedStays各1件)は削除済み。親の旅行ドキュメント
+  自体は`firestore.rules`の方針上delete不可のため、名前を
+  「[検証用/削除不可] evolveのF・G画面SPA動作確認で作成」に更新して共有テストグループ
+  `FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のscheduleEntries・lodgingCandidates・
+  confirmedStaysのフィールド構造から逸脱なし。`docs/screens.md`のタブ遷移方針とも一致。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の最後の残タスク(H しおりのタブ化)に着手。
+  完了後は12.3(旧pages/*.htmlの削除・vite.config.jsの単一エントリ化)に進める。
+- blocked / partial: なし。

@@ -39,8 +39,8 @@
   段階的に置き換える(移行途中で機能が使えなくなる期間を作らない)
 
 ### 12. C画面(旅行詳細)のタブ構造化 [status: 進行中]
-- [ ] (S) F(日程調整)〜H(しおり)の既存3画面を、フルページ遷移ではなくタブ切り替えで
-      表示するよう移行(D・E移行済み。詳細はdocs/roadmap-done.md参照)
+- [ ] (S) H(しおり)の既存画面を、フルページ遷移ではなくタブ切り替えで表示するよう移行
+      (D・E・F・G移行済み。詳細はdocs/roadmap-done.md参照)
 - [ ] (S) 12.3: 11・12の移行が全て完了した後、旧`pages/*.html`(index/trips/trip/notes/
       destinations/schedule/lodging/itinerary)・`public/index.html`(ルートリダイレクト)を
       削除し、`vite.config.js`を`app.html`単一エントリに整理する。`app.html`を
