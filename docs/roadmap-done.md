@@ -201,3 +201,20 @@
 
 
 ## 9. 仕上げ
+- [x] (S) レスポンシブ確認(モバイル中心) → Playwrightで375px幅ビューポートを使い、
+      A〜H全8画面(参加・旅行一覧・旅行詳細トップ・企画メモ・行き先決め・日程調整・
+      宿泊・しおり)で`document.documentElement.scrollWidth`が`window.innerWidth`を
+      超えないこと(横スクロール発生無し)を確認(2026-08-18)
+- [x] (S) 受け入れ条件(`docs/requirements.md` 10章)の一連の流れを通しで確認 →
+      Playwrightで2名(たろう・はなこ)がそれぞれ操作し、要件10.2の一連の流れ
+      (グループに参加→旅行を新規作成→企画メモを書く→行き先に投票する→
+      日程に○×△で回答する→宿泊候補を並べて比較する→確定宿泊を複数登録する)を実施。
+      たろうの入力(企画メモ・行き先投票・日程回答・宿泊候補・確定宿泊2件)がはなこの
+      画面から見えること、はなこの追加投票がたろうの画面にリロード後反映され
+      平均スコアが再計算されること(4.0→4.5)を実Firestoreで確認(2026-08-18)
+- [x] (S) `src/firebase-config.js`から未使用の`initializeAppCheck`(reCAPTCHA v3)関連
+      コードを削除。`initializeAppCheck`・`ReCaptchaV3Provider`のimport、サイトキー、
+      Debug Provider初期化コード、`appCheck`のexportを全て削除(他に参照箇所が無いことを
+      grepで確認済み)。あわせて`eslint.config.js`から未使用になった`self`グローバルも削除。
+      削除後、ブラウザconsoleにApp Check由来の403エラー・デバッグトークンログが
+      一切出なくなったことを確認(2026-08-18)。`npm run check`(lint・test)成功

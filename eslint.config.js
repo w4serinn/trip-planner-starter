@@ -14,7 +14,6 @@ export default [
         fetch: 'readonly',
         crypto: 'readonly',
         navigator: 'readonly',
-        self: 'readonly',
         URLSearchParams: 'readonly',
       },
     },
