@@ -215,3 +215,16 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   完了させ、commit・pushする。
 - blocked / partial: あり。`pages/trips.html`・`pages/trips.js`の変更はworking treeに
   留め置き(未commit)。`docs/ROADMAP.md`「2. B. 旅行一覧画面」を`partial`として記載。
+
+## 2026-08-18 15:26
+- 実装: 前サイクルからの継続。人間から検証用グループコード(`FMXRZYW7`)の提供を受け、
+  前サイクルで実装済みだった「2. B. 旅行一覧画面」(一覧カード表示・新規旅行作成・
+  カードタップでのC画面遷移)の実機能確認を完了。コード自体の変更は無し。
+- 動作確認: Playwrightで参加→旅行一覧(空状態)→新規旅行作成→C画面遷移
+  (`新しい旅行`表示)→一覧に戻って複数件カード表示→カードタップでC画面へ正しく遷移、
+  の一連を実Firestoreへの読み書きで確認。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`のtripsスキーマ(`name`・`createdAt`)から
+  逸脱なし。`docs/screens.md`のB→C遷移とも一致。UIは既存の`.card`スタイル再利用のため
+  モバイル幅の懸念なし。
+- 次回予定: 「3. C. 旅行詳細トップ画面」(旅行名の表示・編集、D〜Hへのカードリンク等)に着手。
+- blocked / partial: なし。commit `07abaa3`をpush済み。
