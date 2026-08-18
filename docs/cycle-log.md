@@ -544,3 +544,25 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の最後の残タスク(H しおりのタブ化)に着手。
   完了後は12.3(旧pages/*.htmlの削除・vite.config.jsの単一エントリ化)に進める。
 - blocked / partial: なし。
+
+## 2026-08-18 20:45
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の最後の残タスク、H(しおり)をタブ化した。
+  `src/views/itinerary.js`(`pages/itinerary.js`を移植)を新規作成し、`src/app.js`の
+  `TABS`に`mount`関数を登録。時間入力の3セレクトボックス化(「15」)は別タスクのため
+  `<input type="time">`のまま移植。これでD〜Hの全5画面のタブ移行が完了した。
+- 動作確認: Playwrightで参加→旅行作成→しおりタブで項目追加(時間・場所リンク・メモ含む)
+  →同日でより早い時間の項目を追加して時間順ソートを確認→タブ往復後の項目数保持を実
+  Firestoreで確認。未実装の雑多メモタブが「準備中」プレースホルダーのまま正しく
+  表示されることも確認した(1回目のチェックでしおりのsubtitleが表示され続けている
+  ように見えたが、hashchange後のDOM更新をテストスクリプト側が待ちきれていなかった
+  だけと判明。待機条件を修正した再検証でプレースホルダーが正しく表示されることを
+  確認済み。アプリ自体に問題は無かった)。375px幅でのレイアウトも問題なし。
+  console/pageerrorは0件。`npm run check`(lint・test)成功。検証で作成したサブコレクション
+  文書(itineraryItems 2件)は削除済み。親の旅行ドキューメント自体は`firestore.rules`の
+  方針上delete不可のため、名前を「[検証用/削除不可] evolveのH画面SPA動作確認で作成」に
+  更新して共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のitineraryItemsのフィールド構造から逸脱なし。
+  `docs/screens.md`のタブ遷移方針とも一致。
+- 次回予定: 「12.3」(旧`pages/*.html`・`public/index.html`の削除、`vite.config.js`を
+  `app.html`単一エントリへ整理)に着手。完了後は「13. 企画メモの単一共有テキスト化」へ。
+- blocked / partial: なし。
