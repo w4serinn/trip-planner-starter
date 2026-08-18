@@ -27,6 +27,40 @@
       </div>
     </form>
     <p class="subtitle">企画メモ・行き先決め・日程調整などの機能は、次のサイクル以降で追加予定です。</p>
+
+    <section class="card">
+      <h3>集合情報</h3>
+      <form id="meeting-form" novalidate>
+        <div class="field">
+          <label for="meeting-place">場所</label>
+          <input type="text" id="meeting-place" name="meetingPlace" />
+        </div>
+        <div class="field">
+          <label for="meeting-time">時間</label>
+          <input type="text" id="meeting-time" name="meetingTime" />
+        </div>
+        <div class="field">
+          <label for="meeting-note">メモ</label>
+          <input type="text" id="meeting-note" name="meetingNote" />
+        </div>
+        <p class="error-text" id="meeting-error-text"></p>
+        <p class="copy-feedback" id="meeting-saved-text"></p>
+        <button type="submit">集合情報を保存</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>割り勘リンク(warika)</h3>
+      <form id="warika-form" novalidate>
+        <div class="field">
+          <label for="warika-url">URL</label>
+          <input type="url" id="warika-url" name="warikaUrl" placeholder="https://warika.net/..." />
+        </div>
+        <p class="error-text" id="warika-error-text"></p>
+        <p class="copy-feedback" id="warika-saved-text"></p>
+        <button type="submit">割り勘リンクを保存</button>
+      </form>
+    </section>
   </main>
   <script type="module" src="trip.js"></script>
 </body>

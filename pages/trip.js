@@ -1,6 +1,6 @@
 // C. 旅行詳細トップ画面
-// 旅行名の表示・編集を行う。D〜H各機能画面へのリンクや集合場所・割り勘欄は
-// 別タスク(docs/ROADMAP.md「3. C. 旅行詳細トップ画面」)で実装する。
+// 旅行名の表示・編集、集合情報・割り勘リンクの直接編集を行う。
+// D〜H各機能画面へのカードリンクは別タスク(docs/ROADMAP.md「3. C. 旅行詳細トップ画面」)で実装する。
 import { loadSession } from '../src/session.js';
 import { getDocument, updateDocument } from '../src/firestore.js';
 
@@ -23,6 +23,18 @@ const tripNameInput = document.getElementById('trip-name-input');
 const nameErrorText = document.getElementById('name-error-text');
 const cancelEditButton = document.getElementById('cancel-edit-button');
 
+const meetingForm = document.getElementById('meeting-form');
+const meetingPlaceInput = document.getElementById('meeting-place');
+const meetingTimeInput = document.getElementById('meeting-time');
+const meetingNoteInput = document.getElementById('meeting-note');
+const meetingErrorText = document.getElementById('meeting-error-text');
+const meetingSavedText = document.getElementById('meeting-saved-text');
+
+const warikaForm = document.getElementById('warika-form');
+const warikaUrlInput = document.getElementById('warika-url');
+const warikaErrorText = document.getElementById('warika-error-text');
+const warikaSavedText = document.getElementById('warika-saved-text');
+
 async function loadTrip() {
   try {
     const trip = await getDocument(tripPath);
@@ -31,6 +43,10 @@ async function loadTrip() {
       return;
     }
     tripNameHeading.textContent = trip.name || '名称未設定の旅行';
+    meetingPlaceInput.value = trip.meetingPlace || '';
+    meetingTimeInput.value = trip.meetingTime || '';
+    meetingNoteInput.value = trip.meetingNote || '';
+    warikaUrlInput.value = trip.warikaUrl || '';
   } catch (error) {
     console.error(error);
     tripNameHeading.textContent = '取得に失敗しました';
@@ -67,6 +83,48 @@ editNameForm.addEventListener('submit', async (event) => {
   } catch (error) {
     console.error(error);
     nameErrorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+meetingForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  meetingErrorText.textContent = '';
+  meetingSavedText.textContent = '';
+
+  const submitButton = meetingForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    await updateDocument(tripPath, {
+      meetingPlace: meetingPlaceInput.value.trim(),
+      meetingTime: meetingTimeInput.value.trim(),
+      meetingNote: meetingNoteInput.value.trim(),
+    });
+    meetingSavedText.textContent = '保存しました。';
+  } catch (error) {
+    console.error(error);
+    meetingErrorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+warikaForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  warikaErrorText.textContent = '';
+  warikaSavedText.textContent = '';
+
+  const submitButton = warikaForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    await updateDocument(tripPath, {
+      warikaUrl: warikaUrlInput.value.trim(),
+    });
+    warikaSavedText.textContent = '保存しました。';
+  } catch (error) {
+    console.error(error);
+    warikaErrorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
   } finally {
     submitButton.disabled = false;
   }

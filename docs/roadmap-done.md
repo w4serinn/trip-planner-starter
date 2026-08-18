@@ -93,6 +93,15 @@
       `name`フィールドを保存。空文字はバリデーションで拒否、キャンセルボタンで編集破棄。
       Playwrightで初期表示・編集保存・リロード後の永続化・空名前バリデーション・
       キャンセル動作を実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
+- [x] (S) 集合場所・時間の直接編集欄（Should） → `pages/trip.js`の`meeting-form`で
+      `meetingPlace`・`meetingTime`・`meetingNote`をまとめて`updateDocument`で保存
+- [x] (S) 割り勘リンク(warika)の直接編集欄（Should） → `pages/trip.js`の`warika-form`で
+      `warikaUrl`を`updateDocument`で保存
+
+      いずれも常時編集可能なフォーム(トグル無し)として`.card`セクションに実装。
+      保存成功時は`.copy-feedback`スタイルで「保存しました。」を表示。Playwrightで
+      入力→保存→リロード後の値の永続化を実Firestoreで確認(2026-08-18)。
+      `npm run check`(lint・test)成功。
 
 ## 4. D. 企画メモ画面
 

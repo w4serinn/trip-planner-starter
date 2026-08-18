@@ -46,6 +46,11 @@ h2 {
   margin: 0;
 }
 
+h3 {
+  font-size: var(--font-size-base);
+  margin: 0 0 var(--space-sm);
+}
+
 .subtitle {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
