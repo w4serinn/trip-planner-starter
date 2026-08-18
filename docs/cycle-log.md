@@ -430,3 +430,37 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - blocked / partial: なし。commit `6557364`・`0b374bc`をpush済み。
   **GitHubリポジトリのPages設定(build_type=workflow)を有効化した点は、実際の
   リポジトリ設定への変更であることに留意(人間への報告済み)。**
+
+## 2026-08-18 (手動チャット→evolveサイクルへ引き継ぎ)
+- 実装: 人間が実際にアプリを触った感想(デザイン・ナビゲーション・入力の手間等)を受け、
+  UI刷新の方針を協議・確定。`docs/screens.md`にSPA化方針、`docs/firestore-design.md`に
+  企画メモの単一共有テキスト化・雑多メモ機能のデータモデル、`docs/requirements.md`に
+  対応するエンティティ更新(＋「warika」表記を正式名称「Walica」に修正)を反映。
+  `docs/ROADMAP.md`に「第2期: UI刷新」として10〜16章のタスクを新規追加。
+  あわせて、開発中にPlaywrightで作成したテストデータ(架空URL含む)が人間の目に触れ
+  不安を与えてしまったため、`FMXRZYW7`グループ内の該当ドキュメント21件を削除、
+  1件のフィールド(`warikaUrl`)をクリアした(人間の確認・許可を得て実施)。
+- 動作確認: ドキュメントのみの変更(実装は無し)。テストデータ削除は削除後に
+  対象ドキュメントが404になることを確認。
+- レビュー: 該当なし。
+- 次回予定: 「10. 基盤(SPA化)」に着手。
+- blocked / partial: なし。commit `709a020`をpush済み。
+
+## 2026-08-18 18:27
+- 実装: 「10. 基盤(SPA化)」(ルーター基盤・SPAシェル)を実装。`src/router.js`に
+  `:param`動的セグメント対応のハッシュベース軽量ルーター(mount/unmountライフサイクル
+  付き)を新規作成。`app.html`+`src/app.js`で`#/`(A)・`#/trips`(B)・`#/trips/:tripId`
+  (C概要)・`#/trips/:tripId/{scratch|notes|destinations|schedule|lodging|itinerary}`
+  (雑多メモ・D〜H)のルートを仮実装し、旅行コンテキスト配下ではタブバーを表示する
+  (各ビューの実ロジックは11・12で実装、現時点は骨組みのみ)。
+  当初計画(旧pages/*.html・public/index.htmlの即時削除)から変更し、11・12の移行完了
+  までは旧MPA版を維持する方針にしたため、`app.html`を`vite.config.js`に追加登録する
+  形にとどめた(削除は12.3として新設)。
+- 動作確認: Playwrightでルート遷移・タブ切り替え(フルリロード無し)・ブラウザ戻る
+  ボタンでのハッシュ履歴・未知ルートのフォールバック・375px幅でのレイアウト崩れ無し・
+  旧MPA版(`pages/index.html`)が引き続き独立動作することを確認。`npm run check`
+  (lint・test)成功。
+- レビュー: OK。`docs/screens.md`「画面遷移」で定義したハッシュルート構成と実装が一致。
+  データモデル・セキュリティ方針からの逸脱なし(フロントエンドのルーティング基盤のみ)。
+- 次回予定: 「11. A・B画面のSPA移行」に着手。
+- blocked / partial: なし。commit `650f9f6`をpush済み。
