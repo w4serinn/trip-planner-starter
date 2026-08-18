@@ -274,3 +274,24 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   D〜H画面の実装(4章以降)に合わせて対応する方針のため、次サイクルは
   「4. D. 企画メモ画面」に着手。
 - blocked / partial: なし。commit `a278708`をpush済み。
+
+## 2026-08-18 16:45
+- 実装: 「4. D. 企画メモ画面」(メモの追加・新しい順の一覧表示)を実装。
+  `pages/notes.html`・`notes.js`を新規作成し`vite.config.js`に登録。
+  `groups/{code}/trips/{tripId}/planningNotes`へ`author`・`content`・`createdAt`を
+  `addDocument`、`listCollection`取得後にcreatedAt降順ソートして一覧表示。
+  C画面(`trip.js`)に`featureLinks`配列でカードリンクの仕組みを追加し「企画メモ」を
+  登録(E〜Hは各画面実装時に追加していく)。あわせて`shared.css`の
+  `input[type="text"]`専用スタイルを`input[type="url"]`・`textarea`にも適用する
+  よう修正(前サイクルで追加した割り勘リンク欄が未スタイルだった不具合)。
+- 動作確認: Playwrightでの検証中、投稿直後の一覧再取得が初回ロードの応答順序次第で
+  古い結果に上書きされてしまう競合を検出。再取得をやめてローカルの一覧へ楽観的に
+  追加する設計に変更し、初回取得完了まで投稿ボタンを無効化することで解消。
+  参加→旅行作成→カードリンク遷移→メモ2件追加(新しい順表示)→空メモバリデーション→
+  戻るリンク→リロード後の永続化までを実Firestoreで確認。`npm run check`(lint・test)成功。
+- レビュー: OK(自己レビューで上記の競合を発見・修正済み)。`docs/firestore-design.md`の
+  `planningNotes`スキーマ(author・content・createdAt)から逸脱なし。`docs/screens.md`の
+  D画面の役割・C→D→Cの遷移とも一致。既存`.card`/`.field`/`textarea`スタイル再利用のため
+  モバイル幅も問題なし。
+- 次回予定: 「5. E. 行き先決め画面」に着手。
+- blocked / partial: なし。commit `198fc90`をpush済み。
