@@ -464,3 +464,21 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   データモデル・セキュリティ方針からの逸脱なし(フロントエンドのルーティング基盤のみ)。
 - 次回予定: 「11. A・B画面のSPA移行」に着手。
 - blocked / partial: なし。commit `650f9f6`をpush済み。
+
+## 2026-08-18 18:40
+- 実装: 「11. A・B画面のSPA移行」を実装。`src/views/join.js`にA(参加)画面、
+  `src/views/trips.js`にB(旅行一覧)画面のロジックを`pages/index.js`・
+  `pages/trips.js`から移植し、`src/app.js`の`#/`・`#/trips`ルートに登録。
+  `window.location.href`によるフルページ遷移を`navigate()`に置き換え、
+  docs/screens.md「画面遷移」の通りセッションの有無で`#/`⇄`#/trips`を自動
+  リダイレクトするようにした(旧MPA版には無かった挙動)。B画面のカードリンクは
+  `#/trips/{tripId}`(Cタブ、現状は準備中表示)を指す。
+- 動作確認: Playwrightで参加(存在しないコード・誤った作成用合言葉のエラー含む)→
+  旅行一覧→新規旅行作成→タブ付きC画面への遷移(tabbar表示・tripIdパラメータ抽出)→
+  旅行一覧への復帰(カード件数増加)→リロード後のセッション永続化→自動リダイレクト
+  (参加済み/未参加それぞれ)を実Firestoreで確認。375px幅でのレイアウトも問題なし。
+  `npm run check`(lint・test)成功。
+- レビュー: OK。データモデル・セキュリティ方針からの逸脱なし。旧MPA版
+  (`pages/index.js`等)は変更していないため引き続き独立動作する。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」に着手。
+- blocked / partial: なし。commit `bd0ec84`をpush済み。
