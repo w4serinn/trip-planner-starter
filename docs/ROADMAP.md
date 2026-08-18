@@ -33,18 +33,10 @@
 `docs/firestore-design.md`「UI刷新に伴うデータモデル変更」の通り2026-08-18に方針決定。
 詳細な経緯・設計判断は両ドキュメントを参照。
 
-- `10. 基盤(SPA化)`が完了するまで、`11`以降には着手しない(ルーター基盤に全画面が依存するため)
+- `10. 基盤(SPA化)`は完了済み(詳細はdocs/roadmap-done.md参照)。`11`以降はこれを
+  前提に進める
 - 既存のMPA版D〜H(`pages/notes.js`等)は、`12`でタブ移行が完了するまで動作を維持し、
   段階的に置き換える(移行途中で機能が使えなくなる期間を作らない)
-
-### 10. 基盤(SPA化) [status: 未着手]
-- [ ] (M) ルーター基盤の実装: `src/router.js`でハッシュベースのルーティングを行う。
-      `#/`(A)・`#/trips`(B)・`#/trips/:tripId`(C概要)・
-      `#/trips/:tripId/{scratch|notes|destinations|schedule|lodging|itinerary}`
-      (雑多メモ・D〜H)のルート定義。画面上部にタブバーを常設する土台を作る
-      (詳細はdocs/screens.md「画面遷移」参照)
-- [ ] (M) 単一HTMLシェルへの統合: `vite.config.js`のマルチページ構成(pages/*.html)を
-      廃止し単一エントリに統合。`public/index.html`のリダイレクトページも不要になるため削除
 
 ### 11. A・B画面のSPA移行 [status: 未着手]
 - [ ] (S) A(参加)画面をルーター配下のビューに移行(`pages/index.js`のロジックを移植)
@@ -55,6 +47,10 @@
       レイアウトに移行
 - [ ] (S) D(企画メモ)〜H(しおり)の既存5画面を、フルページ遷移ではなくタブ切り替えで
       表示するよう移行
+- [ ] (S) 12.3: 11・12の移行が全て完了した後、旧`pages/*.html`(index/trips/trip/notes/
+      destinations/schedule/lodging/itinerary)・`public/index.html`(ルートリダイレクト)を
+      削除し、`vite.config.js`を`app.html`単一エントリに整理する。`app.html`を
+      プロジェクトルートの実質的な入口として扱う(10で先送りにした分)
 
 ### 13. 企画メモの単一共有テキスト化 [status: 未着手]
 - [ ] (M) `planningNotes`サブコレクションを廃止し、`trips/{tripId}.planningNotesText`

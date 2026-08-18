@@ -231,3 +231,26 @@
       `npm run check`(lint・test)成功。
 
 **2026-08-18時点で`0. 基盤`〜`9. 仕上げ`まで、ROADMAP上のタスクはすべて完了。**
+
+---
+
+## 第2期: UI刷新
+
+### 10. 基盤(SPA化)
+- [x] (M) ルーター基盤の実装 → `src/router.js`(ハッシュベース、`:param`動的セグメント対応、
+      マウント関数がクリーンアップ関数を返せるmount/unmountライフサイクル)を新規作成。
+      `src/app.js`で`#/`(A)・`#/trips`(B)・`#/trips/:tripId`(C概要)・
+      `#/trips/:tripId/{scratch|notes|destinations|schedule|lodging|itinerary}`
+      (雑多メモ・D〜H)のルートを仮実装(骨組みのみ。各ビューの実ロジックは11・12で実装)。
+      タブバー(`#tabbar`)は旅行コンテキスト配下でのみ表示し、アクティブタブをハイライト
+- [x] (M) SPAシェルの追加 → `app.html`(+`src/app.js`)を新規作成し`vite.config.js`に
+      追加登録。当初案(旧pages/*.html・public/index.htmlの削除)から変更し、11・12で
+      旧MPA版D〜Hのタブ移行が完了するまでは、既存の`pages/*.html`をユーザーが引き続き
+      使える状態に保つため、`app.html`を「並行稼働する新エントリ」として追加するに留めた。
+      旧ページ群の削除・`app.html`のルート昇格は、12完了後の新タスク(12.3)に切り出した
+
+      Playwrightで`#/`・`#/trips`・タブ付き`#/trips/:tripId`系ルートの表示、タブリンク
+      クリックでのフルリロード無し切り替え、ブラウザの戻るボタンでのハッシュ履歴、
+      未知ルートのフォールバック、375px幅でのレイアウト崩れ無しを確認。旧MPA版
+      (`pages/index.html`)が引き続き独立して動作することも確認(2026-08-18)。
+      `npm run check`(lint・test)成功。
