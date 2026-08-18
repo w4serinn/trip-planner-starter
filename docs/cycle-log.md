@@ -592,3 +592,27 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   (`planningNotes`サブコレクション廃止→`trips/{tripId}.planningNotesText`単一テキスト
   フィールドへ変更。docs/firestore-design.md「UI刷新に伴うデータモデル変更」参照)。
 - blocked / partial: なし。
+
+## 2026-08-18 21:45
+- 実装: 「13. 企画メモの単一共有テキスト化」を実施。`src/views/notes.js`を、投稿フォーム
+  +新しい順一覧方式から、旅行1件につき1つの共有`<textarea>`(`trips/{tripId}.
+  planningNotesText`)へ全面書き換え。入力を1200msデバウンスして自動保存し、タブ離脱時
+  (cleanup)にはデバウンス待ちの未保存分を即座にflush保存するようにした(タブをすぐ
+  切り替えても入力が失われない)。`eslint.config.js`のグローバルに`setTimeout`・
+  `clearTimeout`を追加(lintエラー解消のため)。
+- 動作確認: Playwrightで2ユーザー(別ブラウザコンテキスト)を使い、Aさんの入力が
+  デバウンス保存される→Bさんが同じ旅行の企画メモタブで同じ内容を読み込める→Bさんの
+  追記も保存される→Aさんがデバウンス完了前(1200ms未満)にタブを離脱してもflush保存で
+  入力が失われないことを、Bさん視点での再取得で確認。同時編集時の「後勝ち上書き」も
+  設計通りの挙動。375px幅でのレイアウトも問題なし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成した旅行ドキュメントは名前を
+  「[検証用/削除不可] evolveの13(企画メモ共有テキスト化)動作確認で作成」に更新し、
+  `planningNotesText`を空文字にリセットして共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`「UI刷新に伴うデータモデル変更」の
+  `planningNotesText`スキーマ・`docs/screens.md`「企画メモは単一共有テキスト」の設計判断
+  (後勝ち上書き許容)から逸脱なし。`firestore.rules`の変更は不要(既存のtripsドキュメント
+  への`update`権限で対応可能なため、変更せず)。
+- 次回予定: 「14. 雑多メモ機能(新規)」に着手
+  (`scratchNotes`サブコレクションへの追加・一覧表示、「→企画メモへ」「→しおりへ」の
+  振り分けボタン)。
+- blocked / partial: なし。

@@ -347,3 +347,24 @@
       全タブ遷移→リロード後もセッション・C画面が保持されることを実Firestoreで確認。
       375px幅でのレイアウトも問題なし。console/pageerror/HTTPエラーは0件(2026-08-18)。
       `npm run check`(lint・test)成功
+
+## 13. 企画メモの単一共有テキスト化
+- [x] (M) `planningNotes`サブコレクションを廃止し、`trips/{tripId}.planningNotesText`
+      (単一の共有テキストフィールド)に変更。`src/views/notes.js`を、投稿フォーム+
+      一覧方式から、旅行1件につき1つの大きな`<textarea>`1つに全面書き換え。入力を
+      1200msデバウンスして自動保存(`updateDocument`で`planningNotesText`のみ更新)。
+      タブ離脱時(cleanup)にデバウンス待ちの未保存分があれば即座にflush保存し、
+      タブをすぐ切り替えても入力が失われないようにした。保存成功時は「保存しました。」
+      をcopy-feedback領域に表示。`eslint.config.js`のグローバルに`setTimeout`・
+      `clearTimeout`を追加(デバウンス実装に必要)
+
+      Playwrightで2ユーザー(別ブラウザコンテキスト)を使い、Aさんが入力→デバウンス
+      保存→Bさんが同じ旅行の企画メモタブを開いて同じ内容を読み込めることを確認。
+      Bさんが追記して保存→Aさんがデバウンス完了前(1200ms未満)にタブを離脱した際、
+      cleanup内のflush保存によって離脱直前の入力内容が正しく保存されていることを
+      Bさん視点での再取得で確認。同時編集時の競合は「後勝ち上書き」を許容する設計
+      通りの挙動(docs/screens.md「設計判断」参照)。375px幅でのレイアウトも問題なし。
+      console/pageerrorは0件(2026-08-18)。`npm run check`(lint・test)成功。検証で
+      作成した旅行ドキュメントは、名前を
+      「[検証用/削除不可] evolveの13(企画メモ共有テキスト化)動作確認で作成」に更新し、
+      `planningNotesText`を空文字にリセットして共有テストグループ`FMXRZYW7`内に残置

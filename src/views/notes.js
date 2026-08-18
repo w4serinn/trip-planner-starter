@@ -1,9 +1,12 @@
 // D. 企画メモタブビュー(SPA)
-// 旅行が固まる前の「やりたいこと」の書き溜め。メモの追加・一覧表示(新しい順)を行う。
-// データモデルはdocs/firestore-design.md「planningNotes」参照。
+// 旅行1件につき1つの共有テキスト(trips/{tripId}.planningNotesText)を、みんなで
+// 自由に書き足していく(hackmd的な1枚メモ)。入力はデバウンスして自動保存する。
+// 同時編集時の競合(後勝ち上書き)は許容する(docs/screens.md「設計判断」参照)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
+import { getDocument, updateDocument } from '../firestore.js';
+
+const SAVE_DEBOUNCE_MS = 1200;
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -13,120 +16,71 @@ export function mount(outlet, params) {
   }
 
   const { tripId } = params;
-  const notesPath = `groups/${session.groupCode}/trips/${tripId}/planningNotes`;
+  const tripPath = `groups/${session.groupCode}/trips/${tripId}`;
 
   outlet.innerHTML = `
-    <p class="subtitle">旅行が固まる前の「やりたいこと」を自由に書き溜めましょう。</p>
+    <p class="subtitle">旅行が固まる前の「やりたいこと」を、みんなで自由に書き足していきましょう。入力は自動的に保存されます。</p>
 
-    <form id="note-form" novalidate>
-      <div class="field">
-        <label for="note-author">名前</label>
-        <input type="text" id="note-author" name="author" required />
-      </div>
-      <div class="field">
-        <label for="note-content">メモ</label>
-        <textarea id="note-content" name="content" rows="3" required></textarea>
-      </div>
-      <p class="error-text" id="note-error-text"></p>
-      <button type="submit">追加する</button>
-    </form>
-
-    <div id="note-list"></div>
+    <textarea id="planning-notes" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
+    <p class="error-text" id="notes-error-text"></p>
+    <p class="copy-feedback" id="notes-saved-text"></p>
   `;
 
-  const noteForm = outlet.querySelector('#note-form');
-  const authorInput = outlet.querySelector('#note-author');
-  const contentInput = outlet.querySelector('#note-content');
-  const errorText = outlet.querySelector('#note-error-text');
-  const noteList = outlet.querySelector('#note-list');
-  const submitButton = noteForm.querySelector('button[type="submit"]');
+  const notesTextarea = outlet.querySelector('#planning-notes');
+  const errorText = outlet.querySelector('#notes-error-text');
+  const savedText = outlet.querySelector('#notes-saved-text');
 
-  authorInput.value = session.name;
-  // 初回一覧取得が終わるまで投稿を止める。先に投稿を許可すると、初回取得の応答が
-  // 投稿後の楽観的更新より遅れて届いた場合に一覧が古い状態へ巻き戻ってしまうため。
-  submitButton.disabled = true;
+  let saveTimer = null;
+  let lastSavedValue = '';
 
-  let currentNotes = [];
-
-  function formatDate(timestamp) {
-    if (!timestamp?.seconds) return '';
-    return new Date(timestamp.seconds * 1000).toLocaleString('ja-JP');
-  }
-
-  function renderNotes(notes) {
-    noteList.innerHTML = '';
-
-    if (notes.length === 0) {
-      noteList.innerHTML = '<p class="empty-state">まだメモがありません。最初のメモを追加しましょう。</p>';
-      return;
+  async function flushSave() {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
     }
+    const value = notesTextarea.value;
+    if (value === lastSavedValue) return;
 
-    for (const note of notes) {
-      const card = document.createElement('div');
-      card.className = 'card';
-
-      const meta = document.createElement('p');
-      meta.className = 'subtitle';
-      meta.textContent = `${note.author} ・ ${formatDate(note.createdAt)}`;
-
-      const content = document.createElement('p');
-      content.textContent = note.content;
-
-      card.appendChild(meta);
-      card.appendChild(content);
-      noteList.appendChild(card);
+    errorText.textContent = '';
+    try {
+      await updateDocument(tripPath, { planningNotesText: value });
+      lastSavedValue = value;
+      savedText.textContent = '保存しました。';
+    } catch (error) {
+      console.error(error);
+      errorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
     }
   }
+
+  const onNotesInput = () => {
+    savedText.textContent = '';
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
+  };
+  notesTextarea.addEventListener('input', onNotesInput);
 
   async function loadNotes() {
     try {
-      const notes = await listCollection(notesPath);
-      notes.sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0));
-      currentNotes = notes;
-      renderNotes(currentNotes);
+      const trip = await getDocument(tripPath);
+      if (!trip) {
+        navigate('#/trips');
+        return;
+      }
+      lastSavedValue = trip.planningNotesText || '';
+      notesTextarea.value = lastSavedValue;
     } catch (error) {
       console.error(error);
       errorText.textContent = 'メモの取得に失敗しました。時間をおいて再度お試しください。';
     } finally {
-      submitButton.disabled = false;
+      notesTextarea.disabled = false;
     }
   }
-
-  const onNoteSubmit = async (event) => {
-    event.preventDefault();
-    errorText.textContent = '';
-
-    const author = authorInput.value.trim();
-    const content = contentInput.value.trim();
-    if (!author || !content) {
-      errorText.textContent = '名前とメモの両方を入力してください。';
-      return;
-    }
-
-    submitButton.disabled = true;
-    try {
-      await addDocument(notesPath, {
-        author,
-        content,
-        createdAt: serverTimestamp(),
-      });
-      contentInput.value = '';
-      // 追加直後の一覧再取得は、初回ロードとの応答順序次第で古い結果に上書きされる
-      // 競合が起きうるため、再取得せずローカルの一覧に直接追加して描画する。
-      currentNotes = [{ author, content, createdAt: { seconds: Date.now() / 1000 } }, ...currentNotes];
-      renderNotes(currentNotes);
-    } catch (error) {
-      console.error(error);
-      errorText.textContent = 'メモの追加に失敗しました。時間をおいて再度お試しください。';
-    } finally {
-      submitButton.disabled = false;
-    }
-  };
-  noteForm.addEventListener('submit', onNoteSubmit);
 
   loadNotes();
 
   return () => {
-    noteForm.removeEventListener('submit', onNoteSubmit);
+    notesTextarea.removeEventListener('input', onNotesInput);
+    // タブ離脱時、デバウンス待ちの未保存分があれば取りこぼさないよう即座に保存する。
+    flushSave();
   };
 }

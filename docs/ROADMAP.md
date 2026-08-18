@@ -33,15 +33,11 @@
 `docs/firestore-design.md`「UI刷新に伴うデータモデル変更」の通り2026-08-18に方針決定。
 詳細な経緯・設計判断は両ドキュメントを参照。
 
-- `10. 基盤(SPA化)`・`11. A・B画面のSPA移行`・`12. C画面(旅行詳細)のタブ構造化`は
-  全て完了済み(詳細はdocs/roadmap-done.md参照)。旧MPA版(`pages/index.html`等)は
-  削除済み。`index.html`(旧`app.html`)がプロジェクトルートの唯一のエントリーポイント。
-  `13`以降はこれを前提に進める
-
-### 13. 企画メモの単一共有テキスト化 [status: 未着手]
-- [ ] (M) `planningNotes`サブコレクションを廃止し、`trips/{tripId}.planningNotesText`
-      (単一の共有テキストフィールド)に変更。UIは投稿一覧から大きな`<textarea>`1つに
-      置き換え、入力を自動保存(デバウンス)する
+- `10. 基盤(SPA化)`・`11. A・B画面のSPA移行`・`12. C画面(旅行詳細)のタブ構造化`・
+  `13. 企画メモの単一共有テキスト化`は全て完了済み(詳細はdocs/roadmap-done.md参照)。
+  旧MPA版(`pages/index.html`等)は削除済み。`index.html`(旧`app.html`)がプロジェクト
+  ルートの唯一のエントリーポイント。企画メモは`trips/{tripId}.planningNotesText`
+  (単一共有テキスト、デバウンス自動保存)に移行済み。`14`以降はこれを前提に進める
 
 ### 14. 雑多メモ機能(新規) [status: 未着手]
 - [ ] (S) `scratchNotes`サブコレクションへの追加・一覧表示
