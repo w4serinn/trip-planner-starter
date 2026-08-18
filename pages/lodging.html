@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>宿泊 - 旅行計画アプリ</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="back-link" id="back-link" href="trip.html">← 旅行詳細に戻る</a>
+    </header>
+    <h1>宿泊</h1>
+    <p class="subtitle">Airbnb等の候補リンクとメモを並べて比較する場所です(投票機能はありません。決定は口頭やDiscord等で行ってください)。</p>
+
+    <form id="candidate-form" novalidate>
+      <div class="field">
+        <label for="candidate-url">URL</label>
+        <input type="url" id="candidate-url" name="url" required placeholder="https://www.airbnb.jp/..." />
+      </div>
+      <div class="field">
+        <label for="candidate-note">メモ</label>
+        <input type="text" id="candidate-note" name="note" />
+      </div>
+      <p class="error-text" id="candidate-error-text"></p>
+      <button type="submit">候補を追加</button>
+    </form>
+
+    <div id="candidate-list"></div>
+
+    <h2>確定宿泊</h2>
+    <p class="subtitle">実際に泊まる宿を、期間を分けて複数登録できます(日程が飛び飛びでも構いません)。</p>
+
+    <form id="stay-form" novalidate>
+      <div class="field">
+        <label for="stay-url">URL</label>
+        <input type="url" id="stay-url" name="url" required placeholder="https://www.airbnb.jp/..." />
+      </div>
+      <div class="field">
+        <label for="stay-note">メモ</label>
+        <input type="text" id="stay-note" name="note" />
+      </div>
+      <div class="field">
+        <label for="stay-checkin">チェックイン</label>
+        <input type="date" id="stay-checkin" name="checkIn" required />
+      </div>
+      <div class="field">
+        <label for="stay-checkout">チェックアウト</label>
+        <input type="date" id="stay-checkout" name="checkOut" required />
+      </div>
+      <p class="error-text" id="stay-error-text"></p>
+      <button type="submit">確定宿泊を追加</button>
+    </form>
+
+    <div id="stay-list"></div>
+  </main>
+  <script type="module" src="lodging.js"></script>
+</body>
+</html>

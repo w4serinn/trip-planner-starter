@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅行詳細 - 旅行計画アプリ</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="back-link" href="trips.html">← 旅行一覧</a>
+    </header>
+    <div class="trip-name-row">
+      <h2 id="trip-name"></h2>
+      <button type="button" id="edit-name-button" class="btn-secondary">編集</button>
+    </div>
+    <form id="edit-name-form" novalidate hidden>
+      <div class="field">
+        <label for="trip-name-input">旅行名</label>
+        <input type="text" id="trip-name-input" name="tripName" required />
+      </div>
+      <p class="error-text" id="name-error-text"></p>
+      <div class="button-row">
+        <button type="submit">保存</button>
+        <button type="button" id="cancel-edit-button" class="btn-secondary">キャンセル</button>
+      </div>
+    </form>
+    <nav id="feature-links"></nav>
+    <p class="subtitle">行き先決め・日程調整・宿泊・しおりなどの機能は、次のサイクル以降で追加予定です。</p>
+
+    <section class="card">
+      <h3>集合情報</h3>
+      <form id="meeting-form" novalidate>
+        <div class="field">
+          <label for="meeting-place">場所</label>
+          <input type="text" id="meeting-place" name="meetingPlace" />
+        </div>
+        <div class="field">
+          <label for="meeting-time">時間</label>
+          <input type="text" id="meeting-time" name="meetingTime" />
+        </div>
+        <div class="field">
+          <label for="meeting-note">メモ</label>
+          <input type="text" id="meeting-note" name="meetingNote" />
+        </div>
+        <p class="error-text" id="meeting-error-text"></p>
+        <p class="copy-feedback" id="meeting-saved-text"></p>
+        <button type="submit">集合情報を保存</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>割り勘リンク(warika)</h3>
+      <form id="warika-form" novalidate>
+        <div class="field">
+          <label for="warika-url">URL</label>
+          <input type="url" id="warika-url" name="warikaUrl" placeholder="https://warika.net/..." />
+        </div>
+        <p class="error-text" id="warika-error-text"></p>
+        <p class="copy-feedback" id="warika-saved-text"></p>
+        <button type="submit">割り勘リンクを保存</button>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="trip.js"></script>
+</body>
+</html>

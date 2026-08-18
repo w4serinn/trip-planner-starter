@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>しおり - 旅行計画アプリ</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="back-link" id="back-link" href="trip.html">← 旅行詳細に戻る</a>
+    </header>
+    <h1>しおり</h1>
+    <p class="subtitle">現地で何をするかを書き貯めましょう。日付ごとにまとまり、各日の中は時間の早い順に並びます。</p>
+
+    <form id="item-form" novalidate>
+      <div class="field">
+        <label for="item-title">やること</label>
+        <input type="text" id="item-title" name="title" required />
+      </div>
+      <div class="field">
+        <label for="item-date">日付</label>
+        <input type="date" id="item-date" name="date" required />
+      </div>
+      <div class="field">
+        <label for="item-time">時間目安(任意)</label>
+        <input type="time" id="item-time" name="time" />
+      </div>
+      <div class="field">
+        <label for="item-location">場所リンク(任意)</label>
+        <input type="url" id="item-location" name="locationUrl" placeholder="https://maps.app.goo.gl/..." />
+      </div>
+      <div class="field">
+        <label for="item-note">メモ(任意)</label>
+        <input type="text" id="item-note" name="note" />
+      </div>
+      <p class="error-text" id="item-error-text"></p>
+      <button type="submit">追加する</button>
+    </form>
+
+    <div id="item-list"></div>
+  </main>
+  <script type="module" src="itinerary.js"></script>
+</body>
+</html>

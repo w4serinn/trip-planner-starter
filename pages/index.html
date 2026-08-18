@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>参加 - 旅行計画アプリ</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <h1>旅行計画アプリ</h1>
+    </header>
+    <p class="subtitle">名前と合言葉を入力して、グループに入りましょう。</p>
+
+    <form id="join-form" novalidate>
+      <div class="field">
+        <label for="name">名前</label>
+        <input type="text" id="name" name="name" autocomplete="name" required />
+      </div>
+      <div class="field">
+        <label for="group-code">合言葉</label>
+        <input type="text" id="group-code" name="groupCode" autocomplete="off" required />
+      </div>
+      <p class="error-text" id="error-text"></p>
+      <button type="submit">参加する</button>
+    </form>
+
+    <div class="divider"><span>はじめての方</span></div>
+
+    <section>
+      <p class="subtitle">合言葉がまだ無い場合、ここで新しいグループを作れます。</p>
+      <form id="create-form" novalidate>
+        <div class="field">
+          <label for="create-name">名前</label>
+          <input type="text" id="create-name" name="createName" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="creator-secret">作成用合言葉</label>
+          <input type="text" id="creator-secret" name="creatorSecret" autocomplete="off" required />
+        </div>
+        <p class="error-text" id="create-error-text"></p>
+        <button type="submit" class="btn-secondary">新しいグループを作る</button>
+      </form>
+
+      <div class="card" id="created-group" hidden>
+        <p class="subtitle">グループを作成しました。この合言葉をメンバーに共有してください。</p>
+        <p class="passphrase" id="created-code"></p>
+        <button type="button" id="copy-code">合言葉をコピーする</button>
+        <p class="copy-feedback" id="copy-feedback"></p>
+        <button type="button" id="proceed-to-trips">旅行一覧へ進む</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="index.js"></script>
+</body>
+</html>

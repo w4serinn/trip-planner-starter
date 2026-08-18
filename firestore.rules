@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// セキュリティ方針(docs/firestore-design.md「セキュリティ方針」「App Check導入の見送り」参照):
+// Firebase Authを使わない前提のため、以下の対策の組み合わせで
+// 「合言葉を知らない第三者が到達できない」状態を作る。
+// 1. `groups`コレクション直下でのみlist禁止・get(個別ドキュメント取得)のみ許可する。
+//    trips以下の各サブコレクションは、そのパスに到達する時点で正しい合言葉を
+//    すでに知っている必要があるため、list(コレクションクエリ)も許可する
+//    (候補地一覧・しおり一覧など、アプリの表示機能そのものがこれに依存するため)。
+// 2. 合言葉は6〜8文字
+// (App Checkは2026-08-18、原因不明の403不整合により導入を見送り。詳細はdocs/firestore-design.md参照)
+//
+// 削除権限の方針(docs/firestore-design.md「削除権限の方針」参照):
+// 認証を導入しない前提(要件7-1)のため「追加した本人だけ削除可」という制限は
+// 技術的に作れない。身内の信頼関係を前提にしたアプリ全体の設計方針と一貫性を取り、
+// `groups/{groupCode}/trips/{tripId}` 配下のサブコレクション各ドキュメント
+// ({subcollection}/{docId})は合言葉を知っている人なら誰でも削除できる。
+// 一方、`groups`・`trips`自体の削除は誤操作の影響が大きいため引き続き禁止する。
+//
+// グループ作成方針(docs/firestore-design.md「グループ作成方法の方針」参照):
+// 新規グループ作成時、送信データ内のcreatorSecretフィールドが
+// config/adminSecretドキュメントの値と一致する場合のみcreateを許可する。
+// get()の結果自体はクライアントに返らないため、正解の値はコードにも
+// レスポンスにも一切登場しない。友達(グループ参加者)がグループのデータを
+// 読んだ結果としてこの値を知ることは許容する(設計判断として受容済み)。
+// config/adminSecret自体はget/list/write全て禁止し、直接の読み書きを防ぐ。
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /config/{doc} {
+      allow get, list, create, update, delete: if false;
+    }
+
+    match /groups/{groupCode} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.resource.data.creatorSecret ==
+        get(/databases/$(database)/documents/config/adminSecret).data.value;
+      allow update: if true;
+      allow delete: if false;
+
+      match /trips/{tripId} {
+        allow get, list: if true;
+        allow create, update: if true;
+        allow delete: if false;
+
+        // 候補地・企画メモ・宿泊候補・確定宿泊・しおり項目など。
+        match /{subcollection}/{docId} {
+          allow get, list: if true;
+          allow create, update: if true;
+          allow delete: if true;
+        }
+      }
+    }
+
+    // 上記以外のパスはすべて拒否する。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

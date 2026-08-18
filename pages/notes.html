@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>企画メモ - 旅行計画アプリ</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="back-link" id="back-link" href="trip.html">← 旅行詳細に戻る</a>
+    </header>
+    <h1>企画メモ</h1>
+    <p class="subtitle">旅行が固まる前の「やりたいこと」を自由に書き溜めましょう。</p>
+
+    <form id="note-form" novalidate>
+      <div class="field">
+        <label for="note-author">名前</label>
+        <input type="text" id="note-author" name="author" required />
+      </div>
+      <div class="field">
+        <label for="note-content">メモ</label>
+        <textarea id="note-content" name="content" rows="3" required></textarea>
+      </div>
+      <p class="error-text" id="note-error-text"></p>
+      <button type="submit">追加する</button>
+    </form>
+
+    <div id="note-list"></div>
+  </main>
+  <script type="module" src="notes.js"></script>
+</body>
+</html>
