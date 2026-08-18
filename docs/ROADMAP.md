@@ -33,17 +33,10 @@
 `docs/firestore-design.md`「UI刷新に伴うデータモデル変更」の通り2026-08-18に方針決定。
 詳細な経緯・設計判断は両ドキュメントを参照。
 
-- `10. 基盤(SPA化)`は完了済み(詳細はdocs/roadmap-done.md参照)。`11`以降はこれを
-  前提に進める
-- 既存のMPA版D〜H(`pages/notes.js`等)は、`12`でタブ移行が完了するまで動作を維持し、
-  段階的に置き換える(移行途中で機能が使えなくなる期間を作らない)
-
-### 12. C画面(旅行詳細)のタブ構造化 [status: 進行中]
-D〜Hの全タブ移行は完了(詳細はdocs/roadmap-done.md参照)。残るは12.3のみ。
-- [ ] (S) 12.3: 11・12の移行が全て完了した後、旧`pages/*.html`(index/trips/trip/notes/
-      destinations/schedule/lodging/itinerary)・`public/index.html`(ルートリダイレクト)を
-      削除し、`vite.config.js`を`app.html`単一エントリに整理する。`app.html`を
-      プロジェクトルートの実質的な入口として扱う(10で先送りにした分)
+- `10. 基盤(SPA化)`・`11. A・B画面のSPA移行`・`12. C画面(旅行詳細)のタブ構造化`は
+  全て完了済み(詳細はdocs/roadmap-done.md参照)。旧MPA版(`pages/index.html`等)は
+  削除済み。`index.html`(旧`app.html`)がプロジェクトルートの唯一のエントリーポイント。
+  `13`以降はこれを前提に進める
 
 ### 13. 企画メモの単一共有テキスト化 [status: 未着手]
 - [ ] (M) `planningNotes`サブコレクションを廃止し、`trips/{tripId}.planningNotesText`

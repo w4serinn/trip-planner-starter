@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint src pages",
+    "lint": "eslint src",
     "lint:css": "stylelint \"pages/**/*.css\" \"styles/**/*.css\"",
     "test": "vitest run",
     "check": "npm run lint && npm run lint:css && npm run test",

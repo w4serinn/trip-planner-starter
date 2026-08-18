@@ -273,7 +273,7 @@
       実Firestoreで確認。375px幅でのレイアウト崩れも無し(2026-08-18)。
       `npm run check`(lint・test)成功。
 
-### 12. C画面(旅行詳細)のタブ構造化(進行中。完了分のみここに記載)
+### 12. C画面(旅行詳細)のタブ構造化(完了)
 - [x] (M) C画面を「概要」タブ(旅行名編集・集合情報・割り勘リンク)としてタブバー付き
       レイアウトに移行 → `src/views/tripOverview.js`を新規作成し`pages/trip.js`の
       ロジック(旅行名の表示・編集、集合情報・割り勘リンクの保存)を移植。D〜Hへの
@@ -332,3 +332,18 @@
       自体はセキュリティ方針上delete不可のため、名前を
       「[検証用/削除不可] evolveのH画面SPA動作確認で作成」に更新して残置
       (共有テスト用グループ`FMXRZYW7`内)
+- [x] (S) 12.3: 旧MPA版8画面(`pages/index.html`〜`pages/itinerary.html`とその`.js`)・
+      `public/index.html`(ルートリダイレクトスタブ)を削除。`app.html`を`git mv`で
+      プロジェクトルートの`index.html`へ改名し、GitHub Pagesのルートで直接SPAシェルが
+      配信されるようにした(旧リダイレクトスタブは不要になったため削除)。
+      `vite.config.js`の`rollupOptions.input`(A〜H+appの9エントリ)を削除し、
+      Viteのデフォルト(ルート`index.html`単一エントリ)に一本化。`package.json`の
+      `lint`スクリプトから、JSファイルが無くなった`pages`を除外(`eslint src pages`→
+      `eslint src`。`pages/shared.css`は`lint:css`側で引き続き対象)
+
+      `npm run build`でdist/index.htmlのみが出力される(旧pages/*・publicの重複無し)
+      ことを確認。Playwrightでルートベースパス(`http://localhost:5173/trip-planner-starter/`、
+      app.html等のサフィックス無し)からA画面(参加)→B(旅行一覧)→旅行作成→C概要+D〜Hの
+      全タブ遷移→リロード後もセッション・C画面が保持されることを実Firestoreで確認。
+      375px幅でのレイアウトも問題なし。console/pageerror/HTTPエラーは0件(2026-08-18)。
+      `npm run check`(lint・test)成功

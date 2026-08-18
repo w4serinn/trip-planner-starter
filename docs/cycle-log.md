@@ -566,3 +566,29 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - 次回予定: 「12.3」(旧`pages/*.html`・`public/index.html`の削除、`vite.config.js`を
   `app.html`単一エントリへ整理)に着手。完了後は「13. 企画メモの単一共有テキスト化」へ。
 - blocked / partial: なし。
+
+## 2026-08-18 21:15
+- 実装: 「12.3」を実施。旧MPA版8画面(`pages/index.html`〜`pages/itinerary.html`と
+  対応する`.js`)・`public/index.html`(ルートリダイレクトスタブ)を削除。`app.html`を
+  `git mv`でプロジェクトルートの`index.html`へ改名し、GitHub Pagesのルートで直接SPA
+  シェルが配信されるようにした。`vite.config.js`の`rollupOptions.input`(9エントリ)を
+  削除しVite標準のルート`index.html`単一エントリに一本化。`package.json`の`lint`
+  スクリプトから、JSファイルが無くなった`pages`を除外(`eslint src`のみに変更。
+  `pages/shared.css`は`lint:css`側で引き続き対象)。これで「12. C画面のタブ構造化」が
+  完全に完了した。
+- 動作確認: `npm run build`でdist/index.htmlのみが出力され、旧pages/*・publicとの重複が
+  無いことを確認。Playwrightでルートベースパス
+  (`http://localhost:5173/trip-planner-starter/`、`app.html`等のサフィックス無し)から
+  A画面(参加)→B(旅行一覧)→旅行作成→C概要+D〜Hの全タブ遷移→リロード後もセッション・
+  C画面表示が保持されることを実Firestoreで確認。375px幅でのレイアウトも問題なし。
+  console/pageerror/HTTPエラーは0件。`npm run check`(lint・test)成功。検証で作った
+  旅行ドキュメント(サブコレクション書き込みは無し)は名前を
+  「[検証用/削除不可] evolveの12.3(ルートエントリ整理)動作確認で作成」に更新して
+  共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/screens.md`「UI刷新方針」のハッシュルート方針・`docs/firestore-design.md`
+  のホスティング方針から逸脱なし。旧MPA版を参照していたドキュメント記述は無かった
+  (grep確認済み)。
+- 次回予定: 「13. 企画メモの単一共有テキスト化」に着手
+  (`planningNotes`サブコレクション廃止→`trips/{tripId}.planningNotesText`単一テキスト
+  フィールドへ変更。docs/firestore-design.md「UI刷新に伴うデータモデル変更」参照)。
+- blocked / partial: なし。
