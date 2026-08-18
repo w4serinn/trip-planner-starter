@@ -333,3 +333,20 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   C→F→C遷移とも一致。3ボタンの`.button-row`は既存パターン再利用のためモバイル幅も問題なし。
 - 次回予定: 「7. G. 宿泊画面」に着手。
 - blocked / partial: なし。commit `a726dc9`をpush済み。
+
+## 2026-08-18 17:12
+- 実装: 「7. G. 宿泊画面」のMust項目2つ(宿泊候補の追加・一覧表示)を実装。
+  `pages/lodging.html`・`lodging.js`を新規作成し`vite.config.js`に登録。
+  `groups/{code}/trips/{tripId}/lodgingCandidates`へ`url`・`note`・`addedBy`・
+  `addedAt`を`addDocument`、`listCollection`取得後addedAt降順で一覧表示。URLは
+  クリック可能なリンク(`target="_blank"`)として表示し、要件7-3の通り投票UIは
+  持たせていない。C画面(`trip.js`)の`featureLinks`に「宿泊」を追加。
+  Should項目(確定宿泊の追加・一覧表示)はROADMAPに残し、次サイクル以降で対応する。
+- 動作確認: Playwrightで参加→旅行作成→カードリンク遷移→候補2件追加(リンク・メモ
+  表示)→空URLバリデーション→リロード後の永続化→戻るリンクを実Firestoreで確認。
+  `npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`の`lodgingCandidates`スキーマ(url・note・
+  addedBy・addedAt)から逸脱なし。`docs/screens.md`のG画面の役割・C→G→C遷移とも一致。
+  D〜F画面と同じ楽観的更新パターンを踏襲しモバイル幅も問題なし。
+- 次回予定: 「7. G. 宿泊画面」の残りShould項目(確定宿泊)、または「8. H. しおり画面」に着手。
+- blocked / partial: なし。commit `eb0a567`をpush済み。
