@@ -154,3 +154,33 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   未確認・要人間対応。加えてApp Check SDKが403を検知した際24時間のリトライ抑制に
   入る挙動があるため、設定修正後の再検証は新しいブラウザコンテキスト
   (今回はPlaywrightの一時プロファイルのため次回は影響しない見込み)で行うこと。
+
+## 2026-08-18 (手動チャット→evolveサイクルへ引き継ぎ)
+- 実装: 人間の明示的な指示により、手動チャットで以下を実施。
+  1. App CheckにDebug Providerを導入(開発時のみ、`self.FIREBASE_APPCHECK_DEBUG_TOKEN`)
+  2. 「1. A. 参加画面」の実機能(新規グループ作成・既存グループ参加・エラー表示)を実装
+  3. 実機能確認の過程で、有効なApp Checkトークンでも一貫して403になる不整合を
+     curl・実ブラウザSDK・`firestore.rules`変更・Cloud Loggingなど多方面から切り分け、
+     最終的にFirebase Console「App Check」→「API」タブのCloud Firestore
+     「適用(Enforce)」設定という、`firestore.rules`とは独立したプラットフォーム層の
+     ゲートが真因と特定(人間がConsoleでEnforce解除)。`docs/firestore-design.md`に
+     「App Check導入の見送り」として記録し、`firestore.rules`から`isAppCheckValid()`を撤去
+- 動作確認: Playwright(ヘッドレスChromium)で新規作成→合言葉コピー→旅行一覧遷移、
+  既存グループ参加、同名再参加(冪等性)、存在しないコードのエラー表示の4パターンを
+  実Firestoreへの読み書きまで含めて確認。`npm run check`(lint)成功。
+- レビュー: OK。詳細な切り分け過程は本ログには要約のみ記載(会話ログ・
+  `docs/ROADMAP.md`/`docs/roadmap-done.md`/`docs/firestore-design.md`参照)。
+- 次回予定: 「2. B. 旅行一覧画面」またはROADMAP上の次タスクに着手。
+- blocked / partial: なし。commit 2件(`9666ed7`・`bfbdac8`)をpush済み。
+
+## 2026-08-18 12:51
+- 実装: 0.基盤の残タスク「自動テスト実行環境(vitest等)の導入検討」に対応。
+  `npm install -D vitest`し、`package.json`に`test`スクリプト(`vitest run`)を追加、
+  `check`スクリプトに組み込んだ。`src/passphrase.js`に対する
+  `src/passphrase.test.js`(デフォルト長・範囲内の長さ指定・使用文字種・範囲外エラー・
+  非整数エラーの5テスト)を追加。
+- 動作確認: `npm run check`(lint・lint:css・test)すべて成功(テスト5件パス)。
+- レビュー: OK。データモデル・セキュリティ方針・画面構成からの逸脱なし。UI変更なし。
+- 次回予定: 0.基盤が全完了したため、「2. B. 旅行一覧画面」(グループ内の旅行一覧表示・
+  新規旅行作成・C画面への遷移)に着手。
+- blocked / partial: なし。commit `e57805c`をpush済み。
