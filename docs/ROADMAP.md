@@ -34,16 +34,12 @@
 詳細な経緯・設計判断は両ドキュメントを参照。
 
 - `10. 基盤(SPA化)`・`11. A・B画面のSPA移行`・`12. C画面(旅行詳細)のタブ構造化`・
-  `13. 企画メモの単一共有テキスト化`は全て完了済み(詳細はdocs/roadmap-done.md参照)。
-  旧MPA版(`pages/index.html`等)は削除済み。`index.html`(旧`app.html`)がプロジェクト
-  ルートの唯一のエントリーポイント。企画メモは`trips/{tripId}.planningNotesText`
-  (単一共有テキスト、デバウンス自動保存)に移行済み。`14`以降はこれを前提に進める
-
-### 14. 雑多メモ機能(新規) [status: 未着手]
-- [ ] (S) `scratchNotes`サブコレクションへの追加・一覧表示
-- [ ] (S) 「→企画メモへ」振り分けボタン(`planningNotesText`へ追記して元メモを削除)
-- [ ] (M) 「→しおりへ」振り分けボタン(日付選択のみの簡易フォームを挟んで
-      `itineraryItems`を作成し、元メモを削除)
+  `13. 企画メモの単一共有テキスト化`・`14. 雑多メモ機能`は全て完了済み
+  (詳細はdocs/roadmap-done.md参照)。旧MPA版(`pages/index.html`等)は削除済み。
+  `index.html`(旧`app.html`)がプロジェクトルートの唯一のエントリーポイント。企画メモ・
+  雑多メモはそれぞれ`trips/{tripId}.planningNotesText`・`scratchText`(単一共有テキスト、
+  デバウンス自動保存)。雑多メモは選択範囲を「→企画メモへ」「→しおりへ」ボタンで振り分け
+  可能。`15`以降はこれを前提に進める
 
 ### 15. しおりの時間入力UI変更 [status: 未着手]
 - [ ] (S) `<input type="time">`を、「午前/午後」「時(0〜12)」「分(00/15/30/45)」の
@@ -51,6 +47,6 @@
 
 ### 16. 見た目の刷新 [status: 未着手]
 - [ ] (S) 割り勘リンクのラベル表記・placeholderを「Walica」(walica.jp)に修正
-      (`pages/trip.html`の`#warika-url`まわり)
+      (`src/views/tripOverview.js`の`#warika-url`まわり)
 - [ ] (M) 全体的なビジュアル刷新。`styles/tokens.css`の配色・タイポグラフィ見直し、
       カード・ボタン等のスタイル強化。具体的な方向性は着手時に人間と相談する
