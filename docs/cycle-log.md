@@ -430,3 +430,304 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - blocked / partial: なし。commit `6557364`・`0b374bc`をpush済み。
   **GitHubリポジトリのPages設定(build_type=workflow)を有効化した点は、実際の
   リポジトリ設定への変更であることに留意(人間への報告済み)。**
+
+## 2026-08-18 (手動チャット→evolveサイクルへ引き継ぎ)
+- 実装: 人間が実際にアプリを触った感想(デザイン・ナビゲーション・入力の手間等)を受け、
+  UI刷新の方針を協議・確定。`docs/screens.md`にSPA化方針、`docs/firestore-design.md`に
+  企画メモの単一共有テキスト化・雑多メモ機能のデータモデル、`docs/requirements.md`に
+  対応するエンティティ更新(＋「warika」表記を正式名称「Walica」に修正)を反映。
+  `docs/ROADMAP.md`に「第2期: UI刷新」として10〜16章のタスクを新規追加。
+  あわせて、開発中にPlaywrightで作成したテストデータ(架空URL含む)が人間の目に触れ
+  不安を与えてしまったため、`FMXRZYW7`グループ内の該当ドキュメント21件を削除、
+  1件のフィールド(`warikaUrl`)をクリアした(人間の確認・許可を得て実施)。
+- 動作確認: ドキュメントのみの変更(実装は無し)。テストデータ削除は削除後に
+  対象ドキュメントが404になることを確認。
+- レビュー: 該当なし。
+- 次回予定: 「10. 基盤(SPA化)」に着手。
+- blocked / partial: なし。commit `709a020`をpush済み。
+
+## 2026-08-18 18:27
+- 実装: 「10. 基盤(SPA化)」(ルーター基盤・SPAシェル)を実装。`src/router.js`に
+  `:param`動的セグメント対応のハッシュベース軽量ルーター(mount/unmountライフサイクル
+  付き)を新規作成。`app.html`+`src/app.js`で`#/`(A)・`#/trips`(B)・`#/trips/:tripId`
+  (C概要)・`#/trips/:tripId/{scratch|notes|destinations|schedule|lodging|itinerary}`
+  (雑多メモ・D〜H)のルートを仮実装し、旅行コンテキスト配下ではタブバーを表示する
+  (各ビューの実ロジックは11・12で実装、現時点は骨組みのみ)。
+  当初計画(旧pages/*.html・public/index.htmlの即時削除)から変更し、11・12の移行完了
+  までは旧MPA版を維持する方針にしたため、`app.html`を`vite.config.js`に追加登録する
+  形にとどめた(削除は12.3として新設)。
+- 動作確認: Playwrightでルート遷移・タブ切り替え(フルリロード無し)・ブラウザ戻る
+  ボタンでのハッシュ履歴・未知ルートのフォールバック・375px幅でのレイアウト崩れ無し・
+  旧MPA版(`pages/index.html`)が引き続き独立動作することを確認。`npm run check`
+  (lint・test)成功。
+- レビュー: OK。`docs/screens.md`「画面遷移」で定義したハッシュルート構成と実装が一致。
+  データモデル・セキュリティ方針からの逸脱なし(フロントエンドのルーティング基盤のみ)。
+- 次回予定: 「11. A・B画面のSPA移行」に着手。
+- blocked / partial: なし。commit `650f9f6`をpush済み。
+
+## 2026-08-18 18:40
+- 実装: 「11. A・B画面のSPA移行」を実装。`src/views/join.js`にA(参加)画面、
+  `src/views/trips.js`にB(旅行一覧)画面のロジックを`pages/index.js`・
+  `pages/trips.js`から移植し、`src/app.js`の`#/`・`#/trips`ルートに登録。
+  `window.location.href`によるフルページ遷移を`navigate()`に置き換え、
+  docs/screens.md「画面遷移」の通りセッションの有無で`#/`⇄`#/trips`を自動
+  リダイレクトするようにした(旧MPA版には無かった挙動)。B画面のカードリンクは
+  `#/trips/{tripId}`(Cタブ、現状は準備中表示)を指す。
+- 動作確認: Playwrightで参加(存在しないコード・誤った作成用合言葉のエラー含む)→
+  旅行一覧→新規旅行作成→タブ付きC画面への遷移(tabbar表示・tripIdパラメータ抽出)→
+  旅行一覧への復帰(カード件数増加)→リロード後のセッション永続化→自動リダイレクト
+  (参加済み/未参加それぞれ)を実Firestoreで確認。375px幅でのレイアウトも問題なし。
+  `npm run check`(lint・test)成功。
+- レビュー: OK。データモデル・セキュリティ方針からの逸脱なし。旧MPA版
+  (`pages/index.js`等)は変更していないため引き続き独立動作する。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」に着手。
+- blocked / partial: なし。commit `bd0ec84`をpush済み。
+
+## 2026-08-18 19:10
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の1件目(C概要タブ)を実装。
+  `src/views/tripOverview.js`に`pages/trip.js`のロジック(旅行名の表示・編集、
+  集合情報・割り勘リンクの直接編集)を移植し、`src/app.js`の`#/trips/:tripId`
+  ルート(概要タブ)に登録した。D〜Hへの旧カードリンクナビ(`#feature-links`)は
+  タブバーに置き換わったため廃止。旅行コンテキスト配下でのみ表示する
+  「← 旅行一覧」リンクを`app.html`のヘッダーに追加し、タブバーと連動して
+  表示/非表示を切り替えるようにした(D〜H含むどのタブからでも旅行一覧に戻れる)。
+- 動作確認: Playwrightで旅行作成→C概要タブ表示→旅行名編集→集合情報保存→
+  割り勘リンク保存→他タブへ移動後に戻っても値が保持されること→「戻る」リンクでの
+  旅行一覧への復帰を実Firestoreで確認。検証中に「戻るリンクが非表示にならない」と
+  見えた事象があったが、実際はhashchangeイベント発火とDOM更新の間のタイミングを
+  テストスクリプト側で待ちきれていなかっただけと判明(アプリ自体は正しく動作)。
+  375px幅でのレイアウトも問題なし。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`のtripsフィールド(name・meetingPlace・
+  meetingTime・meetingNote・warikaUrl)から逸脱なし。`docs/screens.md`のC概要タブの
+  役割と一致。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の残タスク(D〜Hのタブ化)に着手。
+- blocked / partial: なし。commit `d3061a0`をpush済み。
+
+## 2026-08-18 19:45
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の続き。D(企画メモ)・E(行き先決め)を
+  タブ化した。`src/views/notes.js`(`pages/notes.js`を移植)・
+  `src/views/destinations.js`(`pages/destinations.js`を移植)を新規作成し、
+  `src/app.js`の`TABS`にそれぞれ`mount`関数を登録した。ロジック・データモデルは
+  MPA版から変更なし(移植のみ)。5画面のうち残りF(日程調整)・G(宿泊)・H(しおり)は
+  次サイクル以降。
+- 動作確認: Playwrightで参加→旅行作成→企画メモタブでの投稿→行き先決めタブでの候補地
+  追加・★投票(3点)→平均スコア表示確認→概要タブ経由で企画メモタブへ戻っても投稿内容が
+  保持されることを実Firestoreで確認。375px幅でのレイアウト崩れなし。console/pageerrorは
+  0件。`npm run check`(lint・test)成功。検証で作成したサブコレクション文書
+  (planningNotes/destinations各1件)は削除済み。親の旅行ドキュメント自体は
+  `firestore.rules`の方針上delete不可のため、名前を
+  「[検証用/削除不可] evolveのD・E画面SPA動作確認で作成」に更新して共有テストグループ
+  `FMXRZYW7`内に残置(誤解防止のための処置。過去のtmp/フォルダ同様、これは自動生成物であり
+  人間の作業物ではない)。
+- レビュー: OK。`docs/firestore-design.md`のplanningNotes・destinationsのフィールド構造
+  から逸脱なし。`docs/screens.md`のタブ遷移方針とも一致。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の残タスク(F日程調整・G宿泊・Hしおりの
+  タブ化)に着手。
+- blocked / partial: なし。
+
+## 2026-08-18 20:15
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の続き。F(日程調整)・G(宿泊)をタブ化した。
+  `src/views/schedule.js`(`pages/schedule.js`を移植)・`src/views/lodging.js`
+  (`pages/lodging.js`を移植)を新規作成し、`src/app.js`の`TABS`にそれぞれ`mount`関数を
+  登録した。ロジック・データモデルはMPA版から変更なし(移植のみ)。残りはH(しおり)のみ。
+- 動作確認: Playwrightで参加→旅行作成→日程調整タブでの候補日追加・○回答→宿泊タブでの
+  候補追加・確定宿泊追加(チェックイン/アウト日程含む)→概要タブ経由で日程調整タブへ
+  戻っても回答内容が保持されることを実Firestoreで確認。宿泊タブはフォーム密度が高いため
+  375px幅での横スクロール発生有無を個別に確認、崩れなし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成したサブコレクション文書
+  (scheduleEntries/lodgingCandidates/confirmedStays各1件)は削除済み。親の旅行ドキュメント
+  自体は`firestore.rules`の方針上delete不可のため、名前を
+  「[検証用/削除不可] evolveのF・G画面SPA動作確認で作成」に更新して共有テストグループ
+  `FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のscheduleEntries・lodgingCandidates・
+  confirmedStaysのフィールド構造から逸脱なし。`docs/screens.md`のタブ遷移方針とも一致。
+- 次回予定: 「12. C画面(旅行詳細)のタブ構造化」の最後の残タスク(H しおりのタブ化)に着手。
+  完了後は12.3(旧pages/*.htmlの削除・vite.config.jsの単一エントリ化)に進める。
+- blocked / partial: なし。
+
+## 2026-08-18 20:45
+- 実装: 「12. C画面(旅行詳細)のタブ構造化」の最後の残タスク、H(しおり)をタブ化した。
+  `src/views/itinerary.js`(`pages/itinerary.js`を移植)を新規作成し、`src/app.js`の
+  `TABS`に`mount`関数を登録。時間入力の3セレクトボックス化(「15」)は別タスクのため
+  `<input type="time">`のまま移植。これでD〜Hの全5画面のタブ移行が完了した。
+- 動作確認: Playwrightで参加→旅行作成→しおりタブで項目追加(時間・場所リンク・メモ含む)
+  →同日でより早い時間の項目を追加して時間順ソートを確認→タブ往復後の項目数保持を実
+  Firestoreで確認。未実装の雑多メモタブが「準備中」プレースホルダーのまま正しく
+  表示されることも確認した(1回目のチェックでしおりのsubtitleが表示され続けている
+  ように見えたが、hashchange後のDOM更新をテストスクリプト側が待ちきれていなかった
+  だけと判明。待機条件を修正した再検証でプレースホルダーが正しく表示されることを
+  確認済み。アプリ自体に問題は無かった)。375px幅でのレイアウトも問題なし。
+  console/pageerrorは0件。`npm run check`(lint・test)成功。検証で作成したサブコレクション
+  文書(itineraryItems 2件)は削除済み。親の旅行ドキューメント自体は`firestore.rules`の
+  方針上delete不可のため、名前を「[検証用/削除不可] evolveのH画面SPA動作確認で作成」に
+  更新して共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のitineraryItemsのフィールド構造から逸脱なし。
+  `docs/screens.md`のタブ遷移方針とも一致。
+- 次回予定: 「12.3」(旧`pages/*.html`・`public/index.html`の削除、`vite.config.js`を
+  `app.html`単一エントリへ整理)に着手。完了後は「13. 企画メモの単一共有テキスト化」へ。
+- blocked / partial: なし。
+
+## 2026-08-18 21:15
+- 実装: 「12.3」を実施。旧MPA版8画面(`pages/index.html`〜`pages/itinerary.html`と
+  対応する`.js`)・`public/index.html`(ルートリダイレクトスタブ)を削除。`app.html`を
+  `git mv`でプロジェクトルートの`index.html`へ改名し、GitHub Pagesのルートで直接SPA
+  シェルが配信されるようにした。`vite.config.js`の`rollupOptions.input`(9エントリ)を
+  削除しVite標準のルート`index.html`単一エントリに一本化。`package.json`の`lint`
+  スクリプトから、JSファイルが無くなった`pages`を除外(`eslint src`のみに変更。
+  `pages/shared.css`は`lint:css`側で引き続き対象)。これで「12. C画面のタブ構造化」が
+  完全に完了した。
+- 動作確認: `npm run build`でdist/index.htmlのみが出力され、旧pages/*・publicとの重複が
+  無いことを確認。Playwrightでルートベースパス
+  (`http://localhost:5173/trip-planner-starter/`、`app.html`等のサフィックス無し)から
+  A画面(参加)→B(旅行一覧)→旅行作成→C概要+D〜Hの全タブ遷移→リロード後もセッション・
+  C画面表示が保持されることを実Firestoreで確認。375px幅でのレイアウトも問題なし。
+  console/pageerror/HTTPエラーは0件。`npm run check`(lint・test)成功。検証で作った
+  旅行ドキュメント(サブコレクション書き込みは無し)は名前を
+  「[検証用/削除不可] evolveの12.3(ルートエントリ整理)動作確認で作成」に更新して
+  共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/screens.md`「UI刷新方針」のハッシュルート方針・`docs/firestore-design.md`
+  のホスティング方針から逸脱なし。旧MPA版を参照していたドキュメント記述は無かった
+  (grep確認済み)。
+- 次回予定: 「13. 企画メモの単一共有テキスト化」に着手
+  (`planningNotes`サブコレクション廃止→`trips/{tripId}.planningNotesText`単一テキスト
+  フィールドへ変更。docs/firestore-design.md「UI刷新に伴うデータモデル変更」参照)。
+- blocked / partial: なし。
+
+## 2026-08-18 21:45
+- 実装: 「13. 企画メモの単一共有テキスト化」を実施。`src/views/notes.js`を、投稿フォーム
+  +新しい順一覧方式から、旅行1件につき1つの共有`<textarea>`(`trips/{tripId}.
+  planningNotesText`)へ全面書き換え。入力を1200msデバウンスして自動保存し、タブ離脱時
+  (cleanup)にはデバウンス待ちの未保存分を即座にflush保存するようにした(タブをすぐ
+  切り替えても入力が失われない)。`eslint.config.js`のグローバルに`setTimeout`・
+  `clearTimeout`を追加(lintエラー解消のため)。
+- 動作確認: Playwrightで2ユーザー(別ブラウザコンテキスト)を使い、Aさんの入力が
+  デバウンス保存される→Bさんが同じ旅行の企画メモタブで同じ内容を読み込める→Bさんの
+  追記も保存される→Aさんがデバウンス完了前(1200ms未満)にタブを離脱してもflush保存で
+  入力が失われないことを、Bさん視点での再取得で確認。同時編集時の「後勝ち上書き」も
+  設計通りの挙動。375px幅でのレイアウトも問題なし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成した旅行ドキュメントは名前を
+  「[検証用/削除不可] evolveの13(企画メモ共有テキスト化)動作確認で作成」に更新し、
+  `planningNotesText`を空文字にリセットして共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`「UI刷新に伴うデータモデル変更」の
+  `planningNotesText`スキーマ・`docs/screens.md`「企画メモは単一共有テキスト」の設計判断
+  (後勝ち上書き許容)から逸脱なし。`firestore.rules`の変更は不要(既存のtripsドキュメント
+  への`update`権限で対応可能なため、変更せず)。
+- 次回予定: 「14. 雑多メモ機能(新規)」に着手
+  (`scratchNotes`サブコレクションへの追加・一覧表示、「→企画メモへ」「→しおりへ」の
+  振り分けボタン)。
+- blocked / partial: なし。
+
+## 2026-08-18 22:15
+- 実装: 「14. 雑多メモ機能(新規)」を実施。直前の手動チャットで、雑多メモを
+  「一番よく使うメイン機能」と位置づけ、企画メモ(13)と同じ単一共有テキスト方式に
+  再設計する方針を人間と確認済み(docs/firestore-design.md「雑多メモの振り分け方式の
+  再設計」・docs/screens.md「雑多メモも単一共有テキスト」・docs/ROADMAP.md「14」に反映
+  済み)。それに基づき`src/views/scratch.js`を新規作成: `trips/{tripId}.scratchText`を
+  編集する共有textarea(企画メモと同じデバウンス自動保存+flush保存パターン)、
+  テキストエリアで選択中の範囲を対象にした「→企画メモへ」ボタン(`planningNotesText`末尾に
+  追記+`scratchText`から選択範囲のみ削除)、「→しおりへ」ボタン(日付選択の簡易フォームを
+  挟んで`itineraryItems`を新規作成+同様に選択範囲のみ削除)を実装。`src/app.js`の`TABS`に
+  `mount: mountScratch`を登録。3つのMサイズ子タスク(基盤+2つの振り分けボタン)は密接に
+  結合しているため1サイクルでまとめて実装した。
+- 動作確認: Playwrightで2ユーザー(別ブラウザコンテキスト)を使い、Aさんの入力の
+  デバウンス保存→Bさんが同じ雑多メモを読み込める→Bさんの選択範囲の「→企画メモへ」移動
+  (雑多メモから該当範囲のみ削除・企画メモタブへ反映)→Aさんの選択範囲の「→しおりへ」移動
+  (日付選択フォーム経由でしおりタブに新規項目作成)→未選択時にボタンを押してもエラー表示
+  のみで何も起きないこと→タブ離脱時(デバウンス完了前)のflush保存、を全て実Firestoreで
+  確認。375px幅でのレイアウト(ボタン2つ横並び含む)も問題なし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成した2件の旅行ドキュメントは名前を
+  「[検証用/削除不可] evolveの14(雑多メモ)動作確認で作成」に更新し、`scratchText`・
+  `planningNotesText`を空文字にリセット、作成した`itineraryItems`は削除して共有
+  テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`「雑多メモの振り分け方式の再設計」・
+  `docs/screens.md`「雑多メモも単一共有テキスト」の設計判断から逸脱なし。`firestore.rules`
+  の変更は不要(既存の`trips`ドキュメント`update`権限・`itineraryItems`サブコレクション
+  `create`権限で対応可能なため、変更せず)。これで第2期の主要機能(10〜14)が全て完了。
+- 次回予定: 「15. しおりの時間入力UI変更」に着手
+  (`<input type="time">`を「午前/午後」「時(0〜12)」「分(00/15/30/45)」の3セレクトボックス
+  に置き換える。保存データ形式は変えない)。
+- blocked / partial: なし。
+
+## 2026-08-18 22:50
+- 実装: 「15. しおりの時間入力UI変更」を実施。`src/views/itinerary.js`の時間目安入力を
+  `<input type="time">`から「午前/午後」「時(0〜12)」「分(00/15/30/45)」の3つの
+  `<select>`に置き換えた。`pages/shared.css`に`select`の基本スタイル(input/textareaと
+  揃えた見た目)と、3セレクトを横並びにする`.time-select-row`を追加。保存する"HH:MM"
+  文字列形式は変えず、`hour24 = (hourNum % 12) + (amPm==='PM'?12:0)`で変換する関数
+  `buildTimeString`を実装(午前0時=午前12時=00:00、午後0時=午後12時=12:00をエイリアス
+  として扱う)。3つのうち一部だけ選択した状態での送信はエラー表示のみで弾く。
+- 動作確認: Playwrightで「午後2時15分→14:15」「午前12時00分→00:00」
+  「午後12時30分→12:30」「時間未指定→時間無し」の4件を追加し、日付内での時間順ソート
+  (00:00→12:30→14:15→時間無し)が正しいことを確認。部分入力時のエラー表示・非追加も確認。
+  検証中、テストスクリプト側が連続submit時に前の送信のFirestore書き込み完了(と、それに
+  伴うフォームリセット)を待たずに次の項目を入力してしまい、稀に直前のtitle入力が上書き
+  消去されるテストスクリプト側のレースが発生したため、各submit後にカード数の変化を
+  `waitForFunction`で待つよう修正して解消(アプリ自体のバグではなく、既存の他画面と
+  同じ「非同期処理完了後にフォームをリセットする」パターンに起因するテスト側の待機不足)。
+  375px幅での3セレクト横並びレイアウトも問題なし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成した6件の旅行ドキュメント(デバッグ時の
+  再実行分含む)は`itineraryItems`を全て削除の上、名前を
+  「[検証用/削除不可] evolveの15(しおり時間UI)動作確認で作成」に更新して共有テスト
+  グループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`の`itineraryItems.time`スキーマ("HH:MM"文字列)
+  から逸脱なし。`docs/screens.md`「しおりの時間入力はプルダウン3つ」の設計判断と一致。
+  これで第2期(10〜15)が全て完了。
+- 次回予定: 「16. 見た目の刷新」に着手。まず割り勘リンクの「Walica」表記修正(S)から。
+  全体的なビジュアル刷新(M)は方向性を人間と相談してから着手する。
+- blocked / partial: なし。
+
+## 2026-08-18 23:15
+- 実装: 「16. 見た目の刷新」のうち、Sサイズの割り勘リンク表記修正のみを実施。
+  `src/views/tripOverview.js`の見出し「割り勘リンク(warika)」→「割り勘リンク(Walica)」、
+  placeholderを`https://warika.net/...`→`https://walica.jp/...`に修正。内部のHTML id・
+  Firestoreフィールド名(`warikaUrl`)はデータモデル維持のため変更していない。
+  `docs/requirements.md`の「割り勘リンク（warika）」・エンティティ名`(WarikaLink)`も、
+  それぞれ「割り勘リンク（Walica）」・`(WalicaLink)`に修正した。残るMサイズの
+  「全体的なビジュアル刷新」は、ROADMAP自身が「具体的な方向性は着手時に人間と相談する」
+  と明記している通り配色・トンマナ等の方向性が未確定のため、このサイクルでは着手せず
+  据え置いた(evolveの自動サイクルで独断のデザイン方向性を決めて実装することは避けた)。
+- 動作確認: Playwrightで旅行作成→C概要タブの割り勘リンクセクションの見出し・placeholder
+  表記を確認→実際にURLを保存できること(`warikaUrl`フィールドが引き続き機能すること)を
+  実Firestoreで確認。375px幅でのレイアウトも問題なし。console/pageerrorは0件。
+  `npm run check`(lint・test)成功。検証で作成した旅行ドキュメントは名前を
+  「[検証用/削除不可] evolveの16(Walica表記修正)動作確認で作成」に更新し、`warikaUrl`を
+  空文字にリセットして共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`の`warikaUrl`スキーマ(フィールド名)は変更して
+  いないため逸脱なし。ユーザー向け表記のみの修正であり画面構成・遷移にも影響なし。
+- 次回予定: 「16. 見た目の刷新」の残りである全体的なビジュアル刷新(M)は、配色・トンマナ
+  等の方向性について人間との相談を待つ。それ以外にROADMAP上の未着手タスクが無いため、
+  次回evolveサイクル時点でも新規タスクの提示が無ければ、その旨を報告して終了する想定。
+- blocked / partial: なし。
+
+(注: 2026-08-18 23:30〜2026-08-19 00:45の間、方向性未確定のまま4回evolveサイクルが
+起動されたが、いずれも実装対象なしのため変更なしで終了した。人間からの提案が無いことを
+確認し、`/loop 30m /evolve`のcronジョブを一時停止した。その後2026-08-19朝、手動チャットで
+参考サイトhttps://tabiori.com/を踏まえた具体的な配色案を人間に提示・承認を得て
+docs/ROADMAP.mdに書き留め、cronジョブを再開した経緯を残す)
+
+## 2026-08-19 08:15
+- 実装: 「16. 見た目の刷新」の残りである全体的なビジュアル刷新(M)を実施。前日夜の手動
+  チャットで人間と確定した仕様(参考サイトhttps://tabiori.com/を踏まえた明るい青×
+  オレンジ基調への変更、docs/ROADMAP.md記載のトークン値)に基づき、`styles/tokens.css`を
+  更新: `--color-primary`(深緑→明るい青`#2f80ed`)・`--color-primary-dark`
+  (→`#1a5fc4`)・`--color-accent`(→`#f5a623`)・`--color-bg`(クリーム→薄グレー寄りの白
+  `#f7f8fa`)・`--radius-sm`(6px→8px)・`--radius-md`(12px→16px)・`--shadow-card`
+  (柔らかく強めに調整)を変更。`--color-success`はprimaryが青になったことで意味が
+  伝わりにくくなる懸念があったため、独立した緑`#219653`を新たに定義(ROADMAPが明記して
+  いた確認事項への対応)。セルフレビューで、暖色ベージュの`--color-border`が新背景と
+  合わないと判断し、寒色寄りのグレー`#dfe3e8`に追加調整した(ROADMAP未記載だが、トークン
+  変更に伴う視覚的な破綻を防ぐための軽微な追加修正として実施)。
+- 動作確認: Playwrightでスクリーンショットを撮影し、A(参加)・B(旅行一覧)・C(概要)・
+  雑多メモ・企画メモ・行き先決め・日程調整・宿泊・しおりの全画面で新配色が一貫して
+  適用され、視認性・コントラストに問題が無いことを目視確認。375px幅でも全タブで
+  横スクロール発生なし。console/pageerrorは0件。`npm run check`(lint・test)成功。
+  検証で作成した旅行ドキュメントは名前を
+  「[検証用/削除不可] evolveの16(ビジュアル刷新)動作確認で作成」に更新して共有
+  テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマには影響なし(CSSトークンのみの変更)。
+  `docs/screens.md`の画面構成・遷移にも変更なし。これで「16. 見た目の刷新」・
+  第2期(UI刷新: 10〜16)が全て完了。
+- 次回予定: 現時点でROADMAP上に未着手タスクが無い。新規タスクの提案があれば
+  「新規タスク・画面提案」セクションに追記して人間の承認を待つか、人間からの新たな
+  指示を待つ。
+- blocked / partial: なし。

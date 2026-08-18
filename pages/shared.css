@@ -90,6 +90,31 @@ textarea:focus {
   outline-offset: 1px;
 }
 
+select {
+  font-size: var(--font-size-base);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.time-select-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.time-select-row select {
+  flex: 1;
+  min-width: 0;
+}
+
 .error-text {
   color: var(--color-danger);
   font-size: var(--font-size-sm);
@@ -242,4 +267,28 @@ button:hover {
 
 #created-group button + button {
   margin-top: var(--space-sm);
+}
+
+.tabbar {
+  display: flex;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.tab-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: bold;
 }

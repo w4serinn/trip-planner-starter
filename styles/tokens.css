@@ -1,17 +1,24 @@
 /* デザイントークン(仮決定)。配色・タイポグラフィ・余白などをCSS変数として定義する。
    すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。 */
 :root {
-  /* カラー */
-  --color-primary: #2f6f4f;
-  --color-primary-dark: #1f4d36;
-  --color-accent: #e8a33d;
-  --color-bg: #faf8f4;
+  /* カラー(2026-08-19改訂: docs/ROADMAP.md「16. 見た目の刷新」参照。
+     参考サイト https://tabiori.com/ の「ポップで親しみやすく、かつ信頼感のある」
+     トーンに寄せ、深緑×オレンジの落ち着いた配色から明るい青×オレンジへ変更) */
+  --color-primary: #2f80ed;
+  --color-primary-dark: #1a5fc4;
+  --color-accent: #f5a623;
+  --color-bg: #f7f8fa;
   --color-surface: #fff;
   --color-text: #2a2a2a;
   --color-text-muted: #6b6b6b;
-  --color-border: #dedad2;
+
+  /* 旧背景(クリーム系)に合わせた暖色ベージュから、新しい薄グレー背景に合う寒色寄りの
+     グレーへ変更(トークン変更に伴うセルフレビューで、暖色の枠線が浮くと判断したため)。 */
+  --color-border: #dfe3e8;
   --color-danger: #c0392b;
-  --color-success: #2f6f4f;
+
+  /* primaryが青になったため、成功色は独立した緑を保つ(旧primaryと同値の使い回しをやめる)。 */
+  --color-success: #219653;
 
   /* タイポグラフィ */
   --font-family-base: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
@@ -28,7 +35,7 @@
   --space-xl: 32px;
 
   /* 角丸・影 */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --shadow-card: 0 2px 8px rgb(0 0 0 / 8%);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --shadow-card: 0 4px 12px rgb(0 0 0 / 10%);
 }
