@@ -138,6 +138,22 @@
       実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 6. F. 日程調整画面
+- [x] (M) 日付ごとの○×△入力UI(カレンダー形式) → `pages/schedule.html`・`schedule.js`を
+      新規作成し`vite.config.js`に登録。`<input type="date">`で候補日を追加し
+      (`groups/{code}/trips/{tripId}/scheduleEntries/{date}`をドキュメントID=日付で作成)、
+      各候補日に○/△/×の3ボタンで自分の回答を`responses.{sanitizeMapKey(名前)}`に保存
+- [x] (S) メンバーごとの回答一覧表示 → `responses`のエントリを「名前: 記号」で列挙
+- [x] (S) 全員の回答が揃った日をハイライトする等の見やすさ対応 →
+      `groups/{code}`の`members.length`と回答者数を比較し、全員回答済みなら
+      `.schedule-complete`(左ボーダー強調)＋「全員回答済み」バッジを表示
+
+      候補日の重複追加はチェックして拒否。ドキュメント作成には`src/firestore.js`に
+      追加した`setDocumentMerged`(`setDoc`+`merge:true`)を使用し、
+      docs/firestore-design.md「日程調整(scheduleEntries)」の設計判断
+      (複数人の同時書き込みに強いマージ書き込み)通りに実装。C画面(`trip.js`)の
+      `featureLinks`に「日程調整」を追加。Playwrightで実際に8名(グループの全メンバー数)
+      が同一候補日に順に回答し、全員回答済みハイライトが表示されることを実Firestoreで
+      確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 7. G. 宿泊画面
 

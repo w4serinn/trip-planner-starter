@@ -22,6 +22,13 @@ export async function setDocument(path, data) {
   await setDoc(doc(db, path), data);
 }
 
+// ドキュメントが無ければ作成、あれば指定フィールドのみマージする(既存フィールドを
+// 消さない)。docs/firestore-design.md「日程調整(scheduleEntries)」のように、複数人が
+// 同じドキュメントへ同時に書き込む場合はこちらを使う。
+export async function setDocumentMerged(path, data) {
+  await setDoc(doc(db, path), data, { merge: true });
+}
+
 export async function updateDocument(path, data) {
   await updateDoc(doc(db, path), data);
 }
