@@ -420,3 +420,19 @@
       作成した6件の旅行ドキュメント(デバッグ時の再実行分含む)は、`itineraryItems`を
       全て削除の上、名前を「[検証用/削除不可] evolveの15(しおり時間UI)動作確認で作成」に
       更新して共有テストグループ`FMXRZYW7`内に残置
+
+## 16. 見た目の刷新(進行中。完了分のみここに記載)
+- [x] (S) 割り勘リンクのラベル表記・placeholderを「Walica」(walica.jp)に修正 →
+      `src/views/tripOverview.js`の見出し「割り勘リンク(warika)」→「割り勘リンク(Walica)」、
+      placeholderを`https://warika.net/...`→`https://walica.jp/...`に修正。内部のHTML id
+      (`#warika-url`等)・Firestoreのフィールド名(`warikaUrl`)はデータモデル維持のため
+      変更していない(ユーザーに見える表記のみの修正)。`docs/requirements.md`の
+      「割り勘リンク（warika）」表記・エンティティ名`(WarikaLink)`も、それぞれ
+      「割り勘リンク（Walica）」・`(WalicaLink)`に修正
+
+      Playwrightで旅行作成→C概要タブの割り勘リンクセクションの見出し・placeholder表記を
+      確認→実際にURLを保存できること(`warikaUrl`フィールドが引き続き機能すること)を
+      実Firestoreで確認。375px幅でのレイアウトも問題なし。console/pageerrorは0件
+      (2026-08-18)。`npm run check`(lint・test)成功。検証で作成した旅行ドキュメントは
+      名前を「[検証用/削除不可] evolveの16(Walica表記修正)動作確認で作成」に更新し、
+      `warikaUrl`を空文字にリセットして共有テストグループ`FMXRZYW7`内に残置

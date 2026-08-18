@@ -55,11 +55,11 @@ export function mount(outlet, params) {
     </section>
 
     <section class="card">
-      <h3>割り勘リンク(warika)</h3>
+      <h3>割り勘リンク(Walica)</h3>
       <form id="warika-form" novalidate>
         <div class="field">
           <label for="warika-url">URL</label>
-          <input type="url" id="warika-url" name="warikaUrl" placeholder="https://warika.net/..." />
+          <input type="url" id="warika-url" name="warikaUrl" placeholder="https://walica.jp/..." />
         </div>
         <p class="error-text" id="warika-error-text"></p>
         <p class="copy-feedback" id="warika-saved-text"></p>
