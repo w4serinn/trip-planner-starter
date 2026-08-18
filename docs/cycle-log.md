@@ -409,3 +409,24 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - 次回予定: 「9. 仕上げ」最後の項目「GitHub Pagesへのデプロイ設定・GitHub Actions
   自動デプロイ」に着手。これが完了すればROADMAP上のMust/Should範囲が全て完了となる。
 - blocked / partial: なし。commit `c99a633`をpush済み。
+
+## 2026-08-18 17:33
+- 実装: 「9. 仕上げ」最後の項目「GitHub Pagesへのデプロイ設定・GitHub Actions自動
+  デプロイ」を実装。`.github/workflows/deploy.yml`を追加し、mainブランチへのpushを
+  トリガーに`npm run check`→`npm run build`→GitHub Pagesへデプロイするワークフローを
+  構成(evolveはmainへ直接pushしないため、実際のデプロイは人間がマージした時点で発火)。
+  `pages/`配下のマルチページ構成のためビルド後に存在しなかったルート
+  (`dist/index.html`)問題に対応するため、`public/index.html`を追加し
+  `pages/index.html`へリダイレクトするようにした。GitHubリポジトリのPages設定も
+  `build_type=workflow`で有効化した(docs/firestore-design.md「ホスティング方針」の
+  確定通り。公開URL: `https://w4serinn.github.io/trip-planner-starter/`)。
+- 動作確認: `vite preview`でビルド成果物を実際に`/trip-planner-starter/`のパスで配信し、
+  Playwrightでルートへのアクセス→自動リダイレクト→アセット読み込み→参加フォーム表示
+  までconsoleエラー無しで確認。`npm run check`(lint・test)成功。
+- レビュー: OK。デプロイ設定・リダイレクトページの追加のみで、データモデル・
+  セキュリティ方針・画面構成からの逸脱なし。
+- 次回予定: ROADMAP上のタスクは全て完了。次に着手すべき項目が無いため、
+  今後は人間からの新規タスク追加を待つ。
+- blocked / partial: なし。commit `6557364`・`0b374bc`をpush済み。
+  **GitHubリポジトリのPages設定(build_type=workflow)を有効化した点は、実際の
+  リポジトリ設定への変更であることに留意(人間への報告済み)。**
