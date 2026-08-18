@@ -5,9 +5,7 @@ import { fileURLToPath } from 'node:url';
 // docs/firestore-design.md「ホスティング方針」参照。
 const base = '/trip-planner-starter/';
 
-// A〜Hの8画面をマルチページ構成で登録する。
-// Hはまだ画面自体が未実装(docs/ROADMAP.md参照)のため、実装済みのA〜Gのみ登録し、
-// 各画面の実装時にここへ追記すること。
+// A〜Hの8画面をすべてマルチページ構成で登録する。
 const input = {
   index: fileURLToPath(new URL('./pages/index.html', import.meta.url)), // A. 参加画面
   trips: fileURLToPath(new URL('./pages/trips.html', import.meta.url)), // B. 旅行一覧画面
@@ -16,6 +14,7 @@ const input = {
   destinations: fileURLToPath(new URL('./pages/destinations.html', import.meta.url)), // E. 行き先決め画面
   schedule: fileURLToPath(new URL('./pages/schedule.html', import.meta.url)), // F. 日程調整画面
   lodging: fileURLToPath(new URL('./pages/lodging.html', import.meta.url)), // G. 宿泊画面
+  itinerary: fileURLToPath(new URL('./pages/itinerary.html', import.meta.url)), // H. しおり画面
 };
 
 export default defineConfig({

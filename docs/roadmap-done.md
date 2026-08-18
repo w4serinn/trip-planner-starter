@@ -102,6 +102,11 @@
       保存成功時は`.copy-feedback`スタイルで「保存しました。」を表示。Playwrightで
       入力→保存→リロード後の値の永続化を実Firestoreで確認(2026-08-18)。
       `npm run check`(lint・test)成功。
+- [x] (S) D〜Hの各機能画面へのカードリンク → `pages/trip.js`の`featureLinks`配列に、
+      4〜8章の各画面実装サイクルで対応するものから順に追加していき、H(しおり)の
+      実装完了(2026-08-18)をもって全5画面(企画メモ・行き先決め・日程調整・宿泊・しおり)
+      分のカードリンクが揃った。各カードは`{画面}.html?tripId={tripId}`へのリンクで、
+      各画面の「戻る」で`trip.html?id={tripId}`に復帰する
 
 ## 4. D. 企画メモ画面
 - [x] (S) メモの追加(投稿者名・本文・日時) → `pages/notes.html`・`notes.js`を新規作成し
@@ -179,5 +184,20 @@
       実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 8. H. しおり画面
+- [x] (S) 項目の追加(やること名・日付・時間目安(任意)・場所リンク(任意)) →
+      `pages/itinerary.html`・`itinerary.js`を新規作成し`vite.config.js`に登録。
+      `groups/{code}/trips/{tripId}/itineraryItems`へ`title`・`date`・`time`・
+      `locationUrl`・`note`・`addedBy`を`addDocument`(`note`はfirestore-design.md
+      スキーマ通り追加。やること名・日付のみ必須)
+- [x] (M) 日付グルーピング＋各日内での時間順自動ソート表示 → 取得した項目を`date`で
+      グルーピングし、日付キーを昇順ソート。各日内は`time`昇順(未入力は番兵値で
+      最後尾)でソートして表示
+
+      C画面(`trip.js`)の`featureLinks`に「しおり」を追加(これでD〜H全カードが揃った)。
+      Playwrightで時間が前後する順で項目を追加しても表示時は時刻順に並び替わること、
+      日付グループが日付順に並ぶこと、時間未入力項目の扱い、場所リンク、必須項目
+      バリデーション、リロード後の永続化、戻るリンクを実Firestoreで確認(2026-08-18)。
+      `npm run check`(lint・test)成功。
+
 
 ## 9. 仕上げ
