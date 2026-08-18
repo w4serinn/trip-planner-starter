@@ -368,3 +368,25 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   モバイル幅も問題なし。
 - 次回予定: 「8. H. しおり画面」に着手。
 - blocked / partial: なし。commit `056cb8f`をpush済み。
+
+## 2026-08-18 17:24
+- 実装: 「8. H. しおり画面」(項目の追加・日付グルーピング＋時間順自動ソート表示)を実装。
+  `pages/itinerary.html`・`itinerary.js`を新規作成し`vite.config.js`に登録。
+  `groups/{code}/trips/{tripId}/itineraryItems`へ`title`・`date`・`time`・
+  `locationUrl`・`note`・`addedBy`を`addDocument`(やること名・日付のみ必須)。
+  取得した項目を`date`でグルーピングして日付昇順に並べ、各日内は`time`昇順
+  (未入力は番兵値`99:99`で最後尾)でソートして表示する。C画面(`trip.js`)の
+  `featureLinks`に「しおり」を追加し、D〜H全5画面分のカードリンクが揃ったため
+  「3. C. 旅行詳細トップ画面」の残タスクも合わせて完了。
+- 動作確認: Playwrightで時間が前後する順(15:00→10:00)で項目を追加しても表示時は
+  時刻順に並び替わること、日付グループが日付順に並ぶこと、時間未入力項目の扱い、
+  場所リンク、必須項目バリデーション、リロード後の永続化、戻るリンクを実Firestoreで
+  確認。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`の`itineraryItems`スキーマ(title・date・
+  time・locationUrl・note・addedBy)から逸脱なし(実装中に不要な`createdAt`フィールドを
+  追加しかけたが自己レビューで気づき削除)。`docs/screens.md`のH画面の役割・C→H→C
+  遷移とも一致。既存パターン再利用のためモバイル幅も問題なし。
+- 次回予定: Must/Should全画面(A〜H)の実装が完了したため、「9. 仕上げ」
+  (レスポンシブ確認・受け入れ条件の通し確認・GitHub Pagesデプロイ・App Check未使用
+  コード削除)に着手。
+- blocked / partial: なし。commit `85407c8`をpush済み。
