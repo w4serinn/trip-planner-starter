@@ -255,3 +255,22 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
 - 次回予定: 「3. C. 旅行詳細トップ画面」の残りSould項目(集合場所・時間、割り勘リンク)、
   または他画面(4章以降)の着手。
 - blocked / partial: なし。commit `455c5db`をpush済み。
+
+## 2026-08-18 16:12
+- 実装: 「3. C. 旅行詳細トップ画面」のShould項目2つ「集合場所・時間の直接編集欄」
+  「割り勘リンク(warika)の直接編集欄」を実装。`pages/trip.js`に`meeting-form`
+  (`meetingPlace`・`meetingTime`・`meetingNote`をまとめて保存)と`warika-form`
+  (`warikaUrl`を保存)を追加。名前編集のようなトグル式ではなく、常時編集可能な
+  フォーム+保存ボタンの単純な構成にした。保存成功時は`.copy-feedback`スタイルで
+  「保存しました。」を表示。`h3`のスタイルが未定義だったため`shared.css`に追加。
+- 動作確認: Playwrightで新規旅行作成→集合情報入力・保存→割り勘リンク入力・保存→
+  リロード後に4フィールドとも値が保持されていることを実Firestoreで確認。
+  `npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`のtripsスキーマ(`meetingPlace`・`meetingTime`・
+  `meetingNote`・`warikaUrl`)から逸脱なし。`docs/screens.md`「集合場所・時間、割り勘リンクは
+  『単一の置き場』のため独立画面を作らずCに直接埋め込む」と一致。既存`.card`/`.field`
+  スタイル再利用のためモバイル幅も問題なし。
+- 次回予定: 「3. C. 旅行詳細トップ画面」の残タスク「D〜Hへのカードリンク」は
+  D〜H画面の実装(4章以降)に合わせて対応する方針のため、次サイクルは
+  「4. D. 企画メモ画面」に着手。
+- blocked / partial: なし。commit `a278708`をpush済み。
