@@ -1,14 +1,16 @@
 // SPAシェルのエントリーポイント。
-// A・B画面は実装済み(docs/ROADMAP.md「11. A・B画面のSPA移行」)。
-// C〜Hタブの実際のロジックは「12」で実装し、それまでは骨組み(準備中表示)のまま。
+// A・B・C(概要タブ)は実装済み(docs/ROADMAP.md「11」「12」)。
+// D〜Hタブの実際のロジックは「12」の残タスクで実装し、それまでは骨組み(準備中表示)のまま。
 import { registerRoute, startRouter } from './router.js';
 import { mount as mountJoin } from './views/join.js';
 import { mount as mountTrips } from './views/trips.js';
+import { mount as mountTripOverview } from './views/tripOverview.js';
 
 const tabbar = document.getElementById('tabbar');
+const backToTrips = document.getElementById('back-to-trips');
 
 const TABS = [
-  { key: 'overview', label: '概要', suffix: '' },
+  { key: 'overview', label: '概要', suffix: '', mount: mountTripOverview },
   { key: 'scratch', label: '雑多メモ', suffix: '/scratch' },
   { key: 'notes', label: '企画メモ', suffix: '/notes' },
   { key: 'destinations', label: '行き先決め', suffix: '/destinations' },
@@ -20,6 +22,7 @@ const TABS = [
 function renderTabbar(tripId, activeKey) {
   tabbar.innerHTML = '';
   tabbar.hidden = false;
+  backToTrips.hidden = false;
   for (const tab of TABS) {
     const link = document.createElement('a');
     link.textContent = tab.label;
@@ -29,25 +32,34 @@ function renderTabbar(tripId, activeKey) {
   }
 }
 
-function registerTripTab(key, label, suffix) {
-  registerRoute(`#/trips/:tripId${suffix}`, (outlet, params) => {
-    renderTabbar(params.tripId, key);
-    outlet.innerHTML = `<p class="subtitle">${label}(準備中。tripId=${params.tripId})</p>`;
+function registerTripTab(tab) {
+  registerRoute(`#/trips/:tripId${tab.suffix}`, (outlet, params) => {
+    renderTabbar(params.tripId, tab.key);
+    if (tab.mount) {
+      return tab.mount(outlet, params);
+    }
+    outlet.innerHTML = `<p class="subtitle">${tab.label}(準備中。tripId=${params.tripId})</p>`;
+    return undefined;
   });
 }
 
-registerRoute('#/', (outlet) => {
+function hideTabbar() {
   tabbar.hidden = true;
+  backToTrips.hidden = true;
+}
+
+registerRoute('#/', (outlet) => {
+  hideTabbar();
   return mountJoin(outlet);
 });
 
 registerRoute('#/trips', (outlet) => {
-  tabbar.hidden = true;
+  hideTabbar();
   return mountTrips(outlet);
 });
 
 for (const tab of TABS) {
-  registerTripTab(tab.key, tab.label, tab.suffix);
+  registerTripTab(tab);
 }
 
 startRouter();
