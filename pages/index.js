@@ -74,8 +74,9 @@ createForm.addEventListener('submit', async (event) => {
   createErrorText.textContent = '';
 
   const name = document.getElementById('create-name').value.trim();
-  if (!name) {
-    createErrorText.textContent = '名前を入力してください。';
+  const creatorSecret = document.getElementById('creator-secret').value;
+  if (!name || !creatorSecret) {
+    createErrorText.textContent = '名前と作成用合言葉の両方を入力してください。';
     return;
   }
 
@@ -91,6 +92,7 @@ createForm.addEventListener('submit', async (event) => {
     await setDocument(`groups/${groupCode}`, {
       createdAt: serverTimestamp(),
       members: [name],
+      creatorSecret,
     });
 
     createdSession = { groupCode, name };
@@ -99,7 +101,11 @@ createForm.addEventListener('submit', async (event) => {
     createdGroup.hidden = false;
   } catch (error) {
     console.error(error);
-    createErrorText.textContent = '通信に失敗しました。時間をおいて再度お試しください。';
+    if (error.code === 'permission-denied') {
+      createErrorText.textContent = '作成用合言葉が正しくありません。';
+    } else {
+      createErrorText.textContent = '通信に失敗しました。時間をおいて再度お試しください。';
+    }
   } finally {
     submitButton.disabled = false;
   }

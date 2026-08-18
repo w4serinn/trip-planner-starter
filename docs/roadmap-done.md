@@ -62,6 +62,15 @@
       Playwright(ヘッドレスChromium)で新規作成→合言葉コピー→旅行一覧遷移、既存グループへの
       参加、同名での再参加(冪等性)、存在しないコードでのエラー表示の4パターンを実際に
       Firestoreへ読み書きした上で確認した。`npm run check`(lint)も成功。
+- [x] (S) 新規グループ作成フォームに「作成用合言葉」入力欄(`#creator-secret`)を追加し、
+      送信データに`creatorSecret`フィールドとして含めるよう変更(2026-08-18 設計変更対応)。
+      `docs/firestore-design.md`「グループ作成方法の方針」の通り、作成用合言葉は
+      コードに埋め込まず`firestore.rules`の`get()`で`config/adminSecret`ドキュメントと
+      照合する方式に変更(`allow create: if request.resource.data.creatorSecret == get(...)`)。
+      `config/adminSecret`自体はget/list/write全て禁止のままクライアントから直接読めない。
+      不一致時は`permission-denied`エラーを検知し「作成用合言葉が正しくありません。」と表示。
+      Playwrightで誤った合言葉での作成拒否・参加フロー継続動作を確認(正しい合言葉での成功
+      パターンは値を知らないため人間が確認)。`npm run check`成功。
 
 ## 2. B. 旅行一覧画面
 
