@@ -25,6 +25,28 @@
       <p class="error-text" id="error-text"></p>
       <button type="submit">参加する</button>
     </form>
+
+    <div class="divider"><span>はじめての方</span></div>
+
+    <section>
+      <p class="subtitle">合言葉がまだ無い場合、ここで新しいグループを作れます。</p>
+      <form id="create-form" novalidate>
+        <div class="field">
+          <label for="create-name">名前</label>
+          <input type="text" id="create-name" name="createName" autocomplete="name" required />
+        </div>
+        <p class="error-text" id="create-error-text"></p>
+        <button type="submit" class="btn-secondary">新しいグループを作る</button>
+      </form>
+
+      <div class="card" id="created-group" hidden>
+        <p class="subtitle">グループを作成しました。この合言葉をメンバーに共有してください。</p>
+        <p class="passphrase" id="created-code"></p>
+        <button type="button" id="copy-code">合言葉をコピーする</button>
+        <p class="copy-feedback" id="copy-feedback"></p>
+        <button type="button" id="proceed-to-trips">旅行一覧へ進む</button>
+      </div>
+    </section>
   </main>
   <script type="module" src="index.js"></script>
 </body>

@@ -120,3 +120,50 @@ button:hover {
   text-align: center;
   padding: var(--space-xl) var(--space-md);
 }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-lg) 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.passphrase {
+  font-size: var(--font-size-xl);
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-align: center;
+  color: var(--color-primary-dark);
+  margin: var(--space-sm) 0;
+}
+
+.copy-feedback {
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  min-height: 1.2em;
+}
+
+#created-group button + button {
+  margin-top: var(--space-sm);
+}

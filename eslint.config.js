@@ -13,6 +13,8 @@ export default [
         localStorage: 'readonly',
         fetch: 'readonly',
         crypto: 'readonly',
+        navigator: 'readonly',
+        self: 'readonly',
       },
     },
   },

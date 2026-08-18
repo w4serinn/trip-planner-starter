@@ -24,8 +24,41 @@
       `dev`/`build`スクリプト追加、`vite.config.js`(A/B/C画面をマルチページ登録、
       GitHub Pages向け`base: '/trip-planner-starter/'`)を追加。ブラウザでの
       `firebase/app`等のbare import解決を確認。人間の指示により実装(2026-08-17)
+- [x] (S) Firebaseプロジェクト作成・Firestore有効化(2026-08-18解消)。当初blockedの原因
+      (App CheckがFirestoreアクセスを一律拒否)を追ったところ、真因は`firestore.rules`でも
+      `src/firebase-config.js`でもなく、Firebase Console「App Check」→「APIs」→
+      Cloud Firestoreの**「適用(Enforce)」**設定(`firestore.rules`の`isAppCheckValid()`とは
+      独立したプラットフォーム層のゲート)だったと判明。App Check自体は
+      `docs/firestore-design.md`「App Check導入の見送り」の通り撤回・Enforce解除し、
+      Firestoreへの読み書きが成功することを確認済み(詳細は「1. A. 参加画面」参照)
 
 ## 1. A. 参加画面
+- [x] (S) 名前＋合言葉の入力フォーム
+- [x] (S) 新規グループ作成(合言葉を発行して表示・コピー機能) → `pages/index.js`
+      `issueUnusedGroupCode`(衝突チェック付き)＋コピー用UI(`#copy-code`)
+- [x] (S) 既存グループへの参加(`groups/{code}`のget、members配列への追記) →
+      `src/firestore.js`に`addToArray`(arrayUnionラッパー)を追加、`pages/index.js`の
+      `join-form`から利用。同名での再参加でも`arrayUnion`により状態が壊れない
+- [x] (S) 該当グループが存在しない場合のエラー表示 → `getDocument`が`null`を返した場合に
+      `#error-text`へ表示
+
+      実機能確認まで完了(2026-08-18)。原因調査の過程でApp Checkは
+      `docs/firestore-design.md`「App Check導入の見送り」の通り撤回し、`firestore.rules`から
+      `isAppCheckValid()`を削除してデプロイ済み(list禁止・合言葉6〜8文字の2層で運用)。
+
+      **判明した真因**: `firestore.rules`の内容やコード側は終始正常だった。実際の原因は
+      Firebase Console「App Check」→「APIs」→Cloud Firestoreの**「適用(Enforce)」**設定
+      であり、これは`firestore.rules`の`isAppCheckValid()`(＝`request.app`をルール内で見る仕組み)
+      とは全く別の、プラットフォーム層で独立して動くゲートだった。このEnforceが有効な間は、
+      有効なApp Checkトークンを付けても(curl直叩き・実ブラウザSDKいずれでも)一律403で拒否され、
+      ルールの内容を`if true`に変えても無関係に拒否され続けていた。人間がこのEnforceを解除した
+      ところ、即座にトークン無しでの読み書きが成功するようになった。
+      (もし将来App Checkを再導入する場合、`isAppCheckValid()`をルールに戻すだけでなく、
+      このEnforce設定も合わせて有効化する必要がある点に注意)
+
+      Playwright(ヘッドレスChromium)で新規作成→合言葉コピー→旅行一覧遷移、既存グループへの
+      参加、同名での再参加(冪等性)、存在しないコードでのエラー表示の4パターンを実際に
+      Firestoreへ読み書きした上で確認した。`npm run check`(lint)も成功。
 
 ## 2. B. 旅行一覧画面
 

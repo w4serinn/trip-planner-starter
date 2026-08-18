@@ -10,6 +10,7 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  arrayUnion,
 } from 'firebase/firestore';
 
 export async function getDocument(path) {
@@ -23,6 +24,12 @@ export async function setDocument(path, data) {
 
 export async function updateDocument(path, data) {
   await updateDoc(doc(db, path), data);
+}
+
+// 配列フィールドへの重複なし追記(例: groups/{code}のmembers)。
+// 同じ値を複数回渡しても配列に重複追加されない(arrayUnionの仕様)。
+export async function addToArray(path, field, value) {
+  await updateDoc(doc(db, path), { [field]: arrayUnion(value) });
 }
 
 export async function addDocument(collectionPath, data) {

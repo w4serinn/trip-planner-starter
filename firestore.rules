@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// セキュリティ方針(docs/firestore-design.md「セキュリティ方針」参照):
+// セキュリティ方針(docs/firestore-design.md「セキュリティ方針」「App Check導入の見送り」参照):
 // Firebase Authを使わない前提のため、以下の対策の組み合わせで
 // 「合言葉を知らない第三者が到達できない」状態を作る。
 // 1. `groups`コレクション直下でのみlist禁止・get(個別ドキュメント取得)のみ許可する。
@@ -8,7 +8,7 @@ rules_version = '2';
 //    すでに知っている必要があるため、list(コレクションクエリ)も許可する
 //    (候補地一覧・しおり一覧など、アプリの表示機能そのものがこれに依存するため)。
 // 2. 合言葉は6〜8文字
-// 3. App Checkで正規リクエストであることを検証
+// (App Checkは2026-08-18、原因不明の403不整合により導入を見送り。詳細はdocs/firestore-design.md参照)
 //
 // 削除権限の方針(docs/firestore-design.md「削除権限の方針」参照):
 // 認証を導入しない前提(要件7-1)のため「追加した本人だけ削除可」という制限は
@@ -20,26 +20,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAppCheckValid() {
-      return request.app != null;
-    }
-
     match /groups/{groupCode} {
-      allow get: if isAppCheckValid();
+      allow get: if true;
       allow list: if false;
-      allow create, update: if isAppCheckValid();
+      allow create, update: if true;
       allow delete: if false;
 
       match /trips/{tripId} {
-        allow get, list: if isAppCheckValid();
-        allow create, update: if isAppCheckValid();
+        allow get, list: if true;
+        allow create, update: if true;
         allow delete: if false;
 
         // 候補地・企画メモ・宿泊候補・確定宿泊・しおり項目など。
         match /{subcollection}/{docId} {
-          allow get, list: if isAppCheckValid();
-          allow create, update: if isAppCheckValid();
-          allow delete: if isAppCheckValid();
+          allow get, list: if true;
+          allow create, update: if true;
+          allow delete: if true;
         }
       }
     }
