@@ -166,6 +166,26 @@ button:hover {
   flex: 1;
 }
 
+.star-row {
+  display: flex;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0;
+}
+
+.star-button {
+  width: auto;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  padding: 0;
+}
+
+.star-button:hover {
+  background: none;
+  opacity: 0.8;
+}
+
 .btn-secondary:hover {
   background: var(--color-bg);
 }

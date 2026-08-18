@@ -42,4 +42,11 @@ export async function listCollection(collectionPath) {
   return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
 }
 
+// 投票・回答のマップキーに「名前」をそのまま使うと、updateDocumentのドット記法が
+// パスの区切りとして解釈されたり、Firestoreで使えない文字が含まれたりする恐れがある
+// (docs/firestore-design.md「未確定・要注意点」参照)ため、キーとして使う前に軽く置換する。
+export function sanitizeMapKey(key) {
+  return key.replace(/[.$/[\]#]/g, '_');
+}
+
 export { serverTimestamp };

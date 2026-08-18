@@ -119,6 +119,23 @@
       リロード後の永続化を実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 5. E. 行き先決め画面
+- [x] (S) 候補地の追加(名前・メモ) → `pages/destinations.html`・`destinations.js`を
+      新規作成し`vite.config.js`に登録。`groups/{code}/trips/{tripId}/destinations`へ
+      `name`・`note`・`addedBy`・`addedAt`・`votes: {}`を`addDocument`
+- [x] (M) ★1〜5の投票UI・自分の投票状態の表示 → 候補地ごとに★ボタン5個を表示し、
+      クリックで`updateDocument`により`votes.{sanitizeMapKey(名前)}`を更新。
+      自分の投票値まで★を塗って表示
+- [x] (S) 平均スコアによる自動ランキング表示 → `votes`の値の平均で降順ソートし
+      「n位」を付けて表示。未投票は平均0扱いで下位
+- [x] (S) 投票者一覧の表示(誰が何点か) → `votes`のエントリを「名前: ★点数」で列挙
+
+      名前をマップキーに使う際は`src/firestore.js`に追加した`sanitizeMapKey`で
+      `.`/`/`等を置換(evolve SKILL.mdの注意事項に対応)。候補地追加・投票とも
+      D画面と同様、初回取得完了まで投稿ボタンを無効化しつつ再取得せず楽観的に
+      ローカル更新する設計。C画面(`trip.js`)の`featureLinks`に「行き先決め」を追加。
+      Playwrightで2ユーザー(たろう・はなこ)による複数候補地への投票・平均スコアの
+      再計算・ランキング入れ替わり・投票者一覧・リロード後の永続化・戻るリンクを
+      実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 6. F. 日程調整画面
 
