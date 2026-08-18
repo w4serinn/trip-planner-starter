@@ -17,12 +17,13 @@ if (!tripId) {
 
 const tripPath = `groups/${session.groupCode}/trips/${tripId}`;
 
-// 実装済みの機能画面のみカードを表示する。未実装の画面(G〜H)は、それぞれの
+// 実装済みの機能画面のみカードを表示する。未実装の画面(H)は、
 // 画面実装サイクルで追加する。
 const featureLinks = [
   { label: '企画メモ', href: `notes.html?tripId=${encodeURIComponent(tripId)}` },
   { label: '行き先決め', href: `destinations.html?tripId=${encodeURIComponent(tripId)}` },
   { label: '日程調整', href: `schedule.html?tripId=${encodeURIComponent(tripId)}` },
+  { label: '宿泊', href: `lodging.html?tripId=${encodeURIComponent(tripId)}` },
 ];
 
 const featureLinksNav = document.getElementById('feature-links');

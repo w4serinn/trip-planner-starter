@@ -156,6 +156,18 @@
       確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 7. G. 宿泊画面
+- [x] (S) 宿泊候補の追加(URL・メモ)（Must） → `pages/lodging.html`・`lodging.js`を
+      新規作成し`vite.config.js`に登録。`groups/{code}/trips/{tripId}/lodgingCandidates`へ
+      `url`・`note`・`addedBy`・`addedAt`を`addDocument`
+- [x] (S) 宿泊候補の一覧表示（Must） → `listCollection`取得後addedAt降順で表示。
+      URLはクリック可能なリンク(`target="_blank"`)として表示し、投票UIは持たない
+      (docs/requirements.md 7-3「投票機能を持たない」の通り)
+
+      候補追加はD/E/F画面と同様、初回取得完了まで投稿ボタンを無効化しつつ再取得せず
+      楽観的にローカル更新する設計。C画面(`trip.js`)の`featureLinks`に「宿泊」を追加。
+      Playwrightで参加→旅行作成→カードリンク遷移→候補2件追加(リンク・メモ表示)→
+      空URLバリデーション→リロード後の永続化→戻るリンクを実Firestoreで確認(2026-08-18)。
+      `npm run check`(lint・test)成功。確定宿泊(confirmedStays)は別タスクとして残す。
 
 ## 8. H. しおり画面
 

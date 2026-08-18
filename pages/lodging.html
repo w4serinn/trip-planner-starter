@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>宿泊 - 旅行計画アプリ</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="back-link" id="back-link" href="trip.html">← 旅行詳細に戻る</a>
+    </header>
+    <h1>宿泊</h1>
+    <p class="subtitle">Airbnb等の候補リンクとメモを並べて比較する場所です(投票機能はありません。決定は口頭やDiscord等で行ってください)。</p>
+
+    <form id="candidate-form" novalidate>
+      <div class="field">
+        <label for="candidate-url">URL</label>
+        <input type="url" id="candidate-url" name="url" required placeholder="https://www.airbnb.jp/..." />
+      </div>
+      <div class="field">
+        <label for="candidate-note">メモ</label>
+        <input type="text" id="candidate-note" name="note" />
+      </div>
+      <p class="error-text" id="candidate-error-text"></p>
+      <button type="submit">候補を追加</button>
+    </form>
+
+    <div id="candidate-list"></div>
+
+    <p class="subtitle">確定宿泊の管理は次のサイクル以降で追加予定です。</p>
+  </main>
+  <script type="module" src="lodging.js"></script>
+</body>
+</html>

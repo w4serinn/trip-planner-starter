@@ -192,6 +192,12 @@ button:hover {
   padding: 0;
 }
 
+.candidate-link {
+  display: block;
+  color: var(--color-primary);
+  word-break: break-all;
+}
+
 .star-button:hover {
   background: none;
   opacity: 0.8;
