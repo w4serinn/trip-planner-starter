@@ -228,3 +228,30 @@ evolveスキルの各サイクル終了時に、実施内容をここに追記�
   モバイル幅の懸念なし。
 - 次回予定: 「3. C. 旅行詳細トップ画面」(旅行名の表示・編集、D〜Hへのカードリンク等)に着手。
 - blocked / partial: なし。commit `07abaa3`をpush済み。
+
+## 2026-08-18 (手動チャット→evolveサイクルへ引き継ぎ)
+- 実装: 人間から「App Check由来のconsoleノイズは問題ないか」と質問を受け、影響なし
+  (`firestore.rules`が`request.app`を見なくなっているため)である旨を説明。「タスクに
+  入れといて」との指示を受け、`src/firebase-config.js`の未使用`initializeAppCheck`関連
+  コード削除を`docs/ROADMAP.md`「9. 仕上げ」にタスクとして追記(実装はせず)。
+- 動作確認: 該当なし(ドキュメントのみの変更)。
+- レビュー: 該当なし。
+- 次回予定: 「3. C. 旅行詳細トップ画面」に着手。
+- blocked / partial: なし。commit `d8dcc84`をpush済み。
+
+## 2026-08-18 15:42
+- 実装: 「3. C. 旅行詳細トップ画面」のMust基盤サブタスクのうち「旅行名の表示・編集」を実装。
+  `pages/trip.js`でURLの`?id=`から`groups/{code}/trips/{id}`を取得・表示し、「編集」ボタンで
+  インライン編集フォームに切り替えて`updateDocument`で`name`を保存する形にした。
+  もう1つのMustサブタスク「D〜Hの各機能画面へのカードリンク」は、D〜Hの画面自体が
+  まだ存在せず(`vite.config.js`未登録)、今リンクを置くと404する壊れたリンクになって
+  しまうため今回は見送り、各画面(4〜8章)のシェル実装に合わせて追加する方針を
+  `docs/ROADMAP.md`に記載した。
+- 動作確認: Playwrightで初期表示・編集保存・リロード後の永続化・空名前バリデーション・
+  キャンセルボタンの動作を実Firestoreで確認。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`の`trips`スキーマ(`name`フィールド)から
+  逸脱なし。`docs/screens.md`の「旅行名の表示・編集」とも一致。新規CSS
+  (`.trip-name-row`・`.button-row`)は既存トークン経由・375px幅でも崩れない構成。
+- 次回予定: 「3. C. 旅行詳細トップ画面」の残りSould項目(集合場所・時間、割り勘リンク)、
+  または他画面(4章以降)の着手。
+- blocked / partial: なし。commit `455c5db`をpush済み。
