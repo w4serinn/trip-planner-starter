@@ -218,3 +218,16 @@
       grepで確認済み)。あわせて`eslint.config.js`から未使用になった`self`グローバルも削除。
       削除後、ブラウザconsoleにApp Check由来の403エラー・デバッグトークンログが
       一切出なくなったことを確認(2026-08-18)。`npm run check`(lint・test)成功
+- [x] (M) GitHub Pagesへのデプロイ設定・GitHub Actions自動デプロイ →
+      `.github/workflows/deploy.yml`を追加。mainブランチへのpushをトリガーに
+      `npm run check`→`npm run build`→GitHub Pagesへデプロイする(evolveはmainへ
+      直接pushしないため、実際のデプロイは人間がマージした時点で発火する)。
+      `public/index.html`を追加し、`pages/`配下のマルチページ構成のため存在しなかった
+      ルート(`dist/index.html`)から`pages/index.html`へリダイレクトするようにした。
+      GitHubリポジトリのPages設定を`build_type=workflow`で有効化済み(公開URL:
+      `https://w4serinn.github.io/trip-planner-starter/`)。`vite preview`でビルド
+      成果物を`/trip-planner-starter/`のパスで実際に配信し、ルートからのリダイレクト・
+      アセット読み込み・参加フォーム表示までPlaywrightで確認(2026-08-18)。
+      `npm run check`(lint・test)成功。
+
+**2026-08-18時点で`0. 基盤`〜`9. 仕上げ`まで、ROADMAP上のタスクはすべて完了。**
