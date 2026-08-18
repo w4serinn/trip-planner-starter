@@ -6,6 +6,7 @@
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
+import { icons } from '../icons.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -79,7 +80,7 @@ export function mount(outlet, params) {
     candidateList.innerHTML = '';
 
     if (candidates.length === 0) {
-      candidateList.innerHTML = '<p class="empty-state">まだ宿泊候補がありません。最初の候補を追加しましょう。</p>';
+      candidateList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ宿泊候補がありません。最初の候補を追加しましょう。</p></div>`;
       return;
     }
 
@@ -183,7 +184,7 @@ export function mount(outlet, params) {
     stayList.innerHTML = '';
 
     if (stays.length === 0) {
-      stayList.innerHTML = '<p class="empty-state">まだ確定宿泊がありません。</p>';
+      stayList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ確定宿泊がありません。</p></div>`;
       return;
     }
 

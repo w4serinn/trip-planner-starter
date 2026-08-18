@@ -2,6 +2,7 @@
 // A・B・C(概要タブ)・D(企画メモ)・E(行き先決め)・F(日程調整)・G(宿泊)・H(しおり)・
 // 雑多メモは実装済み(docs/ROADMAP.md「11」「12」「14」)。
 import { registerRoute, startRouter } from './router.js';
+import { icons } from './icons.js';
 import { mount as mountJoin } from './views/join.js';
 import { mount as mountTrips } from './views/trips.js';
 import { mount as mountTripOverview } from './views/tripOverview.js';
@@ -16,13 +17,13 @@ const tabbar = document.getElementById('tabbar');
 const backToTrips = document.getElementById('back-to-trips');
 
 const TABS = [
-  { key: 'overview', label: '概要', suffix: '', mount: mountTripOverview },
-  { key: 'scratch', label: '雑多メモ', suffix: '/scratch', mount: mountScratch },
-  { key: 'notes', label: '企画メモ', suffix: '/notes', mount: mountNotes },
-  { key: 'destinations', label: '行き先決め', suffix: '/destinations', mount: mountDestinations },
-  { key: 'schedule', label: '日程調整', suffix: '/schedule', mount: mountSchedule },
-  { key: 'lodging', label: '宿泊', suffix: '/lodging', mount: mountLodging },
-  { key: 'itinerary', label: 'しおり', suffix: '/itinerary', mount: mountItinerary },
+  { key: 'overview', label: '概要', suffix: '', icon: icons.overview, mount: mountTripOverview },
+  { key: 'scratch', label: '雑多メモ', suffix: '/scratch', icon: icons.scratch, mount: mountScratch },
+  { key: 'notes', label: '企画メモ', suffix: '/notes', icon: icons.notes, mount: mountNotes },
+  { key: 'destinations', label: '行き先決め', suffix: '/destinations', icon: icons.destinations, mount: mountDestinations },
+  { key: 'schedule', label: '日程調整', suffix: '/schedule', icon: icons.schedule, mount: mountSchedule },
+  { key: 'lodging', label: '宿泊', suffix: '/lodging', icon: icons.lodging, mount: mountLodging },
+  { key: 'itinerary', label: 'しおり', suffix: '/itinerary', icon: icons.itinerary, mount: mountItinerary },
 ];
 
 function renderTabbar(tripId, activeKey) {
@@ -31,7 +32,7 @@ function renderTabbar(tripId, activeKey) {
   backToTrips.hidden = false;
   for (const tab of TABS) {
     const link = document.createElement('a');
-    link.textContent = tab.label;
+    link.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
     link.href = `#/trips/${tripId}${tab.suffix}`;
     link.className = tab.key === activeKey ? 'tab tab-active' : 'tab';
     tabbar.appendChild(link);

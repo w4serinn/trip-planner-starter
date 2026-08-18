@@ -124,6 +124,10 @@ select:focus {
 }
 
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
   width: 100%;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-heading);
@@ -135,6 +139,16 @@ button {
   box-shadow: var(--shadow-button);
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+button svg {
+  flex-shrink: 0;
+}
+
+/* buttonへの明示的なdisplay指定がhidden属性の既定挙動(display: none)より
+   優先されてしまうため、明示的に上書きする。 */
+button[hidden] {
+  display: none;
 }
 
 button:hover {
@@ -167,9 +181,21 @@ button:disabled {
 }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--space-xl) var(--space-md);
+}
+
+.empty-state svg {
+  color: var(--color-border);
+}
+
+.empty-state p {
+  margin: 0;
 }
 
 .btn-secondary {
@@ -294,12 +320,20 @@ button:disabled {
 }
 
 .tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: var(--font-size-sm);
   white-space: nowrap;
   border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab svg {
   flex-shrink: 0;
 }
 

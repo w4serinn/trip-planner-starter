@@ -8,6 +8,7 @@
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection } from '../firestore.js';
+import { icons } from '../icons.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -106,7 +107,7 @@ export function mount(outlet, params) {
     itemList.innerHTML = '';
 
     if (items.length === 0) {
-      itemList.innerHTML = '<p class="empty-state">まだしおり項目がありません。最初の項目を追加しましょう。</p>';
+      itemList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだしおり項目がありません。最初の項目を追加しましょう。</p></div>`;
       return;
     }
 

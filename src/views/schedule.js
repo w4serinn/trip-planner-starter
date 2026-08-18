@@ -10,6 +10,7 @@ import {
   setDocumentMerged,
   sanitizeMapKey,
 } from '../firestore.js';
+import { icons } from '../icons.js';
 
 const RESPONSE_SYMBOLS = ['○', '△', '×'];
 
@@ -61,7 +62,7 @@ export function mount(outlet, params) {
     scheduleList.innerHTML = '';
 
     if (currentEntries.length === 0) {
-      scheduleList.innerHTML = '<p class="empty-state">まだ候補日がありません。最初の候補日を追加しましょう。</p>';
+      scheduleList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ候補日がありません。最初の候補日を追加しましょう。</p></div>`;
       return;
     }
 
