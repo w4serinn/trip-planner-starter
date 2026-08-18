@@ -88,6 +88,11 @@
       (lint・test)成功。
 
 ## 3. C. 旅行詳細トップ画面
+- [x] (S) 旅行名の表示・編集 → `pages/trip.js`でURLの`?id=`から`groups/{code}/trips/{id}`を
+      取得・表示。「編集」ボタンでインライン編集フォームに切り替え、`updateDocument`で
+      `name`フィールドを保存。空文字はバリデーションで拒否、キャンセルボタンで編集破棄。
+      Playwrightで初期表示・編集保存・リロード後の永続化・空名前バリデーション・
+      キャンセル動作を実Firestoreで確認(2026-08-18)。`npm run check`(lint・test)成功。
 
 ## 4. D. 企画メモ画面
 

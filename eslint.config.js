@@ -15,6 +15,7 @@ export default [
         crypto: 'readonly',
         navigator: 'readonly',
         self: 'readonly',
+        URLSearchParams: 'readonly',
       },
     },
   },

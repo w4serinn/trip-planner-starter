@@ -11,7 +11,21 @@
     <header class="page-header">
       <a class="back-link" href="trips.html">← 旅行一覧</a>
     </header>
-    <h2 id="trip-name">新しい旅行</h2>
+    <div class="trip-name-row">
+      <h2 id="trip-name"></h2>
+      <button type="button" id="edit-name-button" class="btn-secondary">編集</button>
+    </div>
+    <form id="edit-name-form" novalidate hidden>
+      <div class="field">
+        <label for="trip-name-input">旅行名</label>
+        <input type="text" id="trip-name-input" name="tripName" required />
+      </div>
+      <p class="error-text" id="name-error-text"></p>
+      <div class="button-row">
+        <button type="submit">保存</button>
+        <button type="button" id="cancel-edit-button" class="btn-secondary">キャンセル</button>
+      </div>
+    </form>
     <p class="subtitle">企画メモ・行き先決め・日程調整などの機能は、次のサイクル以降で追加予定です。</p>
   </main>
   <script type="module" src="trip.js"></script>
