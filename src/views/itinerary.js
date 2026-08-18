@@ -2,14 +2,27 @@
 // しおり項目の追加(やること名・日付・時間目安(任意)・場所リンク(任意)・メモ(任意))と、
 // 日付グルーピング＋各日内での時間順自動ソート表示を行う。
 // データモデルはdocs/firestore-design.md「itineraryItems」参照。
-// 時間入力の3セレクトボックス化(docs/ROADMAP.md「15」)は別タスクのため、ここでは
-// <input type="time">のまま移植する。
+// 時間入力は<input type="time">のネイティブUIではなく、「午前/午後」「時(0〜12)」
+// 「分(00/15/30/45)」の3セレクトボックスにする(docs/ROADMAP.md「15」)。保存する
+// データ形式("HH:MM"の24時間表記文字列)自体は変えない。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection } from '../firestore.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
+
+const HOUR_OPTIONS = Array.from({ length: 13 }, (_, i) => String(i)); // 0〜12
+const MINUTE_OPTIONS = ['00', '15', '30', '45'];
+
+// 「午前/午後」+「0〜12時」+「分」から24時間表記の"HH:MM"文字列を組み立てる。
+// 0時・12時はそれぞれのAM/PM内で同じ境界時刻を指すエイリアスとして扱う
+// (午前0時=午前12時=00:00、午後0時=午後12時=12:00)。
+function buildTimeString(amPm, hour, minute) {
+  const hourNum = Number(hour);
+  const hour24 = (hourNum % 12) + (amPm === 'PM' ? 12 : 0);
+  return `${String(hour24).padStart(2, '0')}:${minute}`;
+}
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -34,8 +47,22 @@ export function mount(outlet, params) {
         <input type="date" id="item-date" name="date" required />
       </div>
       <div class="field">
-        <label for="item-time">時間目安(任意)</label>
-        <input type="time" id="item-time" name="time" />
+        <label for="item-time-ampm">時間目安(任意)</label>
+        <div class="time-select-row">
+          <select id="item-time-ampm" name="timeAmPm">
+            <option value="">--</option>
+            <option value="AM">午前</option>
+            <option value="PM">午後</option>
+          </select>
+          <select id="item-time-hour" name="timeHour">
+            <option value="">時</option>
+            ${HOUR_OPTIONS.map((h) => `<option value="${h}">${h}</option>`).join('')}
+          </select>
+          <select id="item-time-minute" name="timeMinute">
+            <option value="">分</option>
+            ${MINUTE_OPTIONS.map((m) => `<option value="${m}">${m}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="field">
         <label for="item-location">場所リンク(任意)</label>
@@ -55,7 +82,9 @@ export function mount(outlet, params) {
   const itemForm = outlet.querySelector('#item-form');
   const titleInput = outlet.querySelector('#item-title');
   const dateInput = outlet.querySelector('#item-date');
-  const timeInput = outlet.querySelector('#item-time');
+  const timeAmPmSelect = outlet.querySelector('#item-time-ampm');
+  const timeHourSelect = outlet.querySelector('#item-time-hour');
+  const timeMinuteSelect = outlet.querySelector('#item-time-minute');
   const locationInput = outlet.querySelector('#item-location');
   const noteInput = outlet.querySelector('#item-note');
   const errorText = outlet.querySelector('#item-error-text');
@@ -148,13 +177,22 @@ export function mount(outlet, params) {
 
     const title = titleInput.value.trim();
     const date = dateInput.value;
-    const time = timeInput.value;
+    const amPm = timeAmPmSelect.value;
+    const hour = timeHourSelect.value;
+    const minute = timeMinuteSelect.value;
     const locationUrl = locationInput.value.trim();
     const note = noteInput.value.trim();
     if (!title || !date) {
       errorText.textContent = 'やること名と日付を入力してください。';
       return;
     }
+
+    const timeFieldsFilled = [amPm, hour, minute].filter((v) => v !== '').length;
+    if (timeFieldsFilled > 0 && timeFieldsFilled < 3) {
+      errorText.textContent = '時間を指定する場合は、午前/午後・時・分をすべて選択してください。';
+      return;
+    }
+    const time = timeFieldsFilled === 3 ? buildTimeString(amPm, hour, minute) : '';
 
     submitButton.disabled = true;
     try {
@@ -167,7 +205,9 @@ export function mount(outlet, params) {
         addedBy: session.name,
       });
       titleInput.value = '';
-      timeInput.value = '';
+      timeAmPmSelect.value = '';
+      timeHourSelect.value = '';
+      timeMinuteSelect.value = '';
       locationInput.value = '';
       noteInput.value = '';
       // src/views/notes.jsと同様、再取得せずローカルの一覧へ楽観的に追加する。

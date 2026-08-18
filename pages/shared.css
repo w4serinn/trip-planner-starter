@@ -90,6 +90,31 @@ textarea:focus {
   outline-offset: 1px;
 }
 
+select {
+  font-size: var(--font-size-base);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.time-select-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.time-select-row select {
+  flex: 1;
+  min-width: 0;
+}
+
 .error-text {
   color: var(--color-danger);
   font-size: var(--font-size-sm);
