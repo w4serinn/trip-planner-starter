@@ -913,3 +913,13 @@ docs/ROADMAP.mdに書き留め、cronジョブを再開した経緯を残す)
   「新規タスク・画面提案」セクションに追記して人間の承認を待つか、人間からの新たな
   指示を待つ。
 - blocked / partial: なし。
+
+## 2026-08-19 11:50(手動チャットでの修正。evolveサイクルではない)
+- 実装: 人間が`npm run check`を手元で実行したところ、`pages/shared.css`の
+  `.timeline-marker::after`ブロック内のコメント(直前のcommit `9c9262e`で追加)が
+  stylelintの`comment-empty-line-before`ルールに違反していることが判明した
+  (コメント直前に空行が無かった)。空行を1行追加して修正。
+- 動作確認: `npm run check`(lint・lint:css・test)が全て成功することを確認。
+- レビュー: OK。CSSの内容自体(タイムライン線の色)は変更なし、フォーマットのみの修正。
+- 次回予定: 特になし。
+- blocked / partial: なし。
