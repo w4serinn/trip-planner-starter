@@ -551,3 +551,59 @@ button:disabled {
   border-bottom-color: var(--color-primary);
   font-weight: bold;
 }
+
+/* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):
+   雑多メモは「一番よく使うメイン機能」という位置づけのため、白カード主体の他画面群の
+   中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
+   (ヘッダー24と同じ--color-primary-deep系グラデーション+ドット柄。画像不使用)。
+   src/views/scratch.jsの<textarea>を囲む.cardにのみ適用する(他画面のカードは対象外)。 */
+.scratch-card {
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 10%) 1px, transparent 1.5px),
+    linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-size: 18px 18px, 100% 100%;
+  color: var(--color-surface);
+}
+
+.scratch-card textarea {
+  background: rgb(255 255 255 / 8%);
+  border-color: rgb(255 255 255 / 25%);
+  color: var(--color-surface);
+}
+
+.scratch-card textarea::placeholder {
+  color: rgb(255 255 255 / 55%);
+}
+
+.scratch-card textarea:focus {
+  border-color: var(--color-surface);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);
+}
+
+.scratch-card .btn-secondary {
+  color: var(--color-surface);
+  border-color: rgb(255 255 255 / 60%);
+}
+
+.scratch-card .btn-secondary:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+/* --color-danger/--color-successをそのまま文字色に使うと濃紺背景とのコントラストが
+   不十分なため、既存トークンを背景色として使うチップ表示に切り替える(新規の色は
+   追加しない)。 */
+.scratch-card .error-text:not(:empty) {
+  display: inline-block;
+  background: var(--color-danger);
+  color: var(--color-surface);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.scratch-card .copy-feedback:not(:empty) {
+  display: inline-block;
+  background: var(--color-success);
+  color: var(--color-surface);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}

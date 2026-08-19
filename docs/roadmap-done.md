@@ -842,3 +842,24 @@
       console/pageerrorは0件(2026-08-19)。`npm run check`(lint・test)成功。検証データは
       Firestoreから削除済み(前サイクルの脆弱性検証で削除し忘れていた
       `javascript:alert(1)`テストデータも本サイクルで併せて削除した)。
+
+## 26. コンテンツ内のダーク全面塗りセクション追加(第5期)
+- [x] (S) 雑多メモタブ(`src/views/scratch.js`)の`<textarea>`を囲む`.card`に
+      `scratch-card`クラスを追加し、`pages/shared.css`側で専用の濃色スタイルを適用。
+      ヘッダー(`24`)と同系統の`--color-primary-deep`ベースの斜めグラデーション+
+      `radial-gradient`のドット柄(画像不使用)を背景に、`<textarea>`本体は半透明の
+      白背景+白文字+半透明白のplaceholderに変更(通常のカードと明確に見た目を
+      分け、「一番よく使うメイン機能」に専用のブレインダンプらしい見た目を持たせた)。
+      `.btn-secondary`(振り分けボタン)も白系のアウトライン表示に調整。
+      `.error-text`/`.copy-feedback`は、既存の`--color-danger`/`--color-success`を
+      文字色にすると濃紺背景とのコントラストが不十分になるため、同じトークンを
+      背景色として使うチップ表示(白文字)に変更した(新規の色トークンは追加していない)。
+      stylelintの`no-descending-specificity`対応のため、`.scratch-card`関連ルールは
+      `pages/shared.css`末尾(元となる`.btn-secondary`等の定義より後ろ)に配置
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)上で雑多メモタブを開き、
+      グラデーション・ドット柄・白文字のtextareaが表示されること、未選択でボタンを
+      押した際のエラーチップが赤背景+白文字で視認性良く表示されることをスクリーンショットで
+      確認。375px/1200px幅ともに横スクロール・崩れなし、console/pageerrorは0件
+      (2026-08-19)。`npm run check`(lint・test)成功。検証で参加した際に追加された
+      テスト用メンバー名は共有テストグループ`FMXRZYW7`のmembers配列から削除済み。
