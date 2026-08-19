@@ -7,6 +7,7 @@ import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
+import { isSafeUrl } from '../url.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -125,13 +126,20 @@ export function mount(outlet, params) {
       const card = document.createElement('div');
       card.className = 'card';
 
-      const link = document.createElement('a');
-      link.className = 'candidate-link';
-      link.href = candidate.url;
-      link.textContent = candidate.url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      card.appendChild(link);
+      if (isSafeUrl(candidate.url)) {
+        const link = document.createElement('a');
+        link.className = 'candidate-link';
+        link.href = candidate.url;
+        link.textContent = candidate.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        card.appendChild(link);
+      } else {
+        const unsafeUrlText = document.createElement('p');
+        unsafeUrlText.className = 'candidate-link';
+        unsafeUrlText.textContent = candidate.url;
+        card.appendChild(unsafeUrlText);
+      }
 
       if (candidate.note) {
         const note = document.createElement('p');
@@ -257,13 +265,20 @@ export function mount(outlet, params) {
       period.textContent = `${formatDateLabel(stay.checkIn)} 〜 ${formatDateLabel(stay.checkOut)}`;
       card.appendChild(period);
 
-      const link = document.createElement('a');
-      link.className = 'candidate-link';
-      link.href = stay.url;
-      link.textContent = stay.url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      card.appendChild(link);
+      if (isSafeUrl(stay.url)) {
+        const link = document.createElement('a');
+        link.className = 'candidate-link';
+        link.href = stay.url;
+        link.textContent = stay.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        card.appendChild(link);
+      } else {
+        const unsafeUrlText = document.createElement('p');
+        unsafeUrlText.className = 'candidate-link';
+        unsafeUrlText.textContent = stay.url;
+        card.appendChild(unsafeUrlText);
+      }
 
       if (stay.note) {
         const note = document.createElement('p');

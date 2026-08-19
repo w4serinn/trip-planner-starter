@@ -9,6 +9,7 @@ import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection } from '../firestore.js';
 import { icons } from '../icons.js';
+import { isSafeUrl } from '../url.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -177,13 +178,20 @@ export function mount(outlet, params) {
         content.appendChild(title);
 
         if (item.locationUrl) {
-          const link = document.createElement('a');
-          link.className = 'candidate-link';
-          link.href = item.locationUrl;
-          link.textContent = item.locationUrl;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          content.appendChild(link);
+          if (isSafeUrl(item.locationUrl)) {
+            const link = document.createElement('a');
+            link.className = 'candidate-link';
+            link.href = item.locationUrl;
+            link.textContent = item.locationUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            content.appendChild(link);
+          } else {
+            const unsafeUrlText = document.createElement('p');
+            unsafeUrlText.className = 'candidate-link';
+            unsafeUrlText.textContent = item.locationUrl;
+            content.appendChild(unsafeUrlText);
+          }
         }
 
         if (item.note) {

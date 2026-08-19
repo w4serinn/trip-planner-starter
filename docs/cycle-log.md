@@ -1033,3 +1033,31 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
 - 次回予定: 「24. ヘッダーのテクスチャ強化」(`--color-primary-deep`ベースのグラデーション
   +ドット柄パターンをCSSのみで追加)に着手。
 - blocked / partial: なし。
+
+## 2026-08-19 15:15
+- 実装: 直前の人間との会話で洗い出した脆弱性3件(バグ修正セクション)のうち2件を実施。
+  (1) `src/views/itinerary.js`・`src/views/lodging.js`で、Firestoreの`url`/
+  `locationUrl`を無条件で`link.href`に代入していた箇所に、新規`src/url.js`の
+  `isSafeUrl()`(http/httpsスキームのみ許可)を挟み、安全でない場合は`<a>`ではなく
+  クリックできない`<p>`テキスト表示にフォールバックするよう修正。(2)
+  `src/views/join.js`のグループ作成処理で、`creatorSecret`を`groups/{code}`
+  ドキュメントに保存したままにしないよう、作成直後に新設の`removeField()`
+  (`src/firestore.js`、`deleteField()`のラッパー)でフィールド削除するよう変更。
+  あわせて`eslint.config.js`に`URL`グローバルを追加。
+- 動作確認: OK。Playwrightで、G(宿泊)・H(しおり)画面に`javascript:alert(1)`を
+  仕込んだ候補・しおり項目を実Firestore(共有テストグループ`FMXRZYW7`)に一時追加し、
+  `<a>`化されずプレーンテキスト表示になることを確認(通常のhttps URLは従来通り
+  リンクとして機能することも確認)。`removeField()`自体は使い捨ての候補地
+  ドキュメントで追加→削除を確認。検証データはすべてFirestoreから削除済み。
+  `npm run check`(lint・test)成功。なお、グループ作成処理自体の完全なE2E確認は
+  マスター合言葉をAI側が知らないため従来通り未実施(既知の制約)。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・セキュリティ方針、
+  `docs/screens.md`の画面構成・遷移から逸脱なし(いずれもセキュリティ強化のみで
+  データモデル変更なし)。
+- 次回予定: 「24. ヘッダーのテクスチャ強化」に着手。ただし`firestore.rules`の
+  デプロイ承認待ちタスク(下記)が残っているため、人間の判断があればそちらを先に対応。
+- blocked / partial: 3件目のタスク(`firestore.rules`の`groups/{groupCode}`
+  update権限をmembers追記・creatorSecret削除のみに限定)は、ファイル上の変更は
+  完了しているが、`npm run firebase:deploy:rules`の実行がClaude Codeの自動モード
+  安全装置によりブロックされ、本番Firebaseプロジェクト(`trip-planner-cd9b7`)への
+  デプロイができなかった。人間の承認・実行待ちとして`docs/ROADMAP.md`に残置。

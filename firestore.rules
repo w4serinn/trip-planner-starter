@@ -37,7 +37,16 @@ service cloud.firestore {
       allow list: if false;
       allow create: if request.resource.data.creatorSecret ==
         get(/databases/$(database)/documents/config/adminSecret).data.value;
-      allow update: if true;
+      // updateはフィールド単位で制限する(2026-08-19、脆弱性洗い出しを受けて`if true`から変更):
+      // 1. membersへの参加者追記(src/views/join.jsのaddToArray)
+      // 2. creatorSecretの削除のみ(作成直後にsrc/views/join.jsが行う後始末。
+      //    create時のget()比較にしか使わないフィールドのため、作成後は残さない。
+      //    新しい値を設定する用途では使わせない)
+      // これ以外のフィールド(createdAt等)の書き換えは許可しない。
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['creatorSecret']) &&
+          !('creatorSecret' in request.resource.data));
       allow delete: if false;
 
       match /trips/{tripId} {

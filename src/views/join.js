@@ -5,7 +5,7 @@
 // データモデル・セキュリティ方針はdocs/firestore-design.md参照。
 import { navigate } from '../router.js';
 import { saveSession, loadSession } from '../session.js';
-import { getDocument, setDocument, addToArray, serverTimestamp } from '../firestore.js';
+import { getDocument, setDocument, addToArray, removeField, serverTimestamp } from '../firestore.js';
 import { generatePassphrase } from '../passphrase.js';
 import { icons } from '../icons.js';
 
@@ -142,11 +142,23 @@ export function mount(outlet) {
         return;
       }
 
+      // creatorSecretはFirestoreルール側のcreate時get()比較のためにのみ必要で、
+      // 保存したまま残すと参加した全メンバーがget()で読めてしまい、新規グループ作成の
+      // 防波堤であるマスター合言葉が漏れてしまう。ルールの制約上、create自体には
+      // 含めて送る必要があるため、作成直後にフィールドごと削除する
+      // (firestore.rulesの`groups/{groupCode}`のupdate許可も参照)。
       await setDocument(`groups/${groupCode}`, {
         createdAt: serverTimestamp(),
         members: [name],
         creatorSecret,
       });
+      try {
+        // グループ自体の作成はすでに成功しているため、この削除が失敗しても
+        // 作成フロー自体は成功として進める(通信エラー等はログのみに留める)。
+        await removeField(`groups/${groupCode}`, 'creatorSecret');
+      } catch (cleanupError) {
+        console.error(cleanupError);
+      }
 
       createdSession = { groupCode, name };
       createdCode.textContent = groupCode;

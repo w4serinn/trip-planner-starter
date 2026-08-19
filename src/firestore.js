@@ -11,6 +11,7 @@ import {
   addDoc,
   serverTimestamp,
   arrayUnion,
+  deleteField,
 } from 'firebase/firestore';
 
 export async function getDocument(path) {
@@ -37,6 +38,12 @@ export async function updateDocument(path, data) {
 // 同じ値を複数回渡しても配列に重複追加されない(arrayUnionの仕様)。
 export async function addToArray(path, field, value) {
   await updateDoc(doc(db, path), { [field]: arrayUnion(value) });
+}
+
+// 指定フィールドをドキュメントから完全に削除する(値をnull/空文字にするのではなく、
+// フィールド自体を無くす)。例: groups/{code}のcreatorSecretを作成直後に消す用途。
+export async function removeField(path, field) {
+  await updateDoc(doc(db, path), { [field]: deleteField() });
 }
 
 export async function addDocument(collectionPath, data) {

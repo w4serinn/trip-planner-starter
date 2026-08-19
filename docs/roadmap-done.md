@@ -770,3 +770,37 @@
       `rank-badge`がピル形状(`--radius-pill`)で表示され、`--shadow-card`の青みを
       帯びた影がカードに反映されていることを目視確認。検証後、候補地はFirestoreから
       削除済み(2026-08-19)。`npm run check`(lint・test)成功。
+
+## 脆弱性対応(2026-08-19、人間との会話での指摘を受けタスク化)
+- [x] (S) `src/views/itinerary.js`(しおりの場所URL)・`src/views/lodging.js`
+      (宿泊候補・確定宿泊のURL)で、Firestoreの`url`/`locationUrl`をそのまま
+      `link.href`に代入していた箇所を修正。新規`src/url.js`の`isSafeUrl()`で
+      `http:`/`https:`スキームかどうかを判定し、安全な場合のみ`<a href>`として
+      描画、それ以外は`<p class="candidate-link">`のプレーンテキストとして表示する
+      (クリックしても何も起きない)ように変更。`<input type="url">`のブラウザ標準
+      検証は`javascript:`のようなスキームを弾かない既知の穴のため
+- [x] (S) `src/views/join.js`のグループ作成処理で、`groups/{groupCode}`ドキュメントに
+      `creatorSecret`を保存したままにしないよう変更。`firestore.rules`の`create`時
+      `get()`比較には引き続き必要なため作成リクエスト自体には含めるが、作成成功
+      直後に新設の`removeField()`(`src/firestore.js`、`deleteField()`のラッパー)で
+      フィールドごと削除する。削除自体が失敗してもグループ作成という主目的の成功
+      通知は妨げない(削除失敗時はconsole.errorのみ)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)上のG(宿泊)・H(しおり)
+      画面に`javascript:alert(1)`を仕込んだ候補・しおり項目を一時追加し、
+      `<a>`タグにならずプレーンテキスト表示になる(`href`属性が付与されない)ことを
+      確認。同時に追加した通常のhttps URLは従来通りクリック可能なリンクとして描画
+      されることも確認(正常系への影響なし)。検証で作成したデータはFirestoreから
+      削除済み。`removeField()`のフィールド削除自体は、使い捨ての候補地ドキュメントに
+      ダミーフィールドを追加→削除する形で別途動作確認し、削除後にフィールドが
+      無くなっていることを確認(こちらも検証用ドキュメントは削除済み)。
+      グループ作成処理自体(`creatorSecret`一致が必要)は、マスター合言葉をAI側が
+      知らないため実機での完全なフロー確認はできていない(2026-08-18時点の記載と
+      同じ、既知の制約)。`npm run check`(lint・test)成功。
+      あわせて`eslint.config.js`に`URL`グローバルを追加(`src/url.js`の
+      `new URL(...)`使用のため、既存のno-undefエラーを解消)。
+
+      なお、`firestore.rules`の`groups/{groupCode}`updateをmembers追記・
+      creatorSecret削除のみに限定する変更(3件目のタスク)は、ファイル上には
+      反映済みだが本番デプロイがClaude Codeの自動モード安全装置によりブロックされ、
+      人間の承認待ちのため`docs/ROADMAP.md`に残置(このリストには移動しない)。
