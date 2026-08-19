@@ -607,3 +607,77 @@ button:disabled {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }
+
+/* 2026-08-19(docs/ROADMAP.md「27. カスタムカレンダーピッカーの導入」):
+   src/datePicker.jsが描画するカレンダーUI。単一選択・複数選択どちらのモードでも
+   共通のCSSを使う(選択状態のクラスは同じため)。jicoo.com調査時の「格子状のピル型
+   ボタンで日付を選ぶ」パターンを参考に、日付セルは円形のピルボタンにする。 */
+.date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date-picker-label {
+  font-weight: var(--font-weight-subheading);
+}
+
+.date-picker-nav {
+  width: 32px;
+  padding: 0;
+  aspect-ratio: 1;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.date-picker-nav:hover {
+  background: var(--color-bg);
+}
+
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-xs);
+}
+
+.date-picker-weekdays span {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.date-picker-day {
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid transparent;
+  box-shadow: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-subheading);
+}
+
+.date-picker-day:hover {
+  background: var(--color-bg);
+}
+
+.date-picker-today {
+  border-color: var(--color-primary);
+}
+
+.date-picker-selected,
+.date-picker-selected:hover {
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
+}
