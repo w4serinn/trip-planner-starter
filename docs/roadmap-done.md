@@ -826,3 +826,19 @@
       他要素への視覚的な影響が無いことを確認。console/pageerrorは0件(2026-08-19)。
       `npm run check`(lint・test)成功。検証で参加した際に追加されたテスト用メンバー名は
       共有テストグループ`FMXRZYW7`のmembers配列から削除済み。
+
+## 25. しおりタイムラインの装飾強化(第5期)
+- [x] (S) H(しおり)画面のタイムラインマーカーを、単なる丸ドット(`.timeline-marker::before`)
+      から、その日の何番目の予定かを示す連番バッジ(`.timeline-marker-badge`、
+      `--radius-pill`の円形、`--color-primary`背景・白文字)に変更。時刻は既に予定
+      タイトル側(`item.time item.title`)に表示済みのため、バッジ側は時刻の重複表示
+      ではなく1日の中での連番(表示順のindex+1)にして時系列の見通しを補う形にした。
+      `src/views/itinerary.js`の描画ループを`forEach`化し、日付ごとの並び順
+      (時刻の早い順、時刻未入力は最後)そのままに連番を振る
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)上に時刻の異なる3件の
+      しおり項目(09:00・14:00・時間未入力)を一時追加し、バッジが表示順通りに
+      「1」「2」「3」と振られることを確認。375px/1200px幅ともに横スクロール・崩れなし、
+      console/pageerrorは0件(2026-08-19)。`npm run check`(lint・test)成功。検証データは
+      Firestoreから削除済み(前サイクルの脆弱性検証で削除し忘れていた
+      `javascript:alert(1)`テストデータも本サイクルで併せて削除した)。

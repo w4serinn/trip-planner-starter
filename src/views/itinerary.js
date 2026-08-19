@@ -162,12 +162,16 @@ export function mount(outlet, params) {
       const timeline = document.createElement('div');
       timeline.className = 'timeline';
 
-      for (const item of dayItems) {
+      dayItems.forEach((item, index) => {
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
 
         const marker = document.createElement('div');
         marker.className = 'timeline-marker';
+        const badge = document.createElement('span');
+        badge.className = 'timeline-marker-badge';
+        badge.textContent = String(index + 1);
+        marker.appendChild(badge);
         timelineItem.appendChild(marker);
 
         const content = document.createElement('div');
@@ -207,7 +211,7 @@ export function mount(outlet, params) {
 
         timelineItem.appendChild(content);
         timeline.appendChild(timelineItem);
-      }
+      });
 
       itemList.appendChild(timeline);
     }
