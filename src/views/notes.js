@@ -21,9 +21,11 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">旅行が固まる前の「やりたいこと」を、みんなで自由に書き足していきましょう。入力は自動的に保存されます。</p>
 
-    <textarea id="planning-notes" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
-    <p class="error-text" id="notes-error-text"></p>
-    <p class="copy-feedback" id="notes-saved-text"></p>
+    <div class="card">
+      <textarea id="planning-notes" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
+      <p class="error-text" id="notes-error-text"></p>
+      <p class="copy-feedback" id="notes-saved-text"></p>
+    </div>
   `;
 
   const notesTextarea = outlet.querySelector('#planning-notes');

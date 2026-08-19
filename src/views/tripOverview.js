@@ -2,9 +2,12 @@
 // 旅行名の表示・編集、集合情報・割り勘リンクの直接編集を行う。
 // D〜H各機能への移動はタブバー(src/app.js)経由で行うため、旧MPA版にあった
 // featureLinksカードナビは持たない。
+// 集合情報・割り勘リンクも、旅行名と同じ「表示モード+編集ボタンで編集フォームを開く」
+// パターンに揃え(docs/ROADMAP.md「18」)、画面を開いた時点でフォームが並ぶ煩雑さを避ける。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, updateDocument } from '../firestore.js';
+import { icons } from '../icons.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -34,8 +37,19 @@ export function mount(outlet, params) {
     </form>
 
     <section class="card">
-      <h3>集合情報</h3>
-      <form id="meeting-form" novalidate>
+      <div class="card-section-header">
+        <h3>${icons.destinations}<span>集合情報</span></h3>
+        <button type="button" id="edit-meeting-button" class="btn-secondary">編集</button>
+      </div>
+      <div id="meeting-display">
+        <p class="subtitle" id="meeting-empty">まだ設定されていません。</p>
+        <dl class="summary-list" id="meeting-summary" hidden>
+          <dt>場所</dt><dd id="meeting-place-display"></dd>
+          <dt>時間</dt><dd id="meeting-time-display"></dd>
+          <dt>メモ</dt><dd id="meeting-note-display"></dd>
+        </dl>
+      </div>
+      <form id="meeting-form" novalidate hidden>
         <div class="field">
           <label for="meeting-place">場所</label>
           <input type="text" id="meeting-place" name="meetingPlace" />
@@ -49,21 +63,32 @@ export function mount(outlet, params) {
           <input type="text" id="meeting-note" name="meetingNote" />
         </div>
         <p class="error-text" id="meeting-error-text"></p>
-        <p class="copy-feedback" id="meeting-saved-text"></p>
-        <button type="submit">集合情報を保存</button>
+        <div class="button-row">
+          <button type="submit">保存</button>
+          <button type="button" id="cancel-meeting-button" class="btn-secondary">キャンセル</button>
+        </div>
       </form>
     </section>
 
     <section class="card">
-      <h3>割り勘リンク(Walica)</h3>
-      <form id="warika-form" novalidate>
+      <div class="card-section-header">
+        <h3>${icons.link}<span>割り勘リンク(Walica)</span></h3>
+        <button type="button" id="edit-warika-button" class="btn-secondary">編集</button>
+      </div>
+      <div id="warika-display">
+        <p class="subtitle" id="warika-empty">まだ設定されていません。</p>
+        <a id="warika-link-display" class="candidate-link" target="_blank" rel="noopener noreferrer" hidden></a>
+      </div>
+      <form id="warika-form" novalidate hidden>
         <div class="field">
           <label for="warika-url">URL</label>
           <input type="url" id="warika-url" name="warikaUrl" placeholder="https://walica.jp/..." />
         </div>
         <p class="error-text" id="warika-error-text"></p>
-        <p class="copy-feedback" id="warika-saved-text"></p>
-        <button type="submit">割り勘リンクを保存</button>
+        <div class="button-row">
+          <button type="submit">保存</button>
+          <button type="button" id="cancel-warika-button" class="btn-secondary">キャンセル</button>
+        </div>
       </form>
     </section>
   `;
@@ -75,17 +100,49 @@ export function mount(outlet, params) {
   const nameErrorText = outlet.querySelector('#name-error-text');
   const cancelEditButton = outlet.querySelector('#cancel-edit-button');
 
+  const editMeetingButton = outlet.querySelector('#edit-meeting-button');
+  const meetingDisplay = outlet.querySelector('#meeting-display');
+  const meetingEmpty = outlet.querySelector('#meeting-empty');
+  const meetingSummary = outlet.querySelector('#meeting-summary');
+  const meetingPlaceDisplay = outlet.querySelector('#meeting-place-display');
+  const meetingTimeDisplay = outlet.querySelector('#meeting-time-display');
+  const meetingNoteDisplay = outlet.querySelector('#meeting-note-display');
   const meetingForm = outlet.querySelector('#meeting-form');
   const meetingPlaceInput = outlet.querySelector('#meeting-place');
   const meetingTimeInput = outlet.querySelector('#meeting-time');
   const meetingNoteInput = outlet.querySelector('#meeting-note');
   const meetingErrorText = outlet.querySelector('#meeting-error-text');
-  const meetingSavedText = outlet.querySelector('#meeting-saved-text');
+  const cancelMeetingButton = outlet.querySelector('#cancel-meeting-button');
 
+  const editWarikaButton = outlet.querySelector('#edit-warika-button');
+  const warikaDisplay = outlet.querySelector('#warika-display');
+  const warikaEmpty = outlet.querySelector('#warika-empty');
+  const warikaLinkDisplay = outlet.querySelector('#warika-link-display');
   const warikaForm = outlet.querySelector('#warika-form');
   const warikaUrlInput = outlet.querySelector('#warika-url');
   const warikaErrorText = outlet.querySelector('#warika-error-text');
-  const warikaSavedText = outlet.querySelector('#warika-saved-text');
+  const cancelWarikaButton = outlet.querySelector('#cancel-warika-button');
+
+  let currentTrip = {};
+
+  function renderMeetingDisplay() {
+    const hasMeeting = currentTrip.meetingPlace || currentTrip.meetingTime || currentTrip.meetingNote;
+    meetingEmpty.hidden = !!hasMeeting;
+    meetingSummary.hidden = !hasMeeting;
+    meetingPlaceDisplay.textContent = currentTrip.meetingPlace || '(未設定)';
+    meetingTimeDisplay.textContent = currentTrip.meetingTime || '(未設定)';
+    meetingNoteDisplay.textContent = currentTrip.meetingNote || '(未設定)';
+  }
+
+  function renderWarikaDisplay() {
+    const hasWarika = !!currentTrip.warikaUrl;
+    warikaEmpty.hidden = hasWarika;
+    warikaLinkDisplay.hidden = !hasWarika;
+    if (hasWarika) {
+      warikaLinkDisplay.href = currentTrip.warikaUrl;
+      warikaLinkDisplay.textContent = currentTrip.warikaUrl;
+    }
+  }
 
   async function loadTrip() {
     try {
@@ -94,11 +151,14 @@ export function mount(outlet, params) {
         navigate('#/trips');
         return;
       }
+      currentTrip = trip;
       tripNameHeading.textContent = trip.name || '名称未設定の旅行';
       meetingPlaceInput.value = trip.meetingPlace || '';
       meetingTimeInput.value = trip.meetingTime || '';
       meetingNoteInput.value = trip.meetingNote || '';
       warikaUrlInput.value = trip.warikaUrl || '';
+      renderMeetingDisplay();
+      renderWarikaDisplay();
     } catch (error) {
       console.error(error);
       tripNameHeading.textContent = '取得に失敗しました';
@@ -143,20 +203,43 @@ export function mount(outlet, params) {
   };
   editNameForm.addEventListener('submit', onEditNameSubmit);
 
+  const onEditMeetingClick = () => {
+    meetingErrorText.textContent = '';
+    meetingDisplay.hidden = true;
+    meetingForm.hidden = false;
+    editMeetingButton.hidden = true;
+    meetingPlaceInput.focus();
+  };
+  editMeetingButton.addEventListener('click', onEditMeetingClick);
+
+  const closeMeetingForm = () => {
+    meetingForm.hidden = true;
+    meetingDisplay.hidden = false;
+    editMeetingButton.hidden = false;
+  };
+
+  const onCancelMeetingClick = () => {
+    meetingPlaceInput.value = currentTrip.meetingPlace || '';
+    meetingTimeInput.value = currentTrip.meetingTime || '';
+    meetingNoteInput.value = currentTrip.meetingNote || '';
+    closeMeetingForm();
+  };
+  cancelMeetingButton.addEventListener('click', onCancelMeetingClick);
+
   const onMeetingSubmit = async (event) => {
     event.preventDefault();
     meetingErrorText.textContent = '';
-    meetingSavedText.textContent = '';
 
     const submitButton = meetingForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     try {
-      await updateDocument(tripPath, {
-        meetingPlace: meetingPlaceInput.value.trim(),
-        meetingTime: meetingTimeInput.value.trim(),
-        meetingNote: meetingNoteInput.value.trim(),
-      });
-      meetingSavedText.textContent = '保存しました。';
+      const meetingPlace = meetingPlaceInput.value.trim();
+      const meetingTime = meetingTimeInput.value.trim();
+      const meetingNote = meetingNoteInput.value.trim();
+      await updateDocument(tripPath, { meetingPlace, meetingTime, meetingNote });
+      currentTrip = { ...currentTrip, meetingPlace, meetingTime, meetingNote };
+      renderMeetingDisplay();
+      closeMeetingForm();
     } catch (error) {
       console.error(error);
       meetingErrorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
@@ -166,18 +249,39 @@ export function mount(outlet, params) {
   };
   meetingForm.addEventListener('submit', onMeetingSubmit);
 
+  const onEditWarikaClick = () => {
+    warikaErrorText.textContent = '';
+    warikaDisplay.hidden = true;
+    warikaForm.hidden = false;
+    editWarikaButton.hidden = true;
+    warikaUrlInput.focus();
+  };
+  editWarikaButton.addEventListener('click', onEditWarikaClick);
+
+  const closeWarikaForm = () => {
+    warikaForm.hidden = true;
+    warikaDisplay.hidden = false;
+    editWarikaButton.hidden = false;
+  };
+
+  const onCancelWarikaClick = () => {
+    warikaUrlInput.value = currentTrip.warikaUrl || '';
+    closeWarikaForm();
+  };
+  cancelWarikaButton.addEventListener('click', onCancelWarikaClick);
+
   const onWarikaSubmit = async (event) => {
     event.preventDefault();
     warikaErrorText.textContent = '';
-    warikaSavedText.textContent = '';
 
     const submitButton = warikaForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     try {
-      await updateDocument(tripPath, {
-        warikaUrl: warikaUrlInput.value.trim(),
-      });
-      warikaSavedText.textContent = '保存しました。';
+      const warikaUrl = warikaUrlInput.value.trim();
+      await updateDocument(tripPath, { warikaUrl });
+      currentTrip = { ...currentTrip, warikaUrl };
+      renderWarikaDisplay();
+      closeWarikaForm();
     } catch (error) {
       console.error(error);
       warikaErrorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
@@ -193,7 +297,11 @@ export function mount(outlet, params) {
     editNameButton.removeEventListener('click', onEditNameClick);
     cancelEditButton.removeEventListener('click', onCancelEditClick);
     editNameForm.removeEventListener('submit', onEditNameSubmit);
+    editMeetingButton.removeEventListener('click', onEditMeetingClick);
+    cancelMeetingButton.removeEventListener('click', onCancelMeetingClick);
     meetingForm.removeEventListener('submit', onMeetingSubmit);
+    editWarikaButton.removeEventListener('click', onEditWarikaClick);
+    cancelWarikaButton.removeEventListener('click', onCancelWarikaClick);
     warikaForm.removeEventListener('submit', onWarikaSubmit);
   };
 }

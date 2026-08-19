@@ -6,6 +6,7 @@
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
+import { icons } from '../icons.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -19,9 +20,12 @@ export function mount(outlet, params) {
   const confirmedStaysPath = `groups/${session.groupCode}/trips/${tripId}/confirmedStays`;
 
   outlet.innerHTML = `
+    <h2 class="icon-heading">${icons.lodging}<span>宿泊候補</span></h2>
     <p class="subtitle">Airbnb等の候補リンクとメモを並べて比較する場所です(投票機能はありません。決定は口頭やDiscord等で行ってください)。</p>
 
-    <form id="candidate-form" novalidate>
+    <button type="button" id="toggle-candidate-form" class="btn-secondary">${icons.plus}<span>候補を追加</span></button>
+
+    <form id="candidate-form" novalidate hidden>
       <div class="field">
         <label for="candidate-url">URL</label>
         <input type="url" id="candidate-url" name="url" required placeholder="https://www.airbnb.jp/..." />
@@ -31,15 +35,22 @@ export function mount(outlet, params) {
         <input type="text" id="candidate-note" name="note" />
       </div>
       <p class="error-text" id="candidate-error-text"></p>
-      <button type="submit">候補を追加</button>
+      <div class="button-row">
+        <button type="submit">追加する</button>
+        <button type="button" id="cancel-candidate-form" class="btn-secondary">キャンセル</button>
+      </div>
     </form>
 
     <div id="candidate-list"></div>
 
-    <h2>確定宿泊</h2>
+    <div class="divider"><span>確定した宿泊</span></div>
+
+    <h2 class="icon-heading">${icons.lodging}<span>確定宿泊</span></h2>
     <p class="subtitle">実際に泊まる宿を、期間を分けて複数登録できます(日程が飛び飛びでも構いません)。</p>
 
-    <form id="stay-form" novalidate>
+    <button type="button" id="toggle-stay-form" class="btn-secondary">${icons.plus}<span>確定宿泊を追加</span></button>
+
+    <form id="stay-form" novalidate hidden>
       <div class="field">
         <label for="stay-url">URL</label>
         <input type="url" id="stay-url" name="url" required placeholder="https://www.airbnb.jp/..." />
@@ -57,13 +68,18 @@ export function mount(outlet, params) {
         <input type="date" id="stay-checkout" name="checkOut" required />
       </div>
       <p class="error-text" id="stay-error-text"></p>
-      <button type="submit">確定宿泊を追加</button>
+      <div class="button-row">
+        <button type="submit">追加する</button>
+        <button type="button" id="cancel-stay-form" class="btn-secondary">キャンセル</button>
+      </div>
     </form>
 
     <div id="stay-list"></div>
   `;
 
+  const toggleCandidateFormButton = outlet.querySelector('#toggle-candidate-form');
   const candidateForm = outlet.querySelector('#candidate-form');
+  const cancelCandidateFormButton = outlet.querySelector('#cancel-candidate-form');
   const urlInput = outlet.querySelector('#candidate-url');
   const noteInput = outlet.querySelector('#candidate-note');
   const errorText = outlet.querySelector('#candidate-error-text');
@@ -73,13 +89,33 @@ export function mount(outlet, params) {
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
 
+  function openCandidateForm() {
+    toggleCandidateFormButton.hidden = true;
+    candidateForm.hidden = false;
+    urlInput.focus();
+  }
+
+  function closeCandidateForm() {
+    candidateForm.hidden = true;
+    toggleCandidateFormButton.hidden = false;
+    errorText.textContent = '';
+    urlInput.value = '';
+    noteInput.value = '';
+  }
+
+  const onToggleCandidateFormClick = () => openCandidateForm();
+  toggleCandidateFormButton.addEventListener('click', onToggleCandidateFormClick);
+
+  const onCancelCandidateFormClick = () => closeCandidateForm();
+  cancelCandidateFormButton.addEventListener('click', onCancelCandidateFormClick);
+
   let currentCandidates = [];
 
   function renderCandidates(candidates) {
     candidateList.innerHTML = '';
 
     if (candidates.length === 0) {
-      candidateList.innerHTML = '<p class="empty-state">まだ宿泊候補がありません。最初の候補を追加しましょう。</p>';
+      candidateList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ宿泊候補がありません。最初の候補を追加しましょう。</p></div>`;
       return;
     }
 
@@ -143,11 +179,10 @@ export function mount(outlet, params) {
         addedBy: session.name,
         addedAt: serverTimestamp(),
       });
-      urlInput.value = '';
-      noteInput.value = '';
       // src/views/notes.jsと同様、再取得せずローカルの一覧へ楽観的に追加する。
       currentCandidates = [...currentCandidates, { id, url, note, addedBy: session.name }];
       renderCandidates(currentCandidates);
+      closeCandidateForm();
     } catch (error) {
       console.error(error);
       errorText.textContent = '宿泊候補の追加に失敗しました。時間をおいて再度お試しください。';
@@ -160,7 +195,9 @@ export function mount(outlet, params) {
   loadCandidates();
 
   // --- 確定宿泊 ---
+  const toggleStayFormButton = outlet.querySelector('#toggle-stay-form');
   const stayForm = outlet.querySelector('#stay-form');
+  const cancelStayFormButton = outlet.querySelector('#cancel-stay-form');
   const stayUrlInput = outlet.querySelector('#stay-url');
   const stayNoteInput = outlet.querySelector('#stay-note');
   const stayCheckInInput = outlet.querySelector('#stay-checkin');
@@ -170,6 +207,28 @@ export function mount(outlet, params) {
   const staySubmitButton = stayForm.querySelector('button[type="submit"]');
 
   staySubmitButton.disabled = true;
+
+  function openStayForm() {
+    toggleStayFormButton.hidden = true;
+    stayForm.hidden = false;
+    stayUrlInput.focus();
+  }
+
+  function closeStayForm() {
+    stayForm.hidden = true;
+    toggleStayFormButton.hidden = false;
+    stayErrorText.textContent = '';
+    stayUrlInput.value = '';
+    stayNoteInput.value = '';
+    stayCheckInInput.value = '';
+    stayCheckOutInput.value = '';
+  }
+
+  const onToggleStayFormClick = () => openStayForm();
+  toggleStayFormButton.addEventListener('click', onToggleStayFormClick);
+
+  const onCancelStayFormClick = () => closeStayForm();
+  cancelStayFormButton.addEventListener('click', onCancelStayFormClick);
 
   let currentStays = [];
 
@@ -183,7 +242,7 @@ export function mount(outlet, params) {
     stayList.innerHTML = '';
 
     if (stays.length === 0) {
-      stayList.innerHTML = '<p class="empty-state">まだ確定宿泊がありません。</p>';
+      stayList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ確定宿泊がありません。</p></div>`;
       return;
     }
 
@@ -259,12 +318,9 @@ export function mount(outlet, params) {
         checkOut,
         addedBy: session.name,
       });
-      stayUrlInput.value = '';
-      stayNoteInput.value = '';
-      stayCheckInInput.value = '';
-      stayCheckOutInput.value = '';
       currentStays = [...currentStays, { id, url, note, checkIn, checkOut, addedBy: session.name }];
       renderStays(currentStays);
+      closeStayForm();
     } catch (error) {
       console.error(error);
       stayErrorText.textContent = '確定宿泊の追加に失敗しました。時間をおいて再度お試しください。';
@@ -277,7 +333,11 @@ export function mount(outlet, params) {
   loadStays();
 
   return () => {
+    toggleCandidateFormButton.removeEventListener('click', onToggleCandidateFormClick);
+    cancelCandidateFormButton.removeEventListener('click', onCancelCandidateFormClick);
     candidateForm.removeEventListener('submit', onCandidateSubmit);
+    toggleStayFormButton.removeEventListener('click', onToggleStayFormClick);
+    cancelStayFormButton.removeEventListener('click', onCancelStayFormClick);
     stayForm.removeEventListener('submit', onStaySubmit);
   };
 }

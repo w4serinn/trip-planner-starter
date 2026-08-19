@@ -1,23 +1,24 @@
 /* デザイントークン(仮決定)。配色・タイポグラフィ・余白などをCSS変数として定義する。
    すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。 */
 :root {
-  /* カラー(2026-08-19改訂: docs/ROADMAP.md「16. 見た目の刷新」参照。
-     参考サイト https://tabiori.com/ の「ポップで親しみやすく、かつ信頼感のある」
-     トーンに寄せ、深緑×オレンジの落ち着いた配色から明るい青×オレンジへ変更) */
-  --color-primary: #2f80ed;
-  --color-primary-dark: #1a5fc4;
-  --color-accent: #f5a623;
-  --color-bg: #f7f8fa;
+  /* カラー(2026-08-19再改訂: docs/ROADMAP.md「第3期: レイアウト刷新」参照。
+     参考サイト https://tabiori.com/ の「修学旅行のしおり」的な、明るく親しみやすい
+     トーンをさらに反映。背景を寒色グレーから紙めいた温かみのある白へ、アクセントを
+     オレンジ系アンバーから、より親しみやすい暖色コーラルオレンジへ変更した。
+     ロゴ・素材自体は参照していない(雰囲気のみの参考)。 */
+  --color-primary: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-accent: #ff8c42;
+  --color-bg: #fff8f0;
   --color-surface: #fff;
   --color-text: #2a2a2a;
   --color-text-muted: #6b6b6b;
 
-  /* 旧背景(クリーム系)に合わせた暖色ベージュから、新しい薄グレー背景に合う寒色寄りの
-     グレーへ変更(トークン変更に伴うセルフレビューで、暖色の枠線が浮くと判断したため)。 */
-  --color-border: #dfe3e8;
+  /* 温かみのある背景に合わせ、枠線も暖色寄りの薄ベージュにする。 */
+  --color-border: #e8dfd3;
   --color-danger: #c0392b;
 
-  /* primaryが青になったため、成功色は独立した緑を保つ(旧primaryと同値の使い回しをやめる)。 */
+  /* primaryが青系のため、成功色は独立した緑を保つ(primaryと混同しないように)。 */
   --color-success: #219653;
 
   /* タイポグラフィ */
@@ -26,6 +27,10 @@
   --font-size-base: 16px;
   --font-size-lg: 20px;
   --font-size-xl: 28px;
+
+  /* 見出しの重みを本文(400程度)とはっきり分け、階層を強める。 */
+  --font-weight-heading: 700;
+  --font-weight-subheading: 600;
 
   /* スペーシング */
   --space-xs: 4px;
@@ -37,5 +42,11 @@
   /* 角丸・影 */
   --radius-sm: 8px;
   --radius-md: 16px;
-  --shadow-card: 0 4px 12px rgb(0 0 0 / 10%);
+
+  /* ボタン専用の角丸(cardのradius-mdより控えめ、input等のradius-smよりやや丸め)。 */
+  --radius-button: 12px;
+  --shadow-card: 0 4px 14px rgb(0 0 0 / 8%);
+
+  /* primaryカラー(青)を薄くにじませた影で、ボタンに軽い浮遊感を持たせる。 */
+  --shadow-button: 0 4px 10px rgb(59 130 246 / 25%);
 }

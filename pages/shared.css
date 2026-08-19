@@ -4,6 +4,14 @@
   box-sizing: border-box;
 }
 
+/* hidden属性は本来display: noneに相当するが、優先度が最も低いプレゼンテーショナル
+   ヒントとして実装されているため、button/.summary-list等へ明示的にdisplayを指定した
+   要素では上書きされてしまう(実際に発生した不具合。docs/cycle-log.md参照)。個別に
+   [hidden]用の上書きを足し続けるのは漏れやすいため、ここで一括して確実に効かせる。 */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -38,16 +46,20 @@ body {
 
 h1 {
   font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-heading);
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 h2 {
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-heading);
   margin: 0;
 }
 
 h3 {
   font-size: var(--font-size-base);
+  font-weight: var(--font-weight-subheading);
   margin: 0 0 var(--space-sm);
 }
 
@@ -71,25 +83,9 @@ label {
 
 input[type="text"],
 input[type="url"],
-textarea {
-  font-size: var(--font-size-base);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family: inherit;
-  width: 100%;
-  resize: vertical;
-}
-
-input[type="text"]:focus,
-input[type="url"]:focus,
-textarea:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
+input[type="date"],
+input[type="time"],
+textarea,
 select {
   font-size: var(--font-size-base);
   padding: var(--space-sm) var(--space-md);
@@ -98,11 +94,25 @@ select {
   background: var(--color-surface);
   color: var(--color-text);
   font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+input[type="text"],
+input[type="url"],
+textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+input[type="text"]:focus,
+input[type="url"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+textarea:focus,
 select:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 15%);
 }
 
 .time-select-row {
@@ -122,24 +132,44 @@ select:focus {
 }
 
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
   width: 100%;
   font-size: var(--font-size-base);
-  font-weight: bold;
+  font-weight: var(--font-weight-heading);
   padding: var(--space-sm) var(--space-md);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-button);
   background: var(--color-primary);
   color: var(--color-surface);
+  box-shadow: var(--shadow-button);
   cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+button svg {
+  flex-shrink: 0;
 }
 
 button:hover {
   background: var(--color-primary-dark);
 }
 
+button:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
 .card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--space-md);
@@ -150,18 +180,92 @@ button:hover {
   display: block;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-link:active {
+  transform: scale(0.98);
+}
+
+.trip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.trip-card-chevron {
+  display: flex;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--space-xl) var(--space-md);
+}
+
+.empty-state svg {
+  color: var(--color-border);
+}
+
+.empty-state p {
+  margin: 0;
 }
 
 .btn-secondary {
   background: transparent;
   color: var(--color-primary);
   border: 1px solid var(--color-primary);
+  box-shadow: none;
+}
+
+.card-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.icon-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.card-section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+}
+
+.card-section-header button {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.summary-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0;
+}
+
+.summary-list dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.summary-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .trip-name-row {
@@ -211,10 +315,95 @@ button:hover {
 .star-button {
   width: auto;
   background: none;
+  box-shadow: none;
   color: var(--color-accent);
   font-size: var(--font-size-xl);
   line-height: 1;
   padding: 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.timeline-marker {
+  flex-shrink: 0;
+  width: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-marker::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: var(--space-sm);
+}
+
+.timeline-marker::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  /* --color-borderは暖色背景との明度差が小さく線がほぼ見えなくなるため、
+     視認性の高い--color-text-mutedを使う。 */
+  background: var(--color-text-muted);
+  opacity: 0.4;
+  margin-top: var(--space-xs);
+}
+
+.timeline-item:last-child .timeline-marker::after {
+  display: none;
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.destination-heading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.destination-heading-row h3 {
+  margin: 0;
+}
+
+.rank-badge {
+  flex-shrink: 0;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-subheading);
+}
+
+.rank-badge-top {
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.score-bar {
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  overflow: hidden;
+  margin: var(--space-xs) 0;
+}
+
+.score-bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
 }
 
 .candidate-link {
@@ -278,12 +467,20 @@ button:hover {
 }
 
 .tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: var(--font-size-sm);
   white-space: nowrap;
   border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab svg {
   flex-shrink: 0;
 }
 

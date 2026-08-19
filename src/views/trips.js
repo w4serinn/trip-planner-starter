@@ -4,6 +4,7 @@
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
+import { icons } from '../icons.js';
 
 export function mount(outlet) {
   const session = loadSession();
@@ -16,7 +17,7 @@ export function mount(outlet) {
     <p class="subtitle" id="group-subtitle">${session.name}さんとして参加中</p>
     <div id="trip-list"></div>
     <p class="error-text" id="error-text"></p>
-    <button type="button" id="create-trip">＋ 新しい旅行を作る</button>
+    <button type="button" id="create-trip">${icons.plus}<span>新しい旅行を作る</span></button>
   `;
 
   const tripList = outlet.querySelector('#trip-list');
@@ -28,18 +29,30 @@ export function mount(outlet) {
     tripList.innerHTML = '';
 
     if (trips.length === 0) {
-      tripList.innerHTML = '<p class="empty-state">まだ旅行がありません。「＋ 新しい旅行を作る」から始めましょう。</p>';
+      tripList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ旅行がありません。「＋ 新しい旅行を作る」から始めましょう。</p></div>`;
       return;
     }
 
     for (const trip of trips) {
       const link = document.createElement('a');
-      link.className = 'card card-link';
+      link.className = 'card card-link trip-card';
       link.href = `#/trips/${encodeURIComponent(trip.id)}`;
+
+      const textWrap = document.createElement('div');
 
       const name = document.createElement('h2');
       name.textContent = trip.name || '名称未設定の旅行';
-      link.appendChild(name);
+      textWrap.appendChild(name);
+
+      if (trip.createdAt?.seconds) {
+        const meta = document.createElement('p');
+        meta.className = 'subtitle';
+        meta.textContent = `作成日: ${new Date(trip.createdAt.seconds * 1000).toLocaleDateString('ja-JP')}`;
+        textWrap.appendChild(meta);
+      }
+
+      link.appendChild(textWrap);
+      link.insertAdjacentHTML('beforeend', `<span class="trip-card-chevron">${icons.chevron}</span>`);
 
       tripList.appendChild(link);
     }

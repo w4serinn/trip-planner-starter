@@ -8,6 +8,7 @@
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, listCollection } from '../firestore.js';
+import { icons } from '../icons.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -37,7 +38,9 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">現地で何をするかを書き貯めましょう。日付ごとにまとまり、各日の中は時間の早い順に並びます。</p>
 
-    <form id="item-form" novalidate>
+    <button type="button" id="toggle-item-form" class="btn-secondary">${icons.plus}<span>しおり項目を追加</span></button>
+
+    <form id="item-form" novalidate hidden>
       <div class="field">
         <label for="item-title">やること</label>
         <input type="text" id="item-title" name="title" required />
@@ -73,13 +76,18 @@ export function mount(outlet, params) {
         <input type="text" id="item-note" name="note" />
       </div>
       <p class="error-text" id="item-error-text"></p>
-      <button type="submit">追加する</button>
+      <div class="button-row">
+        <button type="submit">追加する</button>
+        <button type="button" id="cancel-item-form" class="btn-secondary">キャンセル</button>
+      </div>
     </form>
 
     <div id="item-list"></div>
   `;
 
+  const toggleFormButton = outlet.querySelector('#toggle-item-form');
   const itemForm = outlet.querySelector('#item-form');
+  const cancelFormButton = outlet.querySelector('#cancel-item-form');
   const titleInput = outlet.querySelector('#item-title');
   const dateInput = outlet.querySelector('#item-date');
   const timeAmPmSelect = outlet.querySelector('#item-time-ampm');
@@ -94,6 +102,31 @@ export function mount(outlet, params) {
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
 
+  function openForm() {
+    toggleFormButton.hidden = true;
+    itemForm.hidden = false;
+    titleInput.focus();
+  }
+
+  function closeForm() {
+    itemForm.hidden = true;
+    toggleFormButton.hidden = false;
+    errorText.textContent = '';
+    titleInput.value = '';
+    dateInput.value = '';
+    timeAmPmSelect.value = '';
+    timeHourSelect.value = '';
+    timeMinuteSelect.value = '';
+    locationInput.value = '';
+    noteInput.value = '';
+  }
+
+  const onToggleFormClick = () => openForm();
+  toggleFormButton.addEventListener('click', onToggleFormClick);
+
+  const onCancelFormClick = () => closeForm();
+  cancelFormButton.addEventListener('click', onCancelFormClick);
+
   let currentItems = [];
 
   function formatDateLabel(dateString) {
@@ -106,7 +139,7 @@ export function mount(outlet, params) {
     itemList.innerHTML = '';
 
     if (items.length === 0) {
-      itemList.innerHTML = '<p class="empty-state">まだしおり項目がありません。最初の項目を追加しましょう。</p>';
+      itemList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだしおり項目がありません。最初の項目を追加しましょう。</p></div>`;
       return;
     }
 
@@ -125,13 +158,23 @@ export function mount(outlet, params) {
 
       const dayItems = groups.get(date).sort((a, b) => (a.time || NO_TIME_SENTINEL).localeCompare(b.time || NO_TIME_SENTINEL));
 
+      const timeline = document.createElement('div');
+      timeline.className = 'timeline';
+
       for (const item of dayItems) {
-        const card = document.createElement('div');
-        card.className = 'card';
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'timeline-item';
+
+        const marker = document.createElement('div');
+        marker.className = 'timeline-marker';
+        timelineItem.appendChild(marker);
+
+        const content = document.createElement('div');
+        content.className = 'timeline-content card';
 
         const title = document.createElement('h3');
         title.textContent = item.time ? `${item.time} ${item.title}` : item.title;
-        card.appendChild(title);
+        content.appendChild(title);
 
         if (item.locationUrl) {
           const link = document.createElement('a');
@@ -140,22 +183,25 @@ export function mount(outlet, params) {
           link.textContent = item.locationUrl;
           link.target = '_blank';
           link.rel = 'noopener noreferrer';
-          card.appendChild(link);
+          content.appendChild(link);
         }
 
         if (item.note) {
           const note = document.createElement('p');
           note.textContent = item.note;
-          card.appendChild(note);
+          content.appendChild(note);
         }
 
         const meta = document.createElement('p');
         meta.className = 'subtitle';
         meta.textContent = `追加: ${item.addedBy}`;
-        card.appendChild(meta);
+        content.appendChild(meta);
 
-        itemList.appendChild(card);
+        timelineItem.appendChild(content);
+        timeline.appendChild(timelineItem);
       }
+
+      itemList.appendChild(timeline);
     }
   }
 
@@ -204,15 +250,10 @@ export function mount(outlet, params) {
         note,
         addedBy: session.name,
       });
-      titleInput.value = '';
-      timeAmPmSelect.value = '';
-      timeHourSelect.value = '';
-      timeMinuteSelect.value = '';
-      locationInput.value = '';
-      noteInput.value = '';
       // src/views/notes.jsと同様、再取得せずローカルの一覧へ楽観的に追加する。
       currentItems = [...currentItems, { id, title, date, time, locationUrl, note, addedBy: session.name }];
       renderItems(currentItems);
+      closeForm();
     } catch (error) {
       console.error(error);
       errorText.textContent = 'しおり項目の追加に失敗しました。時間をおいて再度お試しください。';
@@ -225,6 +266,8 @@ export function mount(outlet, params) {
   loadItems();
 
   return () => {
+    toggleFormButton.removeEventListener('click', onToggleFormClick);
+    cancelFormButton.removeEventListener('click', onCancelFormClick);
     itemForm.removeEventListener('submit', onItemSubmit);
   };
 }
