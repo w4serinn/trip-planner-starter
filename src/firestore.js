@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   arrayUnion,
   deleteField,
+  onSnapshot,
 } from 'firebase/firestore';
 
 export async function getDocument(path) {
@@ -54,6 +55,32 @@ export async function addDocument(collectionPath, data) {
 export async function listCollection(collectionPath) {
   const snapshot = await getDocs(collection(db, collectionPath));
   return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+}
+
+// リアルタイム同期(docs/ROADMAP.md「第8期」参照)。ドキュメントの変更を購読し、
+// 変更のたびにonData({ id, ...data }、存在しない場合はnull)を呼ぶ。
+// 返り値のunsubscribe関数を、呼び出し側のアンマウント時(mountが返すクリーンアップ
+// 関数)で必ず呼ぶこと(呼ばないとリスナーが残り続けてしまう)。
+export function subscribeToDocument(path, onData, onError) {
+  return onSnapshot(
+    doc(db, path),
+    (snapshot) => {
+      onData(snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null);
+    },
+    onError,
+  );
+}
+
+// コレクションの変更を購読し、変更のたびにonData([{ id, ...data }, ...])を呼ぶ
+// (listCollectionと同じデータ形)。返り値のunsubscribe関数を必ず呼ぶこと。
+export function subscribeToCollection(collectionPath, onData, onError) {
+  return onSnapshot(
+    collection(db, collectionPath),
+    (snapshot) => {
+      onData(snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })));
+    },
+    onError,
+  );
 }
 
 // 投票・回答のマップキーに「名前」をそのまま使うと、updateDocumentのドット記法が

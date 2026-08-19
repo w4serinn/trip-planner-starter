@@ -1043,3 +1043,28 @@
       ハンバーガーボタンは非表示であることも再確認。console/pageerrorは0件
       (2026-08-19)。`npm run check`(lint・test)成功。検証用メンバー名は削除済み。
       これで「31」(第7期)は全サブタスク完了。
+
+## 第8期-1. Firestore購読用共通関数の追加
+- [x] (M) `src/firestore.js`に`subscribeToDocument(path, onData, onError)`・
+      `subscribeToCollection(collectionPath, onData, onError)`を新規追加。
+      内部でFirebase SDKの`onSnapshot`を使い、ドキュメント/コレクションの変更が
+      あるたびに、既存の`getDocument`/`listCollection`と同じデータ形
+      (`{ id, ...data }`または`[{ id, ...data }, ...]`)でコールバックを呼ぶ。
+      どちらも呼び出し側が保持すべき`unsubscribe`関数を返す(呼び出し側の
+      アンマウント時クリーンアップで呼ぶ想定)。既存の`getDocument`/`listCollection`
+      (一回きりの取得)はそのまま残し、単発取得が必要な箇所(例: 参加時のグループ
+      存在チェック等)では引き続き使う。まだどの画面にも組み込んでいない
+
+      まだ画面に組み込んでいないため、Playwrightで2つの独立したブラウザページ
+      (実Firestore・共有テストグループ`FMXRZYW7`内の使い捨てコレクション
+      `realtimeTestDocs`を使用)を使い、擬似的に「別ユーザーの操作がリアルタイムに
+      届くか」を検証した。ページBで`subscribeToDocument`を購読開始した状態で、
+      ページA(別のブラウザページ、リロードなし)がFirestoreへ`updateDocument`で
+      書き込むと、ページBのコールバックがリロード無しで新しい値を受信することを確認。
+      `unsubscribe()`実行後は、ページAがさらに書き込んでもページBのコールバックが
+      呼ばれないことを確認。`subscribeToCollection`も同様に、ページAが
+      `addDocument`で新規ドキュメントを追加すると、ページBの購読コールバックが
+      件数の変化(1→2)をリロード無しで受信することを確認。console/pageerrorは0件
+      (2026-08-19)。`npm run check`(lint・test)成功。検証で使った使い捨て
+      コレクション(2ドキュメント)・テスト用メンバー名2件(2ページ分)は、全trip
+      横断で検索してFirestoreから削除済み。

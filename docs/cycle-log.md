@@ -1257,3 +1257,20 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   (onSnapshot化)」のみ。次サイクルはその1つ目のサブタスク(`src/firestore.js`への
   購読用関数追加)に着手。
 - blocked / partial: なし。
+
+## 2026-08-19 20:35
+- 実装: 第8期の1つ目のサブタスクを実施。`src/firestore.js`に
+  `subscribeToDocument(path, onData, onError)`・`subscribeToCollection(collectionPath,
+  onData, onError)`を新規追加(内部で`onSnapshot`、`unsubscribe`関数を返す)。
+  既存の`getDocument`/`listCollection`は変更せず残した。まだどの画面にも
+  組み込んでいない。
+- 動作確認: OK。まだ画面未組み込みのため、Playwrightで2つの独立したブラウザページを
+  使い、実Firestore(共有テストグループ`FMXRZYW7`の使い捨てコレクション)に対して
+  「ページAの書き込みがリロード無しでページBの購読コールバックへ届く」ことを
+  document/collectionどちらの購読関数でも確認。`unsubscribe()`後は届かないことも
+  確認。console/pageerror 0件。`npm run check`(lint・test)成功。検証データ
+  (使い捨てコレクション2件・テスト用メンバー名2件)は全trip横断で検索し削除済み。
+- レビュー: OK。Firestoreのコレクション構造・フィールド名(`docs/firestore-design.md`)
+  は不変(読み取り方式の追加のみ)。UIの変更が無いためモバイル崩れの心配なし。
+- 次回予定: 第8期の2つ目のサブタスク(雑多メモ・企画メモのリアルタイム化)に着手。
+- blocked / partial: なし。

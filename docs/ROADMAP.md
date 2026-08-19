@@ -225,11 +225,10 @@ CSSだけでは完結せず、月めくり・日付グリッド描画・複数�
 保存するFirestoreのコレクション構造・フィールド名(`docs/firestore-design.md`)は
 変えない。読み取り方式のみの変更。以下、影響範囲ごとにS/Mへ分割する。
 
-- [ ] (M) `src/firestore.js`に購読用の共通関数を追加する(例:
-      `subscribeToDocument(path, onData)` / `subscribeToCollection(collectionPath,
-      onData)`。内部で`onSnapshot`を使い、呼び出し側が使う`unsubscribe`関数を返す)。
-      既存の`getDocument`/`listCollection`はそのまま残す(単発取得が必要な箇所
-      向けに引き続き使う)
+`src/firestore.js`への購読用共通関数の追加は完了済み(詳細はdocs/roadmap-done.md
+参照)。`subscribeToDocument(path, onData, onError)`・
+`subscribeToCollection(collectionPath, onData, onError)`を追加し、どちらも
+`unsubscribe`関数を返す。既存の`getDocument`/`listCollection`はそのまま残している。
 - [ ] (M) 雑多メモ・企画メモ(単一ドキュメント購読、`src/views/scratch.js`・
       `src/views/notes.js`)をリアルタイム化する。自分の入力中(デバウンス待ち)に
       他人の更新が届いた場合の扱い(自分の未保存分を上書きしない、等)を決める
