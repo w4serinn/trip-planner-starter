@@ -4,6 +4,14 @@
   box-sizing: border-box;
 }
 
+/* hidden属性は本来display: noneに相当するが、優先度が最も低いプレゼンテーショナル
+   ヒントとして実装されているため、button/.summary-list等へ明示的にdisplayを指定した
+   要素では上書きされてしまう(実際に発生した不具合。docs/cycle-log.md参照)。個別に
+   [hidden]用の上書きを足し続けるのは漏れやすいため、ここで一括して確実に効かせる。 */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -145,12 +153,6 @@ button svg {
   flex-shrink: 0;
 }
 
-/* buttonへの明示的なdisplay指定がhidden属性の既定挙動(display: none)より
-   優先されてしまうため、明示的に上書きする。 */
-button[hidden] {
-  display: none;
-}
-
 button:hover {
   background: var(--color-primary-dark);
 }
@@ -221,6 +223,43 @@ button:disabled {
   color: var(--color-primary);
   border: 1px solid var(--color-primary);
   box-shadow: none;
+}
+
+.card-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.card-section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+}
+
+.card-section-header button {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.summary-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0;
+}
+
+.summary-list dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.summary-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .trip-name-row {
