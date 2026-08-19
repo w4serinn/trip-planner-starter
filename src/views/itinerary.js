@@ -7,7 +7,7 @@
 // データ形式("HH:MM"の24時間表記文字列)自体は変えない。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { addDocument, listCollection } from '../firestore.js';
+import { addDocument, subscribeToCollection } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
@@ -222,17 +222,26 @@ export function mount(outlet, params) {
     }
   }
 
-  async function loadItems() {
-    try {
-      currentItems = await listCollection(itemsPath);
+  // リアルタイム同期(docs/ROADMAP.md「32」参照)。以前は追加のたびにローカルの配列を
+  // 楽観的に更新していたが、購読による再描画と二重になりちらつきの原因になるため、
+  // ローカル更新はやめて購読の再描画だけに一本化した。
+  let isFirstSnapshot = true;
+  const unsubscribeItems = subscribeToCollection(
+    itemsPath,
+    (items) => {
+      currentItems = items;
       renderItems(currentItems);
-    } catch (error) {
+      if (isFirstSnapshot) {
+        isFirstSnapshot = false;
+        submitButton.disabled = false;
+      }
+    },
+    (error) => {
       console.error(error);
       errorText.textContent = 'しおり項目の取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
       submitButton.disabled = false;
-    }
-  }
+    },
+  );
 
   const onItemSubmit = async (event) => {
     event.preventDefault();
@@ -259,7 +268,7 @@ export function mount(outlet, params) {
 
     submitButton.disabled = true;
     try {
-      const id = await addDocument(itemsPath, {
+      await addDocument(itemsPath, {
         title,
         date,
         time,
@@ -267,9 +276,6 @@ export function mount(outlet, params) {
         note,
         addedBy: session.name,
       });
-      // src/views/notes.jsと同様、再取得せずローカルの一覧へ楽観的に追加する。
-      currentItems = [...currentItems, { id, title, date, time, locationUrl, note, addedBy: session.name }];
-      renderItems(currentItems);
       closeForm();
     } catch (error) {
       console.error(error);
@@ -280,12 +286,11 @@ export function mount(outlet, params) {
   };
   itemForm.addEventListener('submit', onItemSubmit);
 
-  loadItems();
-
   return () => {
     toggleFormButton.removeEventListener('click', onToggleFormClick);
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     itemForm.removeEventListener('submit', onItemSubmit);
     datePicker.destroy();
+    unsubscribeItems();
   };
 }

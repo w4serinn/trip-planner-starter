@@ -4,7 +4,7 @@
 // 同時編集時の競合(後勝ち上書き)は許容する(docs/screens.md「設計判断」参照)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { getDocument, updateDocument } from '../firestore.js';
+import { subscribeToDocument, updateDocument } from '../firestore.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -21,7 +21,7 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">旅行が固まる前の「やりたいこと」を、みんなで自由に書き足していきましょう。入力は自動的に保存されます。</p>
 
-    <div class="card">
+    <div class="card card-dark">
       <textarea id="planning-notes" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
       <p class="error-text" id="notes-error-text"></p>
       <p class="copy-feedback" id="notes-saved-text"></p>
@@ -61,27 +61,42 @@ export function mount(outlet, params) {
   };
   notesTextarea.addEventListener('input', onNotesInput);
 
-  async function loadNotes() {
-    try {
-      const trip = await getDocument(tripPath);
-      if (!trip) {
-        navigate('#/trips');
+  // リアルタイム同期(docs/ROADMAP.md「第8期」参照)。他の参加者の更新を購読し、
+  // 自分が編集中(未保存の変更がある、またはテキストエリアにフォーカス中)の間は
+  // 上書きしない(入力中のカーソル位置・未保存分を壊さないため)。
+  let isFirstSnapshot = true;
+  const unsubscribe = subscribeToDocument(
+    tripPath,
+    (trip) => {
+      if (isFirstSnapshot) {
+        isFirstSnapshot = false;
+        if (!trip) {
+          navigate('#/trips');
+          return;
+        }
+        lastSavedValue = trip.planningNotesText || '';
+        notesTextarea.value = lastSavedValue;
+        notesTextarea.disabled = false;
         return;
       }
-      lastSavedValue = trip.planningNotesText || '';
-      notesTextarea.value = lastSavedValue;
-    } catch (error) {
+
+      const remoteValue = trip?.planningNotesText || '';
+      const hasUnsavedLocalEdit = saveTimer !== null;
+      const isFocused = document.activeElement === notesTextarea;
+      if (hasUnsavedLocalEdit || isFocused || remoteValue === lastSavedValue) return;
+      lastSavedValue = remoteValue;
+      notesTextarea.value = remoteValue;
+    },
+    (error) => {
       console.error(error);
       errorText.textContent = 'メモの取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
       notesTextarea.disabled = false;
-    }
-  }
-
-  loadNotes();
+    },
+  );
 
   return () => {
     notesTextarea.removeEventListener('input', onNotesInput);
+    unsubscribe();
     // タブ離脱時、デバウンス待ちの未保存分があれば取りこぼさないよう即座に保存する。
     flushSave();
   };

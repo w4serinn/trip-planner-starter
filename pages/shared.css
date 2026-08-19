@@ -21,6 +21,18 @@ body {
   font-size: var(--font-size-base);
 }
 
+/* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
+   (モバイル)への刷新」): 768px以上ではNotion風の常設左サイドバーを導入する。
+   配色トークンは変更しない(人間の指示により、変えるのは構造・配置のみ)。
+   モバイル(768px未満)は#sidebarをハンバーガーボタンで開閉するドロワーとして
+   共用する(横タブバーは撤去した)。 */
+@media (width >= 768px) {
+  body {
+    display: flex;
+    align-items: flex-start;
+  }
+}
+
 .page {
   max-width: 480px;
   margin: 0 auto;
@@ -33,6 +45,8 @@ body {
   .page {
     max-width: 700px;
     padding: var(--space-xl) var(--space-lg);
+    flex: 1;
+    min-width: 0;
   }
 }
 
@@ -84,6 +98,7 @@ body {
   color: rgb(255 255 255 / 75%);
   text-decoration: none;
   font-size: var(--font-size-sm);
+  flex-shrink: 0;
 }
 
 .back-link:hover {
@@ -99,6 +114,13 @@ h1 {
 
 .page-header h1 {
   color: var(--color-surface);
+
+  /* 2026-08-19(docs/ROADMAP.md「31」): ハンバーガーボタン追加分、モバイル幅での
+     横スペースが以前より狭くなったため、折り返さず省略記号で収める。 */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 h2 {
@@ -520,44 +542,111 @@ button:disabled {
   margin-top: var(--space-sm);
 }
 
-.tabbar {
-  display: flex;
+/* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
+   (モバイル)への刷新」): 768px以上では常設の左サイドバー、未満ではハンバーガー
+   ボタンで開閉するドロワーとして同じ#sidebar要素を共用する
+   (src/app.js「renderNav」参照)。横タブバー(.tabbar/.tab)は撤去した。 */
+.sidebar {
+  display: none;
+  flex-direction: column;
   gap: var(--space-xs);
-  overflow-x: auto;
-  margin-bottom: var(--space-md);
-  border-bottom: 1px solid var(--color-border);
+  width: 220px;
+  flex-shrink: 0;
+  padding: var(--space-lg) var(--space-md);
+  border-right: 1px solid var(--color-border);
 }
 
-.tab {
+/* モバイルでの開閉状態(.sidebar-open): 画面左からのフルハイトドロワーとして
+   固定表示する。src/app.jsのopenMenu/closeMenuがこのクラスをトグルする。 */
+.sidebar.sidebar-open {
+  display: flex;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  background: var(--color-surface);
+  box-shadow: 4px 0 20px rgb(0 0 0 / 15%);
+  overflow-y: auto;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 40%);
+  z-index: 40;
+}
+
+@media (width >= 768px) {
+  .sidebar,
+  .sidebar.sidebar-open {
+    display: flex;
+    position: sticky;
+    inset: auto;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: none;
+    z-index: auto;
+  }
+
+  .sidebar-backdrop {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+}
+
+.menu-toggle {
+  width: 40px;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-surface);
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.menu-toggle:hover {
+  background: rgb(255 255 255 / 15%);
+}
+
+.sidebar-link {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: var(--font-size-sm);
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  flex-shrink: 0;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.tab svg {
+.sidebar-link svg {
   flex-shrink: 0;
 }
 
-.tab-active {
+.sidebar-link:hover {
+  background: var(--color-bg);
+}
+
+.sidebar-link-active {
+  background: var(--color-bg);
   color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: bold;
+  font-weight: var(--font-weight-subheading);
 }
 
 /* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):
-   雑多メモは「一番よく使うメイン機能」という位置づけのため、白カード主体の他画面群の
-   中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
+   単一共有テキストのブレインダンプ的な画面(雑多メモ・企画メモ)は、白カード主体の
+   他画面群の中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
    (ヘッダー24と同じ--color-primary-deep系グラデーション+ドット柄。画像不使用)。
-   src/views/scratch.jsの<textarea>を囲む.cardにのみ適用する(他画面のカードは対象外)。 */
-.scratch-card {
+   2026-08-19追記(docs/ROADMAP.md「29」): 当初は雑多メモの.cardにのみ`.scratch-card`
+   として適用していたが、「雑多メモだけ背景色があり企画メモは無いのは非対称」との
+   指摘を受け、`.card-dark`に改称して企画メモ(src/views/notes.js)にも同様に適用する
+   形で両者の見た目を揃えた。 */
+.card-dark {
   background-image:
     radial-gradient(circle, rgb(255 255 255 / 10%) 1px, transparent 1.5px),
     linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
@@ -565,34 +654,34 @@ button:disabled {
   color: var(--color-surface);
 }
 
-.scratch-card textarea {
+.card-dark textarea {
   background: rgb(255 255 255 / 8%);
   border-color: rgb(255 255 255 / 25%);
   color: var(--color-surface);
 }
 
-.scratch-card textarea::placeholder {
+.card-dark textarea::placeholder {
   color: rgb(255 255 255 / 55%);
 }
 
-.scratch-card textarea:focus {
+.card-dark textarea:focus {
   border-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);
 }
 
-.scratch-card .btn-secondary {
+.card-dark .btn-secondary {
   color: var(--color-surface);
   border-color: rgb(255 255 255 / 60%);
 }
 
-.scratch-card .btn-secondary:hover {
+.card-dark .btn-secondary:hover {
   background: rgb(255 255 255 / 12%);
 }
 
 /* --color-danger/--color-successをそのまま文字色に使うと濃紺背景とのコントラストが
    不十分なため、既存トークンを背景色として使うチップ表示に切り替える(新規の色は
    追加しない)。 */
-.scratch-card .error-text:not(:empty) {
+.card-dark .error-text:not(:empty) {
   display: inline-block;
   background: var(--color-danger);
   color: var(--color-surface);
@@ -600,7 +689,7 @@ button:disabled {
   border-radius: var(--radius-sm);
 }
 
-.scratch-card .copy-feedback:not(:empty) {
+.card-dark .copy-feedback:not(:empty) {
   display: inline-block;
   background: var(--color-success);
   color: var(--color-surface);
@@ -611,11 +700,16 @@ button:disabled {
 /* 2026-08-19(docs/ROADMAP.md「27. カスタムカレンダーピッカーの導入」):
    src/datePicker.jsが描画するカレンダーUI。単一選択・複数選択どちらのモードでも
    共通のCSSを使う(選択状態のクラスは同じため)。jicoo.com調査時の「格子状のピル型
-   ボタンで日付を選ぶ」パターンを参考に、日付セルは円形のピルボタンにする。 */
+   ボタンで日付を選ぶ」パターンを参考に、日付セルは円形のピルボタンにする。
+   2026-08-19追記(docs/ROADMAP.md「28. カレンダーピッカーをコンパクトにする」):
+   日付セルが`aspect-ratio: 1`かつグリッド列(7分割)幅いっぱいに広がる作りだったため、
+   広い画面で大きくなりすぎていた。`.date-picker`全体にmax-widthを設け、フォーム内の
+   他要素と釣り合うコンパクトさに調整する。 */
 .date-picker {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+  max-width: 280px;
 }
 
 .date-picker-header {
@@ -625,11 +719,12 @@ button:disabled {
 }
 
 .date-picker-label {
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-subheading);
 }
 
 .date-picker-nav {
-  width: 32px;
+  width: 24px;
   padding: 0;
   aspect-ratio: 1;
   border-radius: var(--radius-pill);
@@ -637,6 +732,7 @@ button:disabled {
   color: var(--color-primary);
   border: 1px solid var(--color-border);
   box-shadow: none;
+  font-size: var(--font-size-sm);
 }
 
 .date-picker-nav:hover {
@@ -646,24 +742,26 @@ button:disabled {
 .date-picker-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--space-xs);
+  gap: 2px;
 }
 
 .date-picker-weekdays span {
   text-align: center;
-  font-size: var(--font-size-sm);
+  font-size: 11px;
   color: var(--color-text-muted);
 }
 
 .date-picker-day {
   aspect-ratio: 1;
+  max-width: 32px;
+  margin: 0 auto;
   padding: 0;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text);
   border: 1px solid transparent;
   box-shadow: none;
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   font-weight: var(--font-weight-subheading);
 }
 

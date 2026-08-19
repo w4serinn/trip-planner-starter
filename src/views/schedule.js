@@ -5,7 +5,7 @@ import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import {
   getDocument,
-  listCollection,
+  subscribeToCollection,
   updateDocument,
   setDocumentMerged,
   sanitizeMapKey,
@@ -153,18 +153,40 @@ export function mount(outlet, params) {
     }
   }
 
+  // リアルタイム同期(docs/ROADMAP.md「第8期」参照)。メンバー数(全員回答済み判定に
+  // 使う)は候補日一覧とは別のドキュメント(groups/{code})のため、先に一度だけ取得してから
+  // 候補日一覧の購読を開始する。以前は追加・回答のたびにローカルの配列を楽観的に
+  // 更新していたが、購読による再描画と二重になりちらつきの原因になるため、
+  // ローカル更新はやめて購読の再描画だけに一本化した。
+  let isFirstSnapshot = true;
+  let unsubscribeEntries = null;
+
   async function loadEntries() {
     try {
       const group = await getDocument(`groups/${session.groupCode}`);
       memberCount = group?.members?.length ?? 0;
-      currentEntries = await listCollection(schedulePath);
-      renderEntries();
     } catch (error) {
       console.error(error);
-      dateErrorText.textContent = '候補日の取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
-      submitButton.disabled = false;
+      // メンバー数が取れなくても候補日一覧自体は表示したいので、0のまま続行する
+      // (「全員回答済み」判定が常にfalseになるだけで、致命的ではない)。
     }
+
+    unsubscribeEntries = subscribeToCollection(
+      schedulePath,
+      (entries) => {
+        currentEntries = entries;
+        renderEntries();
+        if (isFirstSnapshot) {
+          isFirstSnapshot = false;
+          submitButton.disabled = false;
+        }
+      },
+      (error) => {
+        console.error(error);
+        dateErrorText.textContent = '候補日の取得に失敗しました。時間をおいて再度お試しください。';
+        submitButton.disabled = false;
+      },
+    );
   }
 
   async function setResponse(date, value) {
@@ -173,11 +195,8 @@ export function mount(outlet, params) {
       await updateDocument(`${schedulePath}/${date}`, {
         [`responses.${myKey}`]: value,
       });
-      const entry = currentEntries.find((item) => item.id === date);
-      if (entry) {
-        entry.responses = { ...(entry.responses || {}), [myKey]: value };
-        renderEntries();
-      }
+      // リアルタイム購読(第8期)が新しい値を届けて再描画するため、
+      // ここでのローカル更新は行わない。
     } catch (error) {
       console.error(error);
       dateErrorText.textContent = '回答の保存に失敗しました。時間をおいて再度お試しください。';
@@ -210,8 +229,8 @@ export function mount(outlet, params) {
       for (const date of newDates) {
         await setDocumentMerged(`${schedulePath}/${date}`, { responses: {} });
       }
-      currentEntries = [...currentEntries, ...newDates.map((date) => ({ id: date, responses: {} }))];
-      renderEntries();
+      // リアルタイム購読(第8期)が新しいドキュメントを届けて再描画するため、
+      // ここでのローカル追加は行わない。
       closeForm();
     } catch (error) {
       console.error(error);
@@ -229,5 +248,6 @@ export function mount(outlet, params) {
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     dateForm.removeEventListener('submit', onDateSubmit);
     datePicker.destroy();
+    if (unsubscribeEntries) unsubscribeEntries();
   };
 }

@@ -5,7 +5,7 @@ import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import {
   addDocument,
-  listCollection,
+  subscribeToCollection,
   updateDocument,
   serverTimestamp,
   sanitizeMapKey,
@@ -164,17 +164,26 @@ export function mount(outlet, params) {
     });
   }
 
-  async function loadDestinations() {
-    try {
-      currentDestinations = await listCollection(destinationsPath);
+  // リアルタイム同期(docs/ROADMAP.md「第8期」参照)。以前は追加・投票のたびに
+  // ローカルの配列を楽観的に更新していたが、購読による再描画と二重になり
+  // ちらつきの原因になるため、ローカル更新はやめて購読の再描画だけに一本化した。
+  let isFirstSnapshot = true;
+  const unsubscribeDestinations = subscribeToCollection(
+    destinationsPath,
+    (destinations) => {
+      currentDestinations = destinations;
       renderDestinations(currentDestinations);
-    } catch (error) {
+      if (isFirstSnapshot) {
+        isFirstSnapshot = false;
+        submitButton.disabled = false;
+      }
+    },
+    (error) => {
       console.error(error);
       errorText.textContent = '候補地の取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
       submitButton.disabled = false;
-    }
-  }
+    },
+  );
 
   async function castVote(destinationId, score) {
     errorText.textContent = '';
@@ -182,11 +191,6 @@ export function mount(outlet, params) {
       await updateDocument(`${destinationsPath}/${destinationId}`, {
         [`votes.${myVoterKey}`]: score,
       });
-      const target = currentDestinations.find((destination) => destination.id === destinationId);
-      if (target) {
-        target.votes = { ...(target.votes || {}), [myVoterKey]: score };
-        renderDestinations(currentDestinations);
-      }
     } catch (error) {
       console.error(error);
       errorText.textContent = '投票に失敗しました。時間をおいて再度お試しください。';
@@ -206,16 +210,13 @@ export function mount(outlet, params) {
 
     submitButton.disabled = true;
     try {
-      const id = await addDocument(destinationsPath, {
+      await addDocument(destinationsPath, {
         name,
         note,
         addedBy: session.name,
         addedAt: serverTimestamp(),
         votes: {},
       });
-      // src/views/notes.jsと同様、再取得せずローカルの一覧へ楽観的に追加する。
-      currentDestinations = [...currentDestinations, { id, name, note, addedBy: session.name, votes: {} }];
-      renderDestinations(currentDestinations);
       closeForm();
     } catch (error) {
       console.error(error);
@@ -226,11 +227,10 @@ export function mount(outlet, params) {
   };
   destinationForm.addEventListener('submit', onDestinationSubmit);
 
-  loadDestinations();
-
   return () => {
     toggleFormButton.removeEventListener('click', onToggleFormClick);
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     destinationForm.removeEventListener('submit', onDestinationSubmit);
+    unsubscribeDestinations();
   };
 }
