@@ -14,5 +14,6 @@ export const icons = {
   lodging: icon('<path d="M3 19v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 19h18M6 10V7a2 2 0 0 1 2-2h3v5"/>'),
   itinerary: icon('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.5" fill="currentColor" stroke="none"/>'),
   plus: icon('<path d="M12 5v14M5 12h14"/>', 16),
+  chevron: icon('<path d="M9 6l6 6-6 6"/>', 20),
   empty: icon('<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h5l1.5 2h5L16 12h5"/>', 40),
 };

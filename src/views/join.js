@@ -7,6 +7,7 @@ import { navigate } from '../router.js';
 import { saveSession, loadSession } from '../session.js';
 import { getDocument, setDocument, addToArray, serverTimestamp } from '../firestore.js';
 import { generatePassphrase } from '../passphrase.js';
+import { icons } from '../icons.js';
 
 const MAX_CODE_ATTEMPTS = 5;
 const normalizeCode = (code) => code.trim().toUpperCase();
@@ -20,18 +21,20 @@ export function mount(outlet) {
   outlet.innerHTML = `
     <p class="subtitle">名前と合言葉を入力して、グループに入りましょう。</p>
 
-    <form id="join-form" novalidate>
-      <div class="field">
-        <label for="name">名前</label>
-        <input type="text" id="name" name="name" autocomplete="name" required />
-      </div>
-      <div class="field">
-        <label for="group-code">合言葉</label>
-        <input type="text" id="group-code" name="groupCode" autocomplete="off" required />
-      </div>
-      <p class="error-text" id="error-text"></p>
-      <button type="submit">参加する</button>
-    </form>
+    <div class="card">
+      <form id="join-form" novalidate>
+        <div class="field">
+          <label for="name">名前</label>
+          <input type="text" id="name" name="name" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="group-code">合言葉</label>
+          <input type="text" id="group-code" name="groupCode" autocomplete="off" required />
+        </div>
+        <p class="error-text" id="error-text"></p>
+        <button type="submit">参加する</button>
+      </form>
+    </div>
 
     <div class="divider"><span>はじめての方</span></div>
 
@@ -47,7 +50,7 @@ export function mount(outlet) {
           <input type="text" id="creator-secret" name="creatorSecret" autocomplete="off" required />
         </div>
         <p class="error-text" id="create-error-text"></p>
-        <button type="submit" class="btn-secondary">新しいグループを作る</button>
+        <button type="submit" class="btn-secondary">${icons.plus}<span>新しいグループを作る</span></button>
       </form>
 
       <div class="card" id="created-group" hidden>

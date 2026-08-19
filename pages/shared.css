@@ -178,6 +178,24 @@ button:disabled {
   display: block;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-link:active {
+  transform: scale(0.98);
+}
+
+.trip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.trip-card-chevron {
+  display: flex;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
 .empty-state {

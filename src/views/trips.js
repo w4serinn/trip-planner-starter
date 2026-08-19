@@ -35,12 +35,24 @@ export function mount(outlet) {
 
     for (const trip of trips) {
       const link = document.createElement('a');
-      link.className = 'card card-link';
+      link.className = 'card card-link trip-card';
       link.href = `#/trips/${encodeURIComponent(trip.id)}`;
+
+      const textWrap = document.createElement('div');
 
       const name = document.createElement('h2');
       name.textContent = trip.name || '名称未設定の旅行';
-      link.appendChild(name);
+      textWrap.appendChild(name);
+
+      if (trip.createdAt?.seconds) {
+        const meta = document.createElement('p');
+        meta.className = 'subtitle';
+        meta.textContent = `作成日: ${new Date(trip.createdAt.seconds * 1000).toLocaleDateString('ja-JP')}`;
+        textWrap.appendChild(meta);
+      }
+
+      link.appendChild(textWrap);
+      link.insertAdjacentHTML('beforeend', `<span class="trip-card-chevron">${icons.chevron}</span>`);
 
       tripList.appendChild(link);
     }
