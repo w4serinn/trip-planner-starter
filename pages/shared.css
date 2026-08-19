@@ -27,6 +27,41 @@ body {
   padding: var(--space-lg) var(--space-md);
 }
 
+/* PC等の広い画面向けレスポンシブ対応(docs/ROADMAP.md「第4期」参照)。
+   モバイル幅(480px)は維持しつつ、広い画面では段階的にコンテナ幅を広げる。 */
+@media (width >= 768px) {
+  .page {
+    max-width: 700px;
+    padding: var(--space-xl) var(--space-lg);
+  }
+}
+
+@media (width >= 1024px) {
+  .page {
+    max-width: 960px;
+  }
+}
+
+/* カード一覧を、広い画面では複数カラムのグリッドに切り替える共通クラス。
+   モバイル幅では従来通り1列(ブロック要素の縦積み)のまま。 */
+@media (width >= 768px) {
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .card-grid > .card {
+    margin-bottom: 0;
+  }
+}
+
+@media (width >= 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .page-header {
   display: flex;
   align-items: center;
@@ -216,6 +251,10 @@ button:disabled {
 
 .empty-state p {
   margin: 0;
+}
+
+.card-grid .empty-state {
+  grid-column: 1 / -1;
 }
 
 .btn-secondary {

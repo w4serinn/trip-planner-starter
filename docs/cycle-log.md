@@ -923,3 +923,35 @@ docs/ROADMAP.mdに書き留め、cronジョブを再開した経緯を残す)
 - レビュー: OK。CSSの内容自体(タイムライン線の色)は変更なし、フォーマットのみの修正。
 - 次回予定: 特になし。
 - blocked / partial: なし。
+
+(注: この後、人間との手動チャットで複数の設計相談があり、docs/ROADMAP.md・
+docs/screens.mdに「第4期: PC向けレスポンシブ対応」「タスク22: 雑多メモの振り分け先拡張」
+「第5期: 配色・タイポグラフィの統一感強化」を新規追加した。またこの間に
+`evolve/cycle-1`がGitHub上でPRとしてmainへマージされた(PR #3, #4)。以下は
+`evolve/cycle-2`ブランチでの最初のサイクル)
+
+## 2026-08-19 12:35
+- 実装: 事前チェックで`evolve/cycle-1`が既に`origin/main`にマージ済みと判明したため、
+  評価手順(SKILL.md「0. 事前チェック」)に従い、未コミットの手動チャット由来の
+  ドキュメント更新をstashで退避→`main`へswitch・pull→新規`evolve/cycle-2`ブランチを
+  作成→stashを復元、という手順でブランチを切り替えた。まずその手動チャット分の
+  ドキュメント更新(第4期・タスク22・第5期)を`docs:`コミットとして先にpush。
+  その後、通常のタスク選定で「19. 共通基盤: ブレークポイント・幅の可変化」+
+  「20」の最初の項目(B画面のグリッド化)を選び実装した。`pages/shared.css`の`.page`に
+  768px/1024pxのブレークポイントで段階的にmax-widthを拡大するメディアクエリを追加し、
+  再利用可能な`.card-grid`共通クラス(768px以上で2列、1024px以上で3列)を新設。
+  `src/views/trips.js`の旅行一覧に`.card-grid`を適用した。
+- 動作確認: stylelint(標準設定)の`media-feature-range-notation`ルールに引っかかり、
+  メディアクエリを`(min-width: ...)`から`(width >= ...)`のrange記法に修正(`--fix`で
+  自動修正)。`no-descending-specificity`エラーも、`.card-grid .empty-state`の
+  定義位置を`.empty-state`本体の後に移動して解消。Playwrightで375px(1列)・
+  768px(2列)・1024px以上(3列、`.page`のmax-widthも960pxに拡大)を実機で確認、
+  1200px幅でも横スクロール発生なし。console/pageerrorは0件。`npm run check`
+  (lint・test)成功。検証で作成した4件の旅行ドキュメントは名前を更新して共有
+  テストグループ`FMXRZYW7`内に残置(検証中にFirestore接続の一時的なDNSエラーが
+  ログに出たが、SDKの自動リトライで実際には正常完了していたことを別途確認し実害なし)。
+- レビュー: OK。`docs/firestore-design.md`のスキーマには影響なし。`docs/screens.md`の
+  画面構成・遷移にも変更なし。
+- 次回予定: 「20」の残り(E・F・G画面への`.card-grid`適用)、その後「21」(C・雑多メモ・
+  企画メモ・Hの調整要否確認)に着手。
+- blocked / partial: なし。
