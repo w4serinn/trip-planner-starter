@@ -611,11 +611,16 @@ button:disabled {
 /* 2026-08-19(docs/ROADMAP.md「27. カスタムカレンダーピッカーの導入」):
    src/datePicker.jsが描画するカレンダーUI。単一選択・複数選択どちらのモードでも
    共通のCSSを使う(選択状態のクラスは同じため)。jicoo.com調査時の「格子状のピル型
-   ボタンで日付を選ぶ」パターンを参考に、日付セルは円形のピルボタンにする。 */
+   ボタンで日付を選ぶ」パターンを参考に、日付セルは円形のピルボタンにする。
+   2026-08-19追記(docs/ROADMAP.md「28. カレンダーピッカーをコンパクトにする」):
+   日付セルが`aspect-ratio: 1`かつグリッド列(7分割)幅いっぱいに広がる作りだったため、
+   広い画面で大きくなりすぎていた。`.date-picker`全体にmax-widthを設け、フォーム内の
+   他要素と釣り合うコンパクトさに調整する。 */
 .date-picker {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+  max-width: 280px;
 }
 
 .date-picker-header {
@@ -625,11 +630,12 @@ button:disabled {
 }
 
 .date-picker-label {
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-subheading);
 }
 
 .date-picker-nav {
-  width: 32px;
+  width: 24px;
   padding: 0;
   aspect-ratio: 1;
   border-radius: var(--radius-pill);
@@ -637,6 +643,7 @@ button:disabled {
   color: var(--color-primary);
   border: 1px solid var(--color-border);
   box-shadow: none;
+  font-size: var(--font-size-sm);
 }
 
 .date-picker-nav:hover {
@@ -646,24 +653,26 @@ button:disabled {
 .date-picker-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--space-xs);
+  gap: 2px;
 }
 
 .date-picker-weekdays span {
   text-align: center;
-  font-size: var(--font-size-sm);
+  font-size: 11px;
   color: var(--color-text-muted);
 }
 
 .date-picker-day {
   aspect-ratio: 1;
+  max-width: 32px;
+  margin: 0 auto;
   padding: 0;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text);
   border: 1px solid transparent;
   box-shadow: none;
-  font-size: var(--font-size-sm);
+  font-size: 12px;
   font-weight: var(--font-weight-subheading);
 }
 
