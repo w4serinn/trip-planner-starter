@@ -316,6 +316,47 @@ button:disabled {
   padding: 0;
 }
 
+.destination-heading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.destination-heading-row h3 {
+  margin: 0;
+}
+
+.rank-badge {
+  flex-shrink: 0;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-subheading);
+}
+
+.rank-badge-top {
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.score-bar {
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  overflow: hidden;
+  margin: var(--space-xs) 0;
+}
+
+.score-bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
 .candidate-link {
   display: block;
   color: var(--color-primary);

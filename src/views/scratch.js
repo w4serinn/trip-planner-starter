@@ -6,6 +6,7 @@
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, updateDocument, addDocument } from '../firestore.js';
+import { icons } from '../icons.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -23,15 +24,17 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">まず自由に書きなぐって、後から「企画メモ」や「しおり」に振り分けましょう。入力は自動的に保存されます。</p>
 
-    <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
-    <div class="button-row">
-      <button type="button" id="to-notes-button" class="btn-secondary">選択範囲を→企画メモへ</button>
-      <button type="button" id="to-itinerary-button" class="btn-secondary">選択範囲を→しおりへ</button>
+    <div class="card">
+      <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
+      <div class="button-row">
+        <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>
+        <button type="button" id="to-itinerary-button" class="btn-secondary">${icons.itinerary}<span>→しおりへ</span></button>
+      </div>
+      <p class="error-text" id="scratch-error-text"></p>
+      <p class="copy-feedback" id="scratch-saved-text"></p>
     </div>
-    <p class="error-text" id="scratch-error-text"></p>
-    <p class="copy-feedback" id="scratch-saved-text"></p>
 
-    <form id="to-itinerary-form" novalidate hidden>
+    <form id="to-itinerary-form" class="card" novalidate hidden>
       <p class="subtitle">選択した内容をしおりの項目として追加します。日付を選んでください。</p>
       <div class="field">
         <label for="to-itinerary-date">日付</label>

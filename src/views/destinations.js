@@ -106,9 +106,19 @@ export function mount(outlet, params) {
       const card = document.createElement('div');
       card.className = 'card';
 
+      const headingRow = document.createElement('div');
+      headingRow.className = 'destination-heading-row';
+
+      const rankBadge = document.createElement('span');
+      rankBadge.className = index === 0 && voterCount > 0 ? 'rank-badge rank-badge-top' : 'rank-badge';
+      rankBadge.textContent = `${index + 1}位`;
+      headingRow.appendChild(rankBadge);
+
       const heading = document.createElement('h3');
-      heading.textContent = `${index + 1}位 ${destination.name}`;
-      card.appendChild(heading);
+      heading.textContent = destination.name;
+      headingRow.appendChild(heading);
+
+      card.appendChild(headingRow);
 
       if (destination.note) {
         const note = document.createElement('p');
@@ -120,6 +130,14 @@ export function mount(outlet, params) {
       const scoreText = document.createElement('p');
       scoreText.textContent = `平均スコア: ${voterCount > 0 ? avg.toFixed(1) : '未投票'} (${voterCount}人)`;
       card.appendChild(scoreText);
+
+      const scoreBar = document.createElement('div');
+      scoreBar.className = 'score-bar';
+      const scoreBarFill = document.createElement('div');
+      scoreBarFill.className = 'score-bar-fill';
+      scoreBarFill.style.width = `${Math.max(0, Math.min(100, (avg / 5) * 100))}%`;
+      scoreBar.appendChild(scoreBarFill);
+      card.appendChild(scoreBar);
 
       const starRow = document.createElement('div');
       starRow.className = 'star-row';
