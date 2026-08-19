@@ -27,7 +27,7 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">まず自由に書きなぐって、後から他のタブに振り分けましょう。入力は自動的に保存されます。</p>
 
-    <div class="card scratch-card">
+    <div class="card card-dark">
       <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
       <div class="button-row">
         <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>

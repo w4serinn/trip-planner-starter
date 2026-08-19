@@ -553,11 +553,14 @@ button:disabled {
 }
 
 /* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):
-   雑多メモは「一番よく使うメイン機能」という位置づけのため、白カード主体の他画面群の
-   中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
+   単一共有テキストのブレインダンプ的な画面(雑多メモ・企画メモ)は、白カード主体の
+   他画面群の中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
    (ヘッダー24と同じ--color-primary-deep系グラデーション+ドット柄。画像不使用)。
-   src/views/scratch.jsの<textarea>を囲む.cardにのみ適用する(他画面のカードは対象外)。 */
-.scratch-card {
+   2026-08-19追記(docs/ROADMAP.md「29」): 当初は雑多メモの.cardにのみ`.scratch-card`
+   として適用していたが、「雑多メモだけ背景色があり企画メモは無いのは非対称」との
+   指摘を受け、`.card-dark`に改称して企画メモ(src/views/notes.js)にも同様に適用する
+   形で両者の見た目を揃えた。 */
+.card-dark {
   background-image:
     radial-gradient(circle, rgb(255 255 255 / 10%) 1px, transparent 1.5px),
     linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
@@ -565,34 +568,34 @@ button:disabled {
   color: var(--color-surface);
 }
 
-.scratch-card textarea {
+.card-dark textarea {
   background: rgb(255 255 255 / 8%);
   border-color: rgb(255 255 255 / 25%);
   color: var(--color-surface);
 }
 
-.scratch-card textarea::placeholder {
+.card-dark textarea::placeholder {
   color: rgb(255 255 255 / 55%);
 }
 
-.scratch-card textarea:focus {
+.card-dark textarea:focus {
   border-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);
 }
 
-.scratch-card .btn-secondary {
+.card-dark .btn-secondary {
   color: var(--color-surface);
   border-color: rgb(255 255 255 / 60%);
 }
 
-.scratch-card .btn-secondary:hover {
+.card-dark .btn-secondary:hover {
   background: rgb(255 255 255 / 12%);
 }
 
 /* --color-danger/--color-successをそのまま文字色に使うと濃紺背景とのコントラストが
    不十分なため、既存トークンを背景色として使うチップ表示に切り替える(新規の色は
    追加しない)。 */
-.scratch-card .error-text:not(:empty) {
+.card-dark .error-text:not(:empty) {
   display: inline-block;
   background: var(--color-danger);
   color: var(--color-surface);
@@ -600,7 +603,7 @@ button:disabled {
   border-radius: var(--radius-sm);
 }
 
-.scratch-card .copy-feedback:not(:empty) {
+.card-dark .copy-feedback:not(:empty) {
   display: inline-block;
   background: var(--color-success);
   color: var(--color-surface);
