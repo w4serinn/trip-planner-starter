@@ -24,7 +24,8 @@ body {
 /* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
    (モバイル)への刷新」): 768px以上ではNotion風の常設左サイドバーを導入する。
    配色トークンは変更しない(人間の指示により、変えるのは構造・配置のみ)。
-   モバイル(768px未満)は引き続き#tabbar(横タブバー)を使う。 */
+   モバイル(768px未満)は#sidebarをハンバーガーボタンで開閉するドロワーとして
+   共用する(横タブバーは撤去した)。 */
 @media (width >= 768px) {
   body {
     display: flex;
@@ -97,6 +98,7 @@ body {
   color: rgb(255 255 255 / 75%);
   text-decoration: none;
   font-size: var(--font-size-sm);
+  flex-shrink: 0;
 }
 
 .back-link:hover {
@@ -112,6 +114,13 @@ h1 {
 
 .page-header h1 {
   color: var(--color-surface);
+
+  /* 2026-08-19(docs/ROADMAP.md「31」): ハンバーガーボタン追加分、モバイル幅での
+     横スペースが以前より狭くなったため、折り返さず省略記号で収める。 */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 h2 {
@@ -533,49 +542,10 @@ button:disabled {
   margin-top: var(--space-sm);
 }
 
-.tabbar {
-  display: flex;
-  gap: var(--space-xs);
-  overflow-x: auto;
-  margin-bottom: var(--space-md);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* 768px以上では左サイドバー(.sidebar)がナビゲーションを担うため、横タブバーは隠す
-   (docs/ROADMAP.md「31」参照)。 */
-@media (width >= 768px) {
-  .tabbar {
-    display: none;
-  }
-}
-
-.tab {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  flex-shrink: 0;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.tab svg {
-  flex-shrink: 0;
-}
-
-.tab-active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: bold;
-}
-
 /* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
-   (モバイル)への刷新」): 768px未満では非表示、以上では常設の左サイドバーとして表示。
-   #tabbarと同じTABS配列から並行して描画される(src/app.js「renderTabbar」参照)。 */
+   (モバイル)への刷新」): 768px以上では常設の左サイドバー、未満ではハンバーガー
+   ボタンで開閉するドロワーとして同じ#sidebar要素を共用する
+   (src/app.js「renderNav」参照)。横タブバー(.tabbar/.tab)は撤去した。 */
 .sidebar {
   display: none;
   flex-direction: column;
@@ -586,14 +556,60 @@ button:disabled {
   border-right: 1px solid var(--color-border);
 }
 
+/* モバイルでの開閉状態(.sidebar-open): 画面左からのフルハイトドロワーとして
+   固定表示する。src/app.jsのopenMenu/closeMenuがこのクラスをトグルする。 */
+.sidebar.sidebar-open {
+  display: flex;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  background: var(--color-surface);
+  box-shadow: 4px 0 20px rgb(0 0 0 / 15%);
+  overflow-y: auto;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 40%);
+  z-index: 40;
+}
+
 @media (width >= 768px) {
-  .sidebar {
+  .sidebar,
+  .sidebar.sidebar-open {
     display: flex;
     position: sticky;
+    inset: auto;
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    box-shadow: none;
+    z-index: auto;
   }
+
+  .sidebar-backdrop {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+}
+
+.menu-toggle {
+  width: 40px;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-surface);
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.menu-toggle:hover {
+  background: rgb(255 255 255 / 15%);
 }
 
 .sidebar-link {

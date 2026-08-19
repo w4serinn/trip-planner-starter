@@ -13,8 +13,9 @@ import { mount as mountSchedule } from './views/schedule.js';
 import { mount as mountLodging } from './views/lodging.js';
 import { mount as mountItinerary } from './views/itinerary.js';
 
-const tabbar = document.getElementById('tabbar');
 const sidebar = document.getElementById('sidebar');
+const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+const menuToggle = document.getElementById('menu-toggle');
 const backToTrips = document.getElementById('back-to-trips');
 
 const TABS = [
@@ -27,22 +28,61 @@ const TABS = [
   { key: 'itinerary', label: 'しおり', suffix: '/itinerary', icon: icons.itinerary, mount: mountItinerary },
 ];
 
-// 768px以上では左サイドバー(#sidebar)、未満では横タブバー(#tabbar)を使う
-// (docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー(モバイル)への
-// 刷新」参照)。どちらも同じTABS配列から同時に描画し、CSS側の@mediaで表示を切り替える。
-function renderTabbar(tripId, activeKey) {
-  tabbar.innerHTML = '';
-  tabbar.hidden = false;
+// 768px以上では常設の左サイドバー、未満ではハンバーガーボタンで開閉するドロワーとして
+// #sidebarを共用する(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
+// (モバイル)への刷新」参照)。開閉状態はCSSの.sidebar-openクラス+@mediaで制御する。
+let isMenuOpen = false;
+
+function closeMenu() {
+  isMenuOpen = false;
+  sidebar.classList.remove('sidebar-open');
+  sidebarBackdrop.hidden = true;
+  menuToggle.setAttribute('aria-expanded', 'false');
+  menuToggle.innerHTML = icons.menu;
+}
+
+function openMenu() {
+  isMenuOpen = true;
+  sidebar.classList.add('sidebar-open');
+  sidebarBackdrop.hidden = false;
+  menuToggle.setAttribute('aria-expanded', 'true');
+  menuToggle.innerHTML = icons.close;
+  // ドロワー内の最初のリンクへフォーカスを移す(キーボード操作時、開いた直後に
+  // 背景コンテンツへ迷い込まないように)。
+  sidebar.querySelector('a')?.focus();
+}
+
+menuToggle.addEventListener('click', () => {
+  if (isMenuOpen) closeMenu();
+  else openMenu();
+});
+sidebarBackdrop.addEventListener('click', closeMenu);
+document.addEventListener('keydown', (event) => {
+  if (!isMenuOpen) return;
+  if (event.key === 'Escape') {
+    closeMenu();
+    return;
+  }
+  // モバイルのドロワー表示中は、Tab移動が背景コンテンツへ抜けないよう
+  // ドロワー内(ハンバーガーボタン⇔各リンク)でフォーカスを循環させる
+  // (768px以上の常設サイドバー表示時は.sidebar-openが付かないため対象外)。
+  if (event.key !== 'Tab' || !sidebar.classList.contains('sidebar-open')) return;
+  const focusables = [menuToggle, ...sidebar.querySelectorAll('a')];
+  const currentIndex = focusables.indexOf(document.activeElement);
+  if (currentIndex === -1) return;
+  event.preventDefault();
+  const step = event.shiftKey ? -1 : 1;
+  const nextIndex = (currentIndex + step + focusables.length) % focusables.length;
+  focusables[nextIndex].focus();
+});
+
+function renderNav(tripId, activeKey) {
   sidebar.innerHTML = '';
   sidebar.hidden = false;
+  menuToggle.hidden = false;
   backToTrips.hidden = false;
+  closeMenu();
   for (const tab of TABS) {
-    const link = document.createElement('a');
-    link.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
-    link.href = `#/trips/${tripId}${tab.suffix}`;
-    link.className = tab.key === activeKey ? 'tab tab-active' : 'tab';
-    tabbar.appendChild(link);
-
     const sidebarLink = document.createElement('a');
     sidebarLink.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
     sidebarLink.href = `#/trips/${tripId}${tab.suffix}`;
@@ -53,7 +93,7 @@ function renderTabbar(tripId, activeKey) {
 
 function registerTripTab(tab) {
   registerRoute(`#/trips/:tripId${tab.suffix}`, (outlet, params) => {
-    renderTabbar(params.tripId, tab.key);
+    renderNav(params.tripId, tab.key);
     if (tab.mount) {
       return tab.mount(outlet, params);
     }
@@ -62,19 +102,20 @@ function registerTripTab(tab) {
   });
 }
 
-function hideTabbar() {
-  tabbar.hidden = true;
+function hideNav() {
   sidebar.hidden = true;
+  menuToggle.hidden = true;
   backToTrips.hidden = true;
+  closeMenu();
 }
 
 registerRoute('#/', (outlet) => {
-  hideTabbar();
+  hideNav();
   return mountJoin(outlet);
 });
 
 registerRoute('#/trips', (outlet) => {
-  hideTabbar();
+  hideNav();
   return mountTrips(outlet);
 });
 

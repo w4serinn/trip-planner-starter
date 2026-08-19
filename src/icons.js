@@ -17,4 +17,6 @@ export const icons = {
   chevron: icon('<path d="M9 6l6 6-6 6"/>', 20),
   link: icon('<path d="M10 14a4 4 0 0 0 5.66 0l2-2a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-2 2a4 4 0 0 0 5.66 5.66l1-1"/>'),
   empty: icon('<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h5l1.5 2h5L16 12h5"/>', 40),
+  menu: icon('<path d="M4 6h16M4 12h16M4 18h16"/>', 22),
+  close: icon('<path d="M6 6l12 12M18 6L6 18"/>', 22),
 };
