@@ -1093,3 +1093,28 @@
       `scratchText`/`planningNotesText`へ検証後に復元し、値が一致することを確認。
       console/pageerrorは0件(2026-08-19)。`npm run check`(lint・test)成功。
       テスト用メンバー名2件は削除済み。
+
+## 第8期-3. E(行き先決め)・F(日程調整)のリアルタイム化
+- [x] (M) `src/views/destinations.js`・`src/views/schedule.js`の一覧取得を、
+      `listCollection`(一回きりの取得)から`subscribeToCollection`(リアルタイム購読)に
+      置き換えた。あわせて、以前は追加・投票・回答のたびにローカル配列
+      (`currentDestinations`/`currentEntries`)を楽観的に更新して即座に再描画していたが、
+      購読が自分自身の書き込みも(ローカルキャッシュ経由でほぼ即時に)エコーして
+      くるため、二重更新・ちらつきの原因になる。そのため各書き込み処理
+      (`onDestinationSubmit`・`castVote`・`onDateSubmit`・`setResponse`)からローカル
+      配列の更新・再描画呼び出しを削除し、**購読コールバックによる再描画のみに一本化**
+      した。初回スナップショット到達時のみ`submitButton.disabled = false`にする
+      (`isFirstSnapshot`フラグ)という、初回ロード完了までフォーム投稿を止める既存の
+      挙動は維持。F側は候補日一覧とは別ドキュメントの`groups/{code}`から取得する
+      `memberCount`(全員回答済み判定用)を先に一度だけ取得してから購読を開始する形にした
+      (`memberCount`取得の失敗時も、候補日一覧自体は表示できるよう0のまま継続する)。
+      アンマウント時にそれぞれ`unsubscribe`を呼ぶ
+
+      Playwrightで、2つの独立したブラウザページ(実Firestore・共有テストグループ
+      `FMXRZYW7`)を使い、E画面はページAが候補地を追加するとページBの画面にリロード
+      無しで表示されること、ページBが★5投票するとページAの画面にスコア・投票者名が
+      リロード無しで反映されることを確認。F画面はページAが候補日を追加するとページBに
+      表示されること、ページBが○回答するとページAに「(名前): ○」がリロード無しで
+      反映されることを確認。console/pageerrorは0件(2026-08-19)。`npm run check`
+      (lint・test)成功。検証で作成した候補地1件・候補日1件・テスト用メンバー名2件は
+      Firestoreから削除済み。
