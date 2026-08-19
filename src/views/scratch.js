@@ -6,7 +6,7 @@
 // 詳細はdocs/firestore-design.md「雑多メモの振り分け方式の再設計」参照。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { getDocument, updateDocument, addDocument, serverTimestamp } from '../firestore.js';
+import { getDocument, subscribeToDocument, updateDocument, addDocument, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
@@ -116,22 +116,38 @@ export function mount(outlet, params) {
   };
   scratchTextarea.addEventListener('input', onScratchInput);
 
-  async function loadScratch() {
-    try {
-      const trip = await getDocument(tripPath);
-      if (!trip) {
-        navigate('#/trips');
+  // リアルタイム同期(docs/ROADMAP.md「第8期」参照)。他の参加者の更新を購読し、
+  // 自分が編集中(未保存の変更がある、またはテキストエリアにフォーカス中)の間は
+  // 上書きしない(入力中のカーソル位置・未保存分を壊さないため)。
+  let isFirstSnapshot = true;
+  const unsubscribeScratch = subscribeToDocument(
+    tripPath,
+    (trip) => {
+      if (isFirstSnapshot) {
+        isFirstSnapshot = false;
+        if (!trip) {
+          navigate('#/trips');
+          return;
+        }
+        lastSavedValue = trip.scratchText || '';
+        scratchTextarea.value = lastSavedValue;
+        scratchTextarea.disabled = false;
         return;
       }
-      lastSavedValue = trip.scratchText || '';
-      scratchTextarea.value = lastSavedValue;
-    } catch (error) {
+
+      const remoteValue = trip?.scratchText || '';
+      const hasUnsavedLocalEdit = saveTimer !== null;
+      const isFocused = document.activeElement === scratchTextarea;
+      if (hasUnsavedLocalEdit || isFocused || remoteValue === lastSavedValue) return;
+      lastSavedValue = remoteValue;
+      scratchTextarea.value = remoteValue;
+    },
+    (error) => {
       console.error(error);
       errorText.textContent = '雑多メモの取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
       scratchTextarea.disabled = false;
-    }
-  }
+    },
+  );
 
   function getSelection() {
     const start = scratchTextarea.selectionStart;
@@ -350,8 +366,6 @@ export function mount(outlet, params) {
   };
   toLodgingForm.addEventListener('submit', onToLodgingSubmit);
 
-  loadScratch();
-
   return () => {
     scratchTextarea.removeEventListener('input', onScratchInput);
     toNotesButton.removeEventListener('click', onToNotesClick);
@@ -362,6 +376,7 @@ export function mount(outlet, params) {
     toLodgingButton.removeEventListener('click', onToLodgingClick);
     toLodgingCancelButton.removeEventListener('click', onToLodgingCancel);
     toLodgingForm.removeEventListener('submit', onToLodgingSubmit);
+    unsubscribeScratch();
     // タブ離脱時、デバウンス待ちの未保存分があれば取りこぼさないよう即座に保存する。
     flushSave();
   };

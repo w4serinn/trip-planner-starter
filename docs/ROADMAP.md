@@ -229,9 +229,9 @@ CSSだけでは完結せず、月めくり・日付グリッド描画・複数�
 参照)。`subscribeToDocument(path, onData, onError)`・
 `subscribeToCollection(collectionPath, onData, onError)`を追加し、どちらも
 `unsubscribe`関数を返す。既存の`getDocument`/`listCollection`はそのまま残している。
-- [ ] (M) 雑多メモ・企画メモ(単一ドキュメント購読、`src/views/scratch.js`・
-      `src/views/notes.js`)をリアルタイム化する。自分の入力中(デバウンス待ち)に
-      他人の更新が届いた場合の扱い(自分の未保存分を上書きしない、等)を決める
+雑多メモ・企画メモのリアルタイム化は完了済み(詳細はdocs/roadmap-done.md参照)。
+自分が編集中(未保存の変更がある、またはフォーカス中)の間はリモートの更新で
+上書きしないガードを実装した。
 - [ ] (M) E(行き先決め)・F(日程調整)(コレクション購読、`src/views/destinations.js`・
       `src/views/schedule.js`)をリアルタイム化する。既存の楽観的ローカル更新
       (追加直後にローカル配列へ追加してから再取得しない、というパターン)との
