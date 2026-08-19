@@ -14,6 +14,7 @@ import { mount as mountLodging } from './views/lodging.js';
 import { mount as mountItinerary } from './views/itinerary.js';
 
 const tabbar = document.getElementById('tabbar');
+const sidebar = document.getElementById('sidebar');
 const backToTrips = document.getElementById('back-to-trips');
 
 const TABS = [
@@ -26,9 +27,14 @@ const TABS = [
   { key: 'itinerary', label: 'しおり', suffix: '/itinerary', icon: icons.itinerary, mount: mountItinerary },
 ];
 
+// 768px以上では左サイドバー(#sidebar)、未満では横タブバー(#tabbar)を使う
+// (docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー(モバイル)への
+// 刷新」参照)。どちらも同じTABS配列から同時に描画し、CSS側の@mediaで表示を切り替える。
 function renderTabbar(tripId, activeKey) {
   tabbar.innerHTML = '';
   tabbar.hidden = false;
+  sidebar.innerHTML = '';
+  sidebar.hidden = false;
   backToTrips.hidden = false;
   for (const tab of TABS) {
     const link = document.createElement('a');
@@ -36,6 +42,12 @@ function renderTabbar(tripId, activeKey) {
     link.href = `#/trips/${tripId}${tab.suffix}`;
     link.className = tab.key === activeKey ? 'tab tab-active' : 'tab';
     tabbar.appendChild(link);
+
+    const sidebarLink = document.createElement('a');
+    sidebarLink.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
+    sidebarLink.href = `#/trips/${tripId}${tab.suffix}`;
+    sidebarLink.className = tab.key === activeKey ? 'sidebar-link sidebar-link-active' : 'sidebar-link';
+    sidebar.appendChild(sidebarLink);
   }
 }
 
@@ -52,6 +64,7 @@ function registerTripTab(tab) {
 
 function hideTabbar() {
   tabbar.hidden = true;
+  sidebar.hidden = true;
   backToTrips.hidden = true;
 }
 

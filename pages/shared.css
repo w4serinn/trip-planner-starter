@@ -21,6 +21,17 @@ body {
   font-size: var(--font-size-base);
 }
 
+/* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
+   (モバイル)への刷新」): 768px以上ではNotion風の常設左サイドバーを導入する。
+   配色トークンは変更しない(人間の指示により、変えるのは構造・配置のみ)。
+   モバイル(768px未満)は引き続き#tabbar(横タブバー)を使う。 */
+@media (width >= 768px) {
+  body {
+    display: flex;
+    align-items: flex-start;
+  }
+}
+
 .page {
   max-width: 480px;
   margin: 0 auto;
@@ -33,6 +44,8 @@ body {
   .page {
     max-width: 700px;
     padding: var(--space-xl) var(--space-lg);
+    flex: 1;
+    min-width: 0;
   }
 }
 
@@ -528,6 +541,14 @@ button:disabled {
   border-bottom: 1px solid var(--color-border);
 }
 
+/* 768px以上では左サイドバー(.sidebar)がナビゲーションを担うため、横タブバーは隠す
+   (docs/ROADMAP.md「31」参照)。 */
+@media (width >= 768px) {
+  .tabbar {
+    display: none;
+  }
+}
+
 .tab {
   display: flex;
   align-items: center;
@@ -550,6 +571,55 @@ button:disabled {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
   font-weight: bold;
+}
+
+/* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
+   (モバイル)への刷新」): 768px未満では非表示、以上では常設の左サイドバーとして表示。
+   #tabbarと同じTABS配列から並行して描画される(src/app.js「renderTabbar」参照)。 */
+.sidebar {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 220px;
+  flex-shrink: 0;
+  padding: var(--space-lg) var(--space-md);
+  border-right: 1px solid var(--color-border);
+}
+
+@media (width >= 768px) {
+  .sidebar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link svg {
+  flex-shrink: 0;
+}
+
+.sidebar-link:hover {
+  background: var(--color-bg);
+}
+
+.sidebar-link-active {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-subheading);
 }
 
 /* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):

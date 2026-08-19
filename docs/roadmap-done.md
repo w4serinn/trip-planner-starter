@@ -979,3 +979,27 @@
       ショットで確認。375px/1200px幅ともに横スクロール・崩れなし、console/pageerrorは
       0件(2026-08-19)。`npm run check`(lint・test)成功。検証用メンバー名は削除済み。
       これで第6期(第5期リリース後の見た目フィードバック対応)は全タスク完了。
+
+## 31-1. サイドバー(768px以上)への刷新(第7期「31」の1つ目のサブタスク)
+- [x] (M) `index.html`に`#sidebar`(`.sidebar`)要素を新規追加し、`<main class="page">`
+      と並ぶ形にした。`pages/shared.css`で`body`を768px以上のみ`display: flex`にし、
+      `.sidebar`(768px未満は非表示、以上で`position: sticky`の縦並びナビゲーション、
+      幅220px)+`.page`(`flex: 1`)の2カラムレイアウトに再構成。768px以上では
+      `.tabbar`(横タブバー)を`display: none`にして重複表示を防いだ。`src/app.js`の
+      `renderTabbar()`を拡張し、既存の`TABS`配列から`#tabbar`用DOMと`#sidebar`用DOM
+      (`.sidebar-link`/`.sidebar-link-active`)を同時に描画するようにした
+      (`hideTabbar()`も両方を隠すよう対応)。色トークン(`--color-*`)は一切変更して
+      いない。`docs/screens.md`「画面遷移」のタブ=ルート対応も不変(ナビゲーションの
+      見た目・配置のみの変更)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)上で、375px幅では
+      サイドバー非表示・横タブバー表示、768px/1200px幅ではサイドバー表示(7項目)・
+      横タブバー非表示になることを`getComputedStyle`で確認。サイドバーのリンクを
+      クリックして実際にE(行き先決め)画面へ遷移できること、現在のタブに
+      `sidebar-link-active`が正しく付くことを確認。雑多メモ・企画メモ・E・F・G・Hの
+      6画面すべてを1200px幅でスクリーンショット確認し、`.card-dark`(26/29)・
+      `.card-grid`(20)・タイムライン(H)等の既存レイアウトがサイドバー導入後も
+      崩れていないことを確認。全幅で横スクロールなし、console/pageerrorは0件
+      (2026-08-19)。`npm run check`(lint・test)成功。検証用メンバー名は削除済み。
+      残りのサブタスク(モバイルのハンバーガーメニュー化、アクセシビリティ確認)は
+      次サイクル以降に持ち越し。
