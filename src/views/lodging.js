@@ -41,7 +41,7 @@ export function mount(outlet, params) {
       </div>
     </form>
 
-    <div id="candidate-list"></div>
+    <div id="candidate-list" class="card-grid"></div>
 
     <div class="divider"><span>確定した宿泊</span></div>
 
@@ -74,7 +74,7 @@ export function mount(outlet, params) {
       </div>
     </form>
 
-    <div id="stay-list"></div>
+    <div id="stay-list" class="card-grid"></div>
   `;
 
   const toggleCandidateFormButton = outlet.querySelector('#toggle-candidate-form');

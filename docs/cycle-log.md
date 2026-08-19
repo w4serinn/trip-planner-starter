@@ -955,3 +955,24 @@ docs/screens.mdに「第4期: PC向けレスポンシブ対応」「タスク22:
 - 次回予定: 「20」の残り(E・F・G画面への`.card-grid`適用)、その後「21」(C・雑多メモ・
   企画メモ・Hの調整要否確認)に着手。
 - blocked / partial: なし。
+
+(注: この後、人間との手動チャットでjicoo.com等を参考にした追加提案があり、
+docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カスタムカレンダーピッカーの
+導入(複数選択対応)」を新規追加した)
+
+## 2026-08-19 13:05
+- 実装: 事前チェックで未コミットのROADMAP更新(26・27)があったため先に`docs:`コミットで
+  push。その後「20. リスト系画面のグリッド化」の残り(E・F・G画面)を実装した。
+  `src/views/destinations.js`の`#destination-list`・`src/views/schedule.js`の
+  `#schedule-list`・`src/views/lodging.js`の`#candidate-list`と`#stay-list`(2つとも)に
+  `pages/shared.css`の`.card-grid`共通クラスを付与した。
+- 動作確認: Playwrightで1200px幅において、行き先決め(候補地3件、★投票も維持)・
+  日程調整(候補日3件)・宿泊(候補2件+確定1件、2つのグリッドが独立して並ぶこと)が
+  それぞれ3列グリッドで表示されることを確認。375px幅では全て1列に戻ることも確認。
+  横スクロール発生なし。console/pageerrorは0件。`npm run check`(lint・test)成功。
+  検証で作成したデータは削除・リネームして共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマには影響なし(表示層のみの変更)。
+  `docs/screens.md`の画面構成・遷移にも変更なし。これで「20. リスト系画面のグリッド化」
+  が全て完了した。
+- 次回予定: 「21」(C・雑多メモ・企画メモ・Hの広い画面での調整要否確認)に着手。
+- blocked / partial: なし。

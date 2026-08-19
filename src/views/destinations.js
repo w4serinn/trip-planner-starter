@@ -44,7 +44,7 @@ export function mount(outlet, params) {
       </div>
     </form>
 
-    <div id="destination-list"></div>
+    <div id="destination-list" class="card-grid"></div>
   `;
 
   const toggleFormButton = outlet.querySelector('#toggle-destination-form');
