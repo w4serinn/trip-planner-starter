@@ -10,6 +10,7 @@ import { loadSession } from '../session.js';
 import { addDocument, listCollection } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
+import { createDatePicker } from '../datePicker.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -47,8 +48,8 @@ export function mount(outlet, params) {
         <input type="text" id="item-title" name="title" required />
       </div>
       <div class="field">
-        <label for="item-date">日付</label>
-        <input type="date" id="item-date" name="date" required />
+        <label>日付</label>
+        <div id="item-date-picker"></div>
       </div>
       <div class="field">
         <label for="item-time-ampm">時間目安(任意)</label>
@@ -90,7 +91,7 @@ export function mount(outlet, params) {
   const itemForm = outlet.querySelector('#item-form');
   const cancelFormButton = outlet.querySelector('#cancel-item-form');
   const titleInput = outlet.querySelector('#item-title');
-  const dateInput = outlet.querySelector('#item-date');
+  const datePickerContainer = outlet.querySelector('#item-date-picker');
   const timeAmPmSelect = outlet.querySelector('#item-time-ampm');
   const timeHourSelect = outlet.querySelector('#item-time-hour');
   const timeMinuteSelect = outlet.querySelector('#item-time-minute');
@@ -103,6 +104,10 @@ export function mount(outlet, params) {
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
 
+  // 単一選択モード(docs/ROADMAP.md「27」の3つ目のサブタスク)。既存の<input type="date">の
+  // 置き換え。
+  const datePicker = createDatePicker(datePickerContainer, { mode: 'single' });
+
   function openForm() {
     toggleFormButton.hidden = true;
     itemForm.hidden = false;
@@ -114,7 +119,7 @@ export function mount(outlet, params) {
     toggleFormButton.hidden = false;
     errorText.textContent = '';
     titleInput.value = '';
-    dateInput.value = '';
+    datePicker.setValue(null);
     timeAmPmSelect.value = '';
     timeHourSelect.value = '';
     timeMinuteSelect.value = '';
@@ -234,7 +239,7 @@ export function mount(outlet, params) {
     errorText.textContent = '';
 
     const title = titleInput.value.trim();
-    const date = dateInput.value;
+    const date = datePicker.getValue();
     const amPm = timeAmPmSelect.value;
     const hour = timeHourSelect.value;
     const minute = timeMinuteSelect.value;
@@ -281,5 +286,6 @@ export function mount(outlet, params) {
     toggleFormButton.removeEventListener('click', onToggleFormClick);
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     itemForm.removeEventListener('submit', onItemSubmit);
+    datePicker.destroy();
   };
 }

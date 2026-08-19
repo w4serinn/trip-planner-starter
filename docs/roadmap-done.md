@@ -911,3 +911,35 @@
       何も追加されないことを確認。375px/1200px幅ともに横スクロール・崩れなし、
       console/pageerrorは0件(2026-08-19)。`npm run check`(lint・test)成功。検証で
       作成した候補日(scheduleEntries 4件)・テスト用メンバー名はFirestoreから削除済み。
+
+## 27-3. G/Hへの単一選択モード展開(第5期「27」の3つ目・最後のサブタスク)
+- [x] (S) F画面での運用実績(複数選択モードの実装・実Firestoreでの検証)を踏まえ、
+      G(宿泊)・H(しおり)にも展開すると判断した(コンポーネント自体は単一選択モードを
+      既にサポート済みで追加のJSロジックが不要、かつF画面だけ独自の見た目になり他画面の
+      ネイティブ`<input type="date">`と混在する方が一貫性を欠くと判断したため)。
+      - `src/views/itinerary.js`(H・しおり項目の日付): `<input type="date"
+        id="item-date">`を`createDatePicker(container, { mode: 'single' })`に置き換え
+      - `src/views/lodging.js`(G・確定宿泊のチェックイン/チェックアウト): 2つの
+        `<input type="date">`をそれぞれ独立した単一選択モードのpickerインスタンスに
+        置き換え(`stayCheckInPicker`/`stayCheckOutPicker`)
+      - どちらも、フォームを開くたびに`picker.setValue(null)`でリセットする既存の
+        `closeForm()`パターンを踏襲。アンマウント時に`picker.destroy()`を呼ぶ
+      - 保存するFirestoreデータ形式(`itineraryItems.date`・`confirmedStays.checkIn`/
+        `checkOut`、いずれも"YYYY-MM-DD"文字列)は不変
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)上で、H画面は日付選択→
+      しおり項目作成が成功すること・日付未選択時のバリデーション(「やること名と日付を
+      入力してください。」)が引き続き機能することを確認。G画面はチェックイン/
+      チェックアウトの2つのpickerが独立して動作し(片方の月送りがもう片方に影響しない)、
+      チェックアウトがチェックインより後の日付を選んだ確定宿泊が正しく作成されることを
+      確認。375px/1200px幅ともに横スクロール・崩れなし、console/pageerrorは0件
+      (2026-08-19)。`npm run check`(lint・test)成功。検証で作成したしおり項目・確定宿泊・
+      テスト用メンバー名はFirestoreから削除済み。あわせて、2026-08-19 15:15
+      (脆弱性対応サイクル)の動作確認時に削除し忘れていた宿泊候補のテストデータ2件
+      (`javascript:alert(1)`のURLを含む「-危険URL」、正常系確認用の「-正常URL」)を
+      発見し、本サイクルで併せて削除した(過去2回、動作確認で作成した検証データの削除
+      漏れが発生している。原因は毎回`listCollection`で取得した`trips`配列の`[0]`番目を
+      対象trip決め打ちにしていたこと。Firestoreの`getDocs`は明示的な`orderBy`が無いと
+      返却順序が実行のたびに変わりうるため、削除時に`[0]`が検証時と同じtripを指すとは
+      限らない。以降は、対象tripが不明な場合は全trip横断で検索してから削除する、または
+      検証直後にその場でtripIdを控えておく運用に切り替える)。

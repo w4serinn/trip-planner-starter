@@ -8,6 +8,7 @@ import { loadSession } from '../session.js';
 import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
+import { createDatePicker } from '../datePicker.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -61,12 +62,12 @@ export function mount(outlet, params) {
         <input type="text" id="stay-note" name="note" />
       </div>
       <div class="field">
-        <label for="stay-checkin">チェックイン</label>
-        <input type="date" id="stay-checkin" name="checkIn" required />
+        <label>チェックイン</label>
+        <div id="stay-checkin-picker"></div>
       </div>
       <div class="field">
-        <label for="stay-checkout">チェックアウト</label>
-        <input type="date" id="stay-checkout" name="checkOut" required />
+        <label>チェックアウト</label>
+        <div id="stay-checkout-picker"></div>
       </div>
       <p class="error-text" id="stay-error-text"></p>
       <div class="button-row">
@@ -208,13 +209,18 @@ export function mount(outlet, params) {
   const cancelStayFormButton = outlet.querySelector('#cancel-stay-form');
   const stayUrlInput = outlet.querySelector('#stay-url');
   const stayNoteInput = outlet.querySelector('#stay-note');
-  const stayCheckInInput = outlet.querySelector('#stay-checkin');
-  const stayCheckOutInput = outlet.querySelector('#stay-checkout');
+  const stayCheckInContainer = outlet.querySelector('#stay-checkin-picker');
+  const stayCheckOutContainer = outlet.querySelector('#stay-checkout-picker');
   const stayErrorText = outlet.querySelector('#stay-error-text');
   const stayList = outlet.querySelector('#stay-list');
   const staySubmitButton = stayForm.querySelector('button[type="submit"]');
 
   staySubmitButton.disabled = true;
+
+  // 単一選択モード(docs/ROADMAP.md「27」の3つ目のサブタスク)。既存の<input type="date">の
+  // 置き換え。チェックイン/チェックアウトそれぞれ独立したpickerインスタンスを持つ。
+  const stayCheckInPicker = createDatePicker(stayCheckInContainer, { mode: 'single' });
+  const stayCheckOutPicker = createDatePicker(stayCheckOutContainer, { mode: 'single' });
 
   function openStayForm() {
     toggleStayFormButton.hidden = true;
@@ -228,8 +234,8 @@ export function mount(outlet, params) {
     stayErrorText.textContent = '';
     stayUrlInput.value = '';
     stayNoteInput.value = '';
-    stayCheckInInput.value = '';
-    stayCheckOutInput.value = '';
+    stayCheckInPicker.setValue(null);
+    stayCheckOutPicker.setValue(null);
   }
 
   const onToggleStayFormClick = () => openStayForm();
@@ -313,8 +319,8 @@ export function mount(outlet, params) {
 
     const url = stayUrlInput.value.trim();
     const note = stayNoteInput.value.trim();
-    const checkIn = stayCheckInInput.value;
-    const checkOut = stayCheckOutInput.value;
+    const checkIn = stayCheckInPicker.getValue();
+    const checkOut = stayCheckOutPicker.getValue();
     if (!url || !checkIn || !checkOut) {
       stayErrorText.textContent = 'URL・チェックイン・チェックアウトを入力してください。';
       return;
@@ -354,5 +360,7 @@ export function mount(outlet, params) {
     toggleStayFormButton.removeEventListener('click', onToggleStayFormClick);
     cancelStayFormButton.removeEventListener('click', onCancelStayFormClick);
     stayForm.removeEventListener('submit', onStaySubmit);
+    stayCheckInPicker.destroy();
+    stayCheckOutPicker.destroy();
   };
 }
