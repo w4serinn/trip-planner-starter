@@ -134,12 +134,9 @@ g-mark.org受賞ギャラリー)を調査した上で方針を確定。「和風
 Zen Kaku Gothic New採用・`--color-primary-deep`/`--color-accent-green`追加・
 青みを帯びた`--shadow-card`・`--radius-pill`追加と`.rank-badge`への適用まで完了。
 
-### 24. ヘッダーのテクスチャ強化
-- [ ] (M) `index.html`のアプリヘッダー(「旅行計画アプリ」の見出し部分)に、
-      画像を使わないCSSのみの装飾を追加する: `--color-primary-deep`系のグラデーション
-      背景+微細なドット柄パターン(`radial-gradient`の繰り返しで実現。
-      yamagata_tripの`.hero::after`を参考)。現状の「白背景に黒文字」の単調な
-      ヘッダーから、視覚的なアンカーを持たせる
+`24. ヘッダーのテクスチャ強化`は完了済み(詳細はdocs/roadmap-done.md参照)。
+`.page-header`に`--color-primary-deep`系グラデーション+ドット柄パターンを適用し、
+見出し・戻るリンクの文字色を白系に変更した。
 
 ### 25. しおりタイムラインの装飾強化(優先度低・任意)
 - [ ] (S) H(しおり)画面のタイムラインマーカーを、単なる丸ドットから、時刻や

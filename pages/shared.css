@@ -62,21 +62,32 @@ body {
   }
 }
 
+/* 2026-08-19(docs/ROADMAP.md「24. ヘッダーのテクスチャ強化」): 「白背景に黒文字」の
+   単調さを解消するため、--color-primary-deep系のグラデーション+微細なドット柄
+   (yamagata_tripの.hero::afterを参考にしたradial-gradientの繰り返し。画像は使わない)
+   を持たせる。.pageの内側に収まるカード状のセクションとして塗る(ページ端まで
+   はみ出すフルブリードにはしない)。 */
 .page-header {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 14%) 1px, transparent 1.5px),
+    linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-size: 18px 18px, 100% 100%;
 }
 
 .back-link {
-  color: var(--color-text-muted);
+  color: rgb(255 255 255 / 75%);
   text-decoration: none;
   font-size: var(--font-size-sm);
 }
 
 .back-link:hover {
-  color: var(--color-primary);
+  color: var(--color-surface);
 }
 
 h1 {
@@ -84,6 +95,10 @@ h1 {
   font-weight: var(--font-weight-heading);
   letter-spacing: -0.01em;
   margin: 0;
+}
+
+.page-header h1 {
+  color: var(--color-surface);
 }
 
 h2 {

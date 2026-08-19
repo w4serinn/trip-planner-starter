@@ -809,3 +809,20 @@
       こと・`members`フィールドへの正規の追記(join.jsの参加フロー経由)は引き続き
       成功することの両方を確認。検証で追加したテスト用メンバー名はmembers配列から
       削除済み。
+
+## 24. ヘッダーのテクスチャ強化(第5期)
+- [x] (M) `pages/shared.css`の`.page-header`に、画像を使わないCSSのみの装飾を追加。
+      `background-image`に`radial-gradient(circle, rgb(255 255 255 / 14%) 1px,
+      transparent 1.5px)`(ドット柄、18px間隔)と`linear-gradient(135deg,
+      --color-primary-deep, --color-primary-dark)`(斜めグラデーション)を重ね、
+      `.page`の内側に収まるカード状のセクションとして塗った(ページ端まではみ出す
+      フルブリードにはしていない)。濃色背景に合わせ、`.page-header h1`・
+      `.page-header`内の`.back-link`の文字色を白系(`--color-surface`/半透明白)に
+      変更(アプリ全体で唯一の`<h1>`なので、他画面への影響は無い)
+
+      Playwrightで、375px/768px/1200px幅すべてでヘッダーのグラデーション・ドット柄・
+      白文字が正しく表示され、横スクロールが発生しないことをスクリーンショットで確認。
+      `back-link`(「← 旅行一覧」)が表示される旅行詳細ページ(C画面)でも、タブバー等
+      他要素への視覚的な影響が無いことを確認。console/pageerrorは0件(2026-08-19)。
+      `npm run check`(lint・test)成功。検証で参加した際に追加されたテスト用メンバー名は
+      共有テストグループ`FMXRZYW7`のmembers配列から削除済み。
