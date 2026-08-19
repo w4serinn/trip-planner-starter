@@ -1139,3 +1139,24 @@
       発生しないことを実Firestoreで確認(2026-08-19)。`npm run check`(lint・test)
       成功。検証用メンバー名は削除済み。これで第8期の既存4サブタスクは全て完了。
       新たに追加した`32`(G/Hのリアルタイム化)は次サイクル以降に着手する。
+
+## 32. G(宿泊)・H(しおり)のリアルタイム化
+- [x] (M) `src/views/lodging.js`の宿泊候補(`lodgingCandidates`)・確定宿泊
+      (`confirmedStays`)、2つの独立したコレクションをそれぞれ`subscribeToCollection`
+      化した(候補と確定宿泊は別コレクションのため、それぞれ独立した購読・
+      `isFirstCandidatesSnapshot`/`isFirstStaysSnapshot`フラグ・`unsubscribe`を持つ)。
+      E/Fと同様、追加時の楽観的ローカル配列更新は撤去し、購読による再描画のみに
+      一本化した
+- [x] (M) `src/views/itinerary.js`の`itineraryItems`コレクションを
+      `subscribeToCollection`化した。同様に楽観的ローカル更新を撤去。アンマウント時に
+      `unsubscribeItems()`を呼ぶ(既存の`datePicker.destroy()`と並べて配置)
+
+      Playwrightで、2つの独立したブラウザページ(実Firestore・共有テストグループ
+      `FMXRZYW7`)を使い、G画面はページAが宿泊候補・確定宿泊をそれぞれ追加すると
+      ページBの画面にリロード無しで表示されることを確認。H画面はページAがしおり
+      項目を追加するとページBに表示されることを確認。console/pageerrorは0件
+      (2026-08-19)。`npm run check`(lint・test)成功。検証で作成した宿泊候補1件・
+      確定宿泊1件・しおり項目1件・テスト用メンバー名2件はFirestoreから削除済み。
+      これで第8期(リアルタイム同期)は全タスク完了(共有ドキュメント2画面+
+      コレクション購読4画面、計6画面がリアルタイム化された。残るC・Bは効果が薄いと
+      判断し見送り済み)。

@@ -5,7 +5,7 @@
 // データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」参照。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
+import { addDocument, subscribeToCollection, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
@@ -157,17 +157,26 @@ export function mount(outlet, params) {
     }
   }
 
-  async function loadCandidates() {
-    try {
-      currentCandidates = await listCollection(candidatesPath);
+  // リアルタイム同期(docs/ROADMAP.md「32」参照)。以前は追加のたびにローカルの配列を
+  // 楽観的に更新していたが、購読による再描画と二重になりちらつきの原因になるため、
+  // ローカル更新はやめて購読の再描画だけに一本化した。
+  let isFirstCandidatesSnapshot = true;
+  const unsubscribeCandidates = subscribeToCollection(
+    candidatesPath,
+    (candidates) => {
+      currentCandidates = candidates;
       renderCandidates(currentCandidates);
-    } catch (error) {
+      if (isFirstCandidatesSnapshot) {
+        isFirstCandidatesSnapshot = false;
+        submitButton.disabled = false;
+      }
+    },
+    (error) => {
       console.error(error);
       errorText.textContent = '宿泊候補の取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
       submitButton.disabled = false;
-    }
-  }
+    },
+  );
 
   const onCandidateSubmit = async (event) => {
     event.preventDefault();
@@ -182,15 +191,12 @@ export function mount(outlet, params) {
 
     submitButton.disabled = true;
     try {
-      const id = await addDocument(candidatesPath, {
+      await addDocument(candidatesPath, {
         url,
         note,
         addedBy: session.name,
         addedAt: serverTimestamp(),
       });
-      // src/views/notes.jsと同様、再取得せずローカルの一覧へ楽観的に追加する。
-      currentCandidates = [...currentCandidates, { id, url, note, addedBy: session.name }];
-      renderCandidates(currentCandidates);
       closeCandidateForm();
     } catch (error) {
       console.error(error);
@@ -200,8 +206,6 @@ export function mount(outlet, params) {
     }
   };
   candidateForm.addEventListener('submit', onCandidateSubmit);
-
-  loadCandidates();
 
   // --- 確定宿泊 ---
   const toggleStayFormButton = outlet.querySelector('#toggle-stay-form');
@@ -301,17 +305,23 @@ export function mount(outlet, params) {
     }
   }
 
-  async function loadStays() {
-    try {
-      currentStays = await listCollection(confirmedStaysPath);
+  let isFirstStaysSnapshot = true;
+  const unsubscribeStays = subscribeToCollection(
+    confirmedStaysPath,
+    (stays) => {
+      currentStays = stays;
       renderStays(currentStays);
-    } catch (error) {
+      if (isFirstStaysSnapshot) {
+        isFirstStaysSnapshot = false;
+        staySubmitButton.disabled = false;
+      }
+    },
+    (error) => {
       console.error(error);
       stayErrorText.textContent = '確定宿泊の取得に失敗しました。時間をおいて再度お試しください。';
-    } finally {
       staySubmitButton.disabled = false;
-    }
-  }
+    },
+  );
 
   const onStaySubmit = async (event) => {
     event.preventDefault();
@@ -332,15 +342,13 @@ export function mount(outlet, params) {
 
     staySubmitButton.disabled = true;
     try {
-      const id = await addDocument(confirmedStaysPath, {
+      await addDocument(confirmedStaysPath, {
         url,
         note,
         checkIn,
         checkOut,
         addedBy: session.name,
       });
-      currentStays = [...currentStays, { id, url, note, checkIn, checkOut, addedBy: session.name }];
-      renderStays(currentStays);
       closeStayForm();
     } catch (error) {
       console.error(error);
@@ -351,8 +359,6 @@ export function mount(outlet, params) {
   };
   stayForm.addEventListener('submit', onStaySubmit);
 
-  loadStays();
-
   return () => {
     toggleCandidateFormButton.removeEventListener('click', onToggleCandidateFormClick);
     cancelCandidateFormButton.removeEventListener('click', onCancelCandidateFormClick);
@@ -362,5 +368,7 @@ export function mount(outlet, params) {
     stayForm.removeEventListener('submit', onStaySubmit);
     stayCheckInPicker.destroy();
     stayCheckOutPicker.destroy();
+    unsubscribeCandidates();
+    unsubscribeStays();
   };
 }

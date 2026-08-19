@@ -243,8 +243,8 @@ G・Hは展開する(下記`32`)、C・Bは見送り。
 E・Fと同じ理由(複数人が同時に候補を追加・確認する使い方)で展開する。C(概要)は
 編集頻度が低く明示的な「編集」ボタン経由の単発更新のため、B(旅行一覧)は一覧を
 見る場面が同時編集と衝突しにくいため、どちらも今回は見送る(効果が薄いと判断)。
-- [ ] (M) `src/views/lodging.js`の宿泊候補(`lodgingCandidates`)・確定宿泊
-      (`confirmedStays`)、2つのコレクションをそれぞれ`subscribeToCollection`化する。
-      E/Fと同様、楽観的ローカル更新は撤去し購読による再描画に一本化する
-- [ ] (M) `src/views/itinerary.js`の`itineraryItems`コレクションを
-      `subscribeToCollection`化する。同様に楽観的ローカル更新を撤去する
+`32. G(宿泊)・H(しおり)のリアルタイム化`は完了済み(詳細はdocs/roadmap-done.md参照)。
+`src/views/lodging.js`(宿泊候補・確定宿泊の2コレクション)・`src/views/itinerary.js`を
+`subscribeToCollection`化し、楽観的ローカル更新は撤去した。
+
+第8期のタスクは以上で全て完了。
