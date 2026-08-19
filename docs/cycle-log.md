@@ -923,3 +923,257 @@ docs/ROADMAP.mdに書き留め、cronジョブを再開した経緯を残す)
 - レビュー: OK。CSSの内容自体(タイムライン線の色)は変更なし、フォーマットのみの修正。
 - 次回予定: 特になし。
 - blocked / partial: なし。
+
+(注: この後、人間との手動チャットで複数の設計相談があり、docs/ROADMAP.md・
+docs/screens.mdに「第4期: PC向けレスポンシブ対応」「タスク22: 雑多メモの振り分け先拡張」
+「第5期: 配色・タイポグラフィの統一感強化」を新規追加した。またこの間に
+`evolve/cycle-1`がGitHub上でPRとしてmainへマージされた(PR #3, #4)。以下は
+`evolve/cycle-2`ブランチでの最初のサイクル)
+
+## 2026-08-19 12:35
+- 実装: 事前チェックで`evolve/cycle-1`が既に`origin/main`にマージ済みと判明したため、
+  評価手順(SKILL.md「0. 事前チェック」)に従い、未コミットの手動チャット由来の
+  ドキュメント更新をstashで退避→`main`へswitch・pull→新規`evolve/cycle-2`ブランチを
+  作成→stashを復元、という手順でブランチを切り替えた。まずその手動チャット分の
+  ドキュメント更新(第4期・タスク22・第5期)を`docs:`コミットとして先にpush。
+  その後、通常のタスク選定で「19. 共通基盤: ブレークポイント・幅の可変化」+
+  「20」の最初の項目(B画面のグリッド化)を選び実装した。`pages/shared.css`の`.page`に
+  768px/1024pxのブレークポイントで段階的にmax-widthを拡大するメディアクエリを追加し、
+  再利用可能な`.card-grid`共通クラス(768px以上で2列、1024px以上で3列)を新設。
+  `src/views/trips.js`の旅行一覧に`.card-grid`を適用した。
+- 動作確認: stylelint(標準設定)の`media-feature-range-notation`ルールに引っかかり、
+  メディアクエリを`(min-width: ...)`から`(width >= ...)`のrange記法に修正(`--fix`で
+  自動修正)。`no-descending-specificity`エラーも、`.card-grid .empty-state`の
+  定義位置を`.empty-state`本体の後に移動して解消。Playwrightで375px(1列)・
+  768px(2列)・1024px以上(3列、`.page`のmax-widthも960pxに拡大)を実機で確認、
+  1200px幅でも横スクロール発生なし。console/pageerrorは0件。`npm run check`
+  (lint・test)成功。検証で作成した4件の旅行ドキュメントは名前を更新して共有
+  テストグループ`FMXRZYW7`内に残置(検証中にFirestore接続の一時的なDNSエラーが
+  ログに出たが、SDKの自動リトライで実際には正常完了していたことを別途確認し実害なし)。
+- レビュー: OK。`docs/firestore-design.md`のスキーマには影響なし。`docs/screens.md`の
+  画面構成・遷移にも変更なし。
+- 次回予定: 「20」の残り(E・F・G画面への`.card-grid`適用)、その後「21」(C・雑多メモ・
+  企画メモ・Hの調整要否確認)に着手。
+- blocked / partial: なし。
+
+(注: この後、人間との手動チャットでjicoo.com等を参考にした追加提案があり、
+docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カスタムカレンダーピッカーの
+導入(複数選択対応)」を新規追加した)
+
+## 2026-08-19 13:05
+- 実装: 事前チェックで未コミットのROADMAP更新(26・27)があったため先に`docs:`コミットで
+  push。その後「20. リスト系画面のグリッド化」の残り(E・F・G画面)を実装した。
+  `src/views/destinations.js`の`#destination-list`・`src/views/schedule.js`の
+  `#schedule-list`・`src/views/lodging.js`の`#candidate-list`と`#stay-list`(2つとも)に
+  `pages/shared.css`の`.card-grid`共通クラスを付与した。
+- 動作確認: Playwrightで1200px幅において、行き先決め(候補地3件、★投票も維持)・
+  日程調整(候補日3件)・宿泊(候補2件+確定1件、2つのグリッドが独立して並ぶこと)が
+  それぞれ3列グリッドで表示されることを確認。375px幅では全て1列に戻ることも確認。
+  横スクロール発生なし。console/pageerrorは0件。`npm run check`(lint・test)成功。
+  検証で作成したデータは削除・リネームして共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマには影響なし(表示層のみの変更)。
+  `docs/screens.md`の画面構成・遷移にも変更なし。これで「20. リスト系画面のグリッド化」
+  が全て完了した。
+- 次回予定: 「21」(C・雑多メモ・企画メモ・Hの広い画面での調整要否確認)に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 13:35
+- 実装: 「21. その他画面の広い画面での調整」を実施。C(概要)・雑多メモ・企画メモ・
+  H(しおり)を1200px幅でPlaywright実機確認した結果、いずれも`19`の`.page`幅拡大の
+  恩恵のみで問題なく、グリッド化等の追加コード変更は不要と判断した。C概要は2枚の
+  カードが単一カラムのまま適切な幅、雑多メモ・企画メモの`<textarea>`は幅が広がった
+  ことでむしろ書き込みやすく、H(しおり)のタイムラインは縦線+マーカーの構造上
+  複数カラム化すると意味を失うため1カラム据え置きが適切と確認した。
+- 動作確認: 全てPlaywrightでの目視確認のみ(コード変更なし)。console/pageerrorは
+  0件。`npm run check`(lint・test)は変更なしのまま成功を再確認。検証で作成した2件の
+  旅行ドキュメント・しおり項目は削除の上、名前を更新して共有テストグループ
+  `FMXRZYW7`内に残置。
+- レビュー: OK(コード変更なし)。
+- 次回予定: これで第4期(PCレスポンシブ対応: 19〜21)が全て完了。次は「22. 雑多メモの
+  振り分け先を拡張」(行き先決め・宿泊への→ボタン追加)に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 14:05
+- 実装: 「22. 雑多メモの振り分け先を拡張」を実施。`src/views/scratch.js`に
+  「→行き先決めへ」(即時追加。選択範囲を`destinations`の`name`に設定)・「→宿泊へ」
+  (URL入力のみの簡易フォーム経由。選択範囲を`lodgingCandidates`の`note`に設定)の
+  2つのボタンを追加し、既存の「→企画メモへ」「→しおりへ」と合わせて2行×2列の
+  `.button-row`で配置した。`docs/firestore-design.md`「雑多メモの振り分け方式の
+  再設計」・`docs/screens.md`「雑多メモも単一共有テキスト」の記述も、対象タブが
+  2つ→4つに増えたことを反映して更新した。
+- 動作確認: Playwrightで、選択範囲を「→行き先決めへ」で移動すると即座に候補地が
+  作成され雑多メモから該当範囲のみ削除されること、「→宿泊へ」でURL入力フォームを
+  挟んで宿泊候補(URL=入力値、メモ=選択範囲)が作成されることを実Firestoreで確認。
+  未選択時のエラー表示も確認。375px幅でも4ボタンが2×2で折り返され横スクロール
+  発生なし。console/pageerrorは0件。`npm run check`(lint・test)成功。検証で作成した
+  候補地・宿泊候補は削除の上、旅行ドキュメントは名前を更新し`scratchText`を空文字に
+  リセットして共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ(`destinations`・
+  `lodgingCandidates`のフィールド構造)から逸脱なし。`firestore.rules`の変更も不要
+  (既存のサブコレクション`create`権限で対応可能)。
+- 次回予定: 第5期(配色・タイポグラフィの統一感強化)の「23. デザイントークンの拡充」に
+  着手。
+- blocked / partial: なし。
+
+## 2026-08-19 14:40
+- 実装: 「23. デザイントークンの拡充」(第5期)を実施。`styles/tokens.css`に
+  Google Fonts「Zen Kaku Gothic New」を`@import`し`--font-family-base`に採用、
+  `--font-weight-heading`(700→900)・`--font-weight-subheading`(600→700)を強化。
+  新規トークン`--color-primary-deep`(濃紺)・`--color-accent-green`(調和する緑、
+  `--color-success`とは独立)・`--radius-pill`(999px)を追加し、`--shadow-card`を
+  `rgb(29 78 216 / 10%)`の青みを帯びた影に変更。`pages/shared.css`の`.rank-badge`に
+  `--radius-pill`を適用。
+- 動作確認: OK。Playwrightで、Vite dev server(`http://localhost:5173/trip-planner-starter/`)
+  上の375px/1200px幅で`getComputedStyle`によりフォント適用を確認、横スクロール
+  発生なし、console/pageerror 0件。実Firestore(共有テストグループ`FMXRZYW7`)で
+  E(行き先決め)画面に検証用候補地を一時追加・★5投票し、`rank-badge`のピル形状化と
+  カード影の青み変化を目視確認後、Firestoreから削除済み。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・セキュリティ方針、
+  `docs/screens.md`の画面構成・遷移から逸脱なし(CSSトークンのみの変更)。
+- 次回予定: 「24. ヘッダーのテクスチャ強化」(`--color-primary-deep`ベースのグラデーション
+  +ドット柄パターンをCSSのみで追加)に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 15:15
+- 実装: 直前の人間との会話で洗い出した脆弱性3件(バグ修正セクション)のうち2件を実施。
+  (1) `src/views/itinerary.js`・`src/views/lodging.js`で、Firestoreの`url`/
+  `locationUrl`を無条件で`link.href`に代入していた箇所に、新規`src/url.js`の
+  `isSafeUrl()`(http/httpsスキームのみ許可)を挟み、安全でない場合は`<a>`ではなく
+  クリックできない`<p>`テキスト表示にフォールバックするよう修正。(2)
+  `src/views/join.js`のグループ作成処理で、`creatorSecret`を`groups/{code}`
+  ドキュメントに保存したままにしないよう、作成直後に新設の`removeField()`
+  (`src/firestore.js`、`deleteField()`のラッパー)でフィールド削除するよう変更。
+  あわせて`eslint.config.js`に`URL`グローバルを追加。
+- 動作確認: OK。Playwrightで、G(宿泊)・H(しおり)画面に`javascript:alert(1)`を
+  仕込んだ候補・しおり項目を実Firestore(共有テストグループ`FMXRZYW7`)に一時追加し、
+  `<a>`化されずプレーンテキスト表示になることを確認(通常のhttps URLは従来通り
+  リンクとして機能することも確認)。`removeField()`自体は使い捨ての候補地
+  ドキュメントで追加→削除を確認。検証データはすべてFirestoreから削除済み。
+  `npm run check`(lint・test)成功。なお、グループ作成処理自体の完全なE2E確認は
+  マスター合言葉をAI側が知らないため従来通り未実施(既知の制約)。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・セキュリティ方針、
+  `docs/screens.md`の画面構成・遷移から逸脱なし(いずれもセキュリティ強化のみで
+  データモデル変更なし)。
+- 次回予定: 「24. ヘッダーのテクスチャ強化」に着手。ただし`firestore.rules`の
+  デプロイ承認待ちタスク(下記)が残っているため、人間の判断があればそちらを先に対応。
+- blocked / partial: 3件目のタスク(`firestore.rules`の`groups/{groupCode}`
+  update権限をmembers追記・creatorSecret削除のみに限定)は、ファイル上の変更は
+  完了しているが、`npm run firebase:deploy:rules`の実行がClaude Codeの自動モード
+  安全装置によりブロックされ、本番Firebaseプロジェクト(`trip-planner-cd9b7`)への
+  デプロイができなかった。人間の承認・実行待ちとして`docs/ROADMAP.md`に残置。
+
+## 2026-08-19 15:30
+- 実装: コード変更なし。人間から「デプロイしたよ」と連絡を受け、直前のサイクルで
+  ブロックされていた`firestore.rules`(`groups/{groupCode}`のupdate制限)の本番反映
+  (`trip-planner-cd9b7`)が人間の手動実行により完了したことを受けた確認作業のみ実施。
+- 動作確認: OK。Playwrightで実Firestoreに対し、(1)許可外フィールド
+  (`evolveVerifyDisallowedField`)への`groups/FMXRZYW7`のupdateが`permission-denied`で
+  拒否されること、(2)`src/views/join.js`の参加フロー(`members`フィールドへの
+  `arrayUnion`追記)は引き続き正常に成功することの両方を確認。検証で追加したテスト用
+  メンバー名2件(`evolveの検証用ルール確認`・`evolveの検証用ルール確認-members`)は
+  `arrayRemove`で削除済み。
+- レビュー: OK。
+- 次回予定: 「24. ヘッダーのテクスチャ強化」に着手。
+- blocked / partial: なし。バグ修正セクションの3件は全て完了・本番反映済みとなった。
+
+## 2026-08-19 15:35
+- 実装: 「24. ヘッダーのテクスチャ強化」(第5期)を実施。`pages/shared.css`の
+  `.page-header`に、`--color-primary-deep`系の斜めグラデーション+微細なドット柄
+  (`radial-gradient`の繰り返し、画像不使用)を追加。濃色背景に合わせ`.page-header h1`・
+  `.back-link`の文字色を白系に変更。
+- 動作確認: OK。Playwrightで375px/768px/1200px幅すべてでヘッダーの見た目(グラデーション・
+  ドット柄・白文字)をスクリーンショットで確認、横スクロール発生なし、console/pageerror
+  0件。back-linkが表示される旅行詳細ページでも崩れなし。`npm run check`(lint・test)成功。
+  検証で参加した際に追加されたテスト用メンバー名は共有テストグループ`FMXRZYW7`の
+  members配列から削除済み。
+- レビュー: OK。CSSのみの変更でデータモデル・画面構成から逸脱なし。アプリ内に`<h1>`は
+  ヘッダー1箇所のみのため、文字色変更の影響範囲も限定的であることを確認。
+- 次回予定: 「25. しおりタイムラインの装飾強化」(優先度低・任意)または「26. コンテンツ内の
+  ダーク全面塗りセクション追加」に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 16:05
+- 実装: 「25. しおりタイムラインの装飾強化」(第5期)を実施。H(しおり)画面の
+  タイムラインマーカーを丸ドットから、その日の何番目の予定かを示す連番バッジ
+  (`--radius-pill`円形、`--color-primary`背景・白文字)に変更。`src/views/itinerary.js`の
+  描画ループを`forEach`化し表示順にindexを振った。
+- 動作確認: OK。Playwrightで、時刻の異なる3件のしおり項目(09:00・14:00・時間未入力)を
+  実Firestoreに一時追加し、バッジが表示順通りに1/2/3と振られることを確認。375px/1200px
+  幅ともに崩れなし、console/pageerror 0件。`npm run check`(lint・test)成功。検証データは
+  削除済み。あわせて、前サイクル(2026-08-19 15:15、脆弱性対応)の動作確認時に削除し忘れて
+  いた`javascript:alert(1)`のテストしおり項目1件を発見し、本サイクルで併せて削除した。
+- レビュー: OK。表示のみの変更でデータモデル・画面構成から逸脱なし。
+- 次回予定: 「26. コンテンツ内のダーク全面塗りセクション追加」(雑多メモタブの`.card`を
+  候補に検討)に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 16:35
+- 実装: 「26. コンテンツ内のダーク全面塗りセクション追加」(第5期)を実施。雑多メモタブの
+  `<textarea>`を囲む`.card`に`scratch-card`クラスを追加し、ヘッダー(24)と同系統の
+  `--color-primary-deep`グラデーション+ドット柄を適用。textarea・振り分けボタン・
+  エラー/成功メッセージの配色も濃色背景向けに調整(danger/successは背景色として
+  再利用したチップ表示にし、新規の色トークンは追加していない)。
+- 動作確認: OK。Playwrightで、雑多メモタブの見た目(グラデーション・ドット柄・白文字)、
+  未選択エラー時の赤チップ表示を375px/1200px幅で確認、横スクロール・崩れなし、
+  console/pageerror 0件。`npm run check`(lint・test)成功。検証用メンバー名は削除済み。
+- レビュー: OK。CSSのみの変更でデータモデル・画面構成から逸脱なし。stylelintの
+  no-descending-specificity対応のため.scratch-card関連ルールをファイル末尾に配置。
+- 次回予定: 「27. カスタムカレンダーピッカーの導入(複数選択対応)」の1つ目のサブタスク
+  (`src/datePicker.js`の新規作成)に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 17:05
+- 実装: 「27」の1つ目のサブタスク(再利用可能なカレンダーピッカーコンポーネントの新規
+  作成)を実施。`src/datePicker.js`に`createDatePicker(container, options)`を実装し、
+  単一選択モード(1つの"YYYY-MM-DD"を返す)・複数選択モード(日付配列を返す)を切り替え
+  可能にした。前月/翌月ナビゲーション・今日のハイライトも実装。日付グリッド生成等の
+  計算ロジックを純粋関数として切り出し`src/datePicker.test.js`(vitest、7件)を追加。
+  `pages/shared.css`に`.date-picker`系のCSS(ピル型の円形日付ボタン)を追加(既存トークンの
+  みで新規色は追加せず)。まだF画面等どの画面にも組み込んでいない。
+- 動作確認: OK。まだ画面に組み込んでいないため実Firestoreでの確認は対象外。代わりに
+  Playwrightで、`src/datePicker.js`を直接動的importし、単一/複数選択の選択・解除、
+  月送りナビゲーション(年またぎ含む)、今日のハイライト、`destroy()`の動作を実際の
+  クリック操作で確認。console/pageerror 0件。`npm run check`(lint・test、計12件)成功。
+  Firestoreへの書き込みが無いコンポーネントのため検証データの後始末は不要だった。
+- レビュー: OK。データモデル・画面構成への影響なし(新規の独立コンポーネントのみ)。
+- 次回予定: 「27」の2つ目のサブタスク(F(日程調整)画面の「候補日を追加」フォームを
+  複数選択モードのdatePickerに置き換え)に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 17:40
+- 実装: 「27」の2つ目のサブタスク(F画面への複数選択モード適用)を実施。
+  `src/views/schedule.js`の「候補日を追加」フォームの`<input type="date">`を
+  `datePicker.js`の複数選択モードに置き換え、選択済み日付を`.chip`で一覧表示。
+  「追加する」押下時は既存の重複チェックを維持しつつ、新規分のみ`setDocumentMerged`を
+  ループで呼ぶ形にした(全件重複はエラー表示、一部重複は無言スキップ)。
+  `pages/shared.css`に`.chip`/`.chip-row`を追加。
+- 動作確認: OK。Playwrightで、実Firestoreに3日分を複数選択して送信→3件作成、
+  既存+新規混在で送信→新規分のみ追加、全件重複で送信→エラー表示のみ、をそれぞれ確認。
+  375px/1200px幅とも横スクロール・崩れなし、console/pageerror 0件。`npm run check`
+  (lint・test)成功。検証データ(scheduleEntries 4件・テスト用メンバー名)は削除済み。
+- レビュー: OK。scheduleEntries/{date}のFirestoreスキーマは不変。画面構成・遷移も不変。
+- 次回予定: 「27」の3つ目のサブタスク(G/Hへの単一選択モード展開を判断)、または
+  第5期完了後の次の期の検討に着手。
+- blocked / partial: なし。
+
+## 2026-08-19 18:10
+- 実装: 「27」の3つ目・最後のサブタスクを実施。展開すると判断し(コンポーネントが
+  単一選択モードを既にサポート済み・F画面だけ見た目が浮くのを避けたいため)、
+  `src/views/itinerary.js`(Hのしおり項目日付)・`src/views/lodging.js`(Gの確定宿泊
+  チェックイン/チェックアウト、2つの独立したpickerインスタンス)の`<input type="date">`を
+  `datePicker.js`の単一選択モードに置き換えた。これで「27」(カスタムカレンダー
+  ピッカーの導入)・第5期(配色・タイポグラフィの統一感強化)ともに全タスク完了。
+- 動作確認: OK。Playwrightで、H画面の日付選択→しおり項目作成、日付未選択時の
+  バリデーション維持、G画面のチェックイン/チェックアウト2つのpickerが独立して動作し
+  正しい期間の確定宿泊が作成されることを確認。375px/1200px幅とも崩れなし、
+  console/pageerror 0件。`npm run check`成功。検証データは削除済み。
+- レビュー: OK。itineraryItems.date・confirmedStays.checkIn/checkOutのデータ形式は
+  不変。
+- 次回予定: 第5期完了に伴い、次に着手する期(新規タスク)を検討する。現時点では
+  ROADMAP.mdに新規タスクの用意が無いため、次回は人間への確認、または既存画面の
+  細部見直しから着手を検討。
+- blocked / partial: なし。追記: 2026-08-19 15:15サイクルの動作確認で作成した宿泊候補の
+  テストデータ2件(削除し忘れ)を本サイクルで発見・削除した。原因は`listCollection`で
+  取得した`trips`配列の`[0]`番目を対象trip決め打ちにしていたこと(Firestoreの
+  `getDocs`は明示的な`orderBy`が無いと返却順序が実行のたびに変わりうるため)。
+  今後は対象tripが不明な場合は全trip横断で検索してから削除する運用に切り替える。

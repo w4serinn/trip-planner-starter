@@ -27,21 +27,67 @@ body {
   padding: var(--space-lg) var(--space-md);
 }
 
+/* PC等の広い画面向けレスポンシブ対応(docs/ROADMAP.md「第4期」参照)。
+   モバイル幅(480px)は維持しつつ、広い画面では段階的にコンテナ幅を広げる。 */
+@media (width >= 768px) {
+  .page {
+    max-width: 700px;
+    padding: var(--space-xl) var(--space-lg);
+  }
+}
+
+@media (width >= 1024px) {
+  .page {
+    max-width: 960px;
+  }
+}
+
+/* カード一覧を、広い画面では複数カラムのグリッドに切り替える共通クラス。
+   モバイル幅では従来通り1列(ブロック要素の縦積み)のまま。 */
+@media (width >= 768px) {
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .card-grid > .card {
+    margin-bottom: 0;
+  }
+}
+
+@media (width >= 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 2026-08-19(docs/ROADMAP.md「24. ヘッダーのテクスチャ強化」): 「白背景に黒文字」の
+   単調さを解消するため、--color-primary-deep系のグラデーション+微細なドット柄
+   (yamagata_tripの.hero::afterを参考にしたradial-gradientの繰り返し。画像は使わない)
+   を持たせる。.pageの内側に収まるカード状のセクションとして塗る(ページ端まで
+   はみ出すフルブリードにはしない)。 */
 .page-header {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 14%) 1px, transparent 1.5px),
+    linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-size: 18px 18px, 100% 100%;
 }
 
 .back-link {
-  color: var(--color-text-muted);
+  color: rgb(255 255 255 / 75%);
   text-decoration: none;
   font-size: var(--font-size-sm);
 }
 
 .back-link:hover {
-  color: var(--color-primary);
+  color: var(--color-surface);
 }
 
 h1 {
@@ -49,6 +95,10 @@ h1 {
   font-weight: var(--font-weight-heading);
   letter-spacing: -0.01em;
   margin: 0;
+}
+
+.page-header h1 {
+  color: var(--color-surface);
 }
 
 h2 {
@@ -218,6 +268,10 @@ button:disabled {
   margin: 0;
 }
 
+.card-grid .empty-state {
+  grid-column: 1 / -1;
+}
+
 .btn-secondary {
   background: transparent;
   color: var(--color-primary);
@@ -329,20 +383,27 @@ button:disabled {
 
 .timeline-marker {
   flex-shrink: 0;
-  width: 10px;
+  width: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.timeline-marker::before {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-primary);
+/* 2026-08-19(docs/ROADMAP.md「25. しおりタイムラインの装飾強化」): 単なる丸ドットから、
+   その日の何番目の予定かを表示する連番バッジに強化。時刻は既に予定タイトル側に
+   表示されているため、ここでは時刻の重複表示ではなく連番にして時系列の見通しを補う。 */
+.timeline-marker-badge {
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
-  margin-top: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-subheading);
 }
 
 .timeline-marker::after {
@@ -380,7 +441,7 @@ button:disabled {
 .rank-badge {
   flex-shrink: 0;
   padding: 2px var(--space-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: var(--color-bg);
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
@@ -489,4 +550,151 @@ button:disabled {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
   font-weight: bold;
+}
+
+/* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):
+   雑多メモは「一番よく使うメイン機能」という位置づけのため、白カード主体の他画面群の
+   中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
+   (ヘッダー24と同じ--color-primary-deep系グラデーション+ドット柄。画像不使用)。
+   src/views/scratch.jsの<textarea>を囲む.cardにのみ適用する(他画面のカードは対象外)。 */
+.scratch-card {
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 10%) 1px, transparent 1.5px),
+    linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-size: 18px 18px, 100% 100%;
+  color: var(--color-surface);
+}
+
+.scratch-card textarea {
+  background: rgb(255 255 255 / 8%);
+  border-color: rgb(255 255 255 / 25%);
+  color: var(--color-surface);
+}
+
+.scratch-card textarea::placeholder {
+  color: rgb(255 255 255 / 55%);
+}
+
+.scratch-card textarea:focus {
+  border-color: var(--color-surface);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);
+}
+
+.scratch-card .btn-secondary {
+  color: var(--color-surface);
+  border-color: rgb(255 255 255 / 60%);
+}
+
+.scratch-card .btn-secondary:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+/* --color-danger/--color-successをそのまま文字色に使うと濃紺背景とのコントラストが
+   不十分なため、既存トークンを背景色として使うチップ表示に切り替える(新規の色は
+   追加しない)。 */
+.scratch-card .error-text:not(:empty) {
+  display: inline-block;
+  background: var(--color-danger);
+  color: var(--color-surface);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.scratch-card .copy-feedback:not(:empty) {
+  display: inline-block;
+  background: var(--color-success);
+  color: var(--color-surface);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* 2026-08-19(docs/ROADMAP.md「27. カスタムカレンダーピッカーの導入」):
+   src/datePicker.jsが描画するカレンダーUI。単一選択・複数選択どちらのモードでも
+   共通のCSSを使う(選択状態のクラスは同じため)。jicoo.com調査時の「格子状のピル型
+   ボタンで日付を選ぶ」パターンを参考に、日付セルは円形のピルボタンにする。 */
+.date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date-picker-label {
+  font-weight: var(--font-weight-subheading);
+}
+
+.date-picker-nav {
+  width: 32px;
+  padding: 0;
+  aspect-ratio: 1;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.date-picker-nav:hover {
+  background: var(--color-bg);
+}
+
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-xs);
+}
+
+.date-picker-weekdays span {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.date-picker-day {
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid transparent;
+  box-shadow: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-subheading);
+}
+
+.date-picker-day:hover {
+  background: var(--color-bg);
+}
+
+.date-picker-today {
+  border-color: var(--color-primary);
+}
+
+.date-picker-selected,
+.date-picker-selected:hover {
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+/* 2026-08-19(docs/ROADMAP.md「27」の2つ目のサブタスク): datePickerの複数選択モードで
+   選択した日付を一覧表示するチップ。F(日程調整)画面の「候補日を追加」フォームで使用。 */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.chip {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-size: var(--font-size-sm);
 }

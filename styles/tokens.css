@@ -1,5 +1,7 @@
 /* デザイントークン(仮決定)。配色・タイポグラフィ・余白などをCSS変数として定義する。
    すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。 */
+@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap");
+
 :root {
   /* カラー(2026-08-19再改訂: docs/ROADMAP.md「第3期: レイアウト刷新」参照。
      参考サイト https://tabiori.com/ の「修学旅行のしおり」的な、明るく親しみやすい
@@ -21,16 +23,25 @@
   /* primaryが青系のため、成功色は独立した緑を保つ(primaryと混同しないように)。 */
   --color-success: #219653;
 
-  /* タイポグラフィ */
-  --font-family-base: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  /* 2026-08-19追加(第5期・docs/ROADMAP.md「23. デザイントークンの拡充」): primaryを
+     さらに沈めた藍系の濃紺。ヘッダーやダーク全面塗りセクションの背景に使う。
+     --color-success(意味的な「成功」表現)とは独立した、青と調和する装飾用の緑。
+     全面採用ではなく差し色として、既存の彩度高めなオレンジaccentとは別枠で使う。 */
+  --color-primary-deep: #16234a;
+  --color-accent-green: #4d9a7a;
+
+  /* タイポグラフィ(2026-08-19: Zen Kaku Gothic Newを本文フォントに採用。
+     未読込時・フォールバック用に既存フォントは維持する) */
+  --font-family-base: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-size-sm: 14px;
   --font-size-base: 16px;
   --font-size-lg: 20px;
   --font-size-xl: 28px;
 
-  /* 見出しの重みを本文(400程度)とはっきり分け、階層を強める。 */
-  --font-weight-heading: 700;
-  --font-weight-subheading: 600;
+  /* 見出しの重みを本文(400程度)とはっきり分け、階層を強める。
+     2026-08-19: 太さのジャンプ率をさらに強調(700→900 / 600→700)。 */
+  --font-weight-heading: 900;
+  --font-weight-subheading: 700;
 
   /* スペーシング */
   --space-xs: 4px;
@@ -45,7 +56,13 @@
 
   /* ボタン専用の角丸(cardのradius-mdより控えめ、input等のradius-smよりやや丸め)。 */
   --radius-button: 12px;
-  --shadow-card: 0 4px 14px rgb(0 0 0 / 8%);
+
+  /* 完全な丸み(ピル型)。バッジ等、円形に近い強い丸みを持たせたい要素に使う。 */
+  --radius-pill: 999px;
+
+  /* 2026-08-19: 中立グレー系から、primary-darkを薄くにじませた青みの影に変更し、
+     青ベース配色との統一感を強めた(design-library.jpの実例を参考)。 */
+  --shadow-card: 0 4px 14px rgb(29 78 216 / 10%);
 
   /* primaryカラー(青)を薄くにじませた影で、ボタンに軽い浮遊感を持たせる。 */
   --shadow-button: 0 4px 10px rgb(59 130 246 / 25%);

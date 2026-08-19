@@ -15,7 +15,7 @@ export function mount(outlet) {
 
   outlet.innerHTML = `
     <p class="subtitle" id="group-subtitle">${session.name}さんとして参加中</p>
-    <div id="trip-list"></div>
+    <div id="trip-list" class="card-grid"></div>
     <p class="error-text" id="error-text"></p>
     <button type="button" id="create-trip">${icons.plus}<span>新しい旅行を作る</span></button>
   `;
