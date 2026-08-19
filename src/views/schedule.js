@@ -28,19 +28,26 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">候補日を追加し、○(参加できる)・△(未定)・×(参加できない)で回答しましょう。</p>
 
-    <form id="date-form" novalidate>
+    <button type="button" id="toggle-date-form" class="btn-secondary">${icons.plus}<span>候補日を追加</span></button>
+
+    <form id="date-form" novalidate hidden>
       <div class="field">
         <label for="date-input">候補日</label>
         <input type="date" id="date-input" name="date" required />
       </div>
       <p class="error-text" id="date-error-text"></p>
-      <button type="submit">候補日を追加</button>
+      <div class="button-row">
+        <button type="submit">追加する</button>
+        <button type="button" id="cancel-date-form" class="btn-secondary">キャンセル</button>
+      </div>
     </form>
 
     <div id="schedule-list"></div>
   `;
 
+  const toggleFormButton = outlet.querySelector('#toggle-date-form');
   const dateForm = outlet.querySelector('#date-form');
+  const cancelFormButton = outlet.querySelector('#cancel-date-form');
   const dateInput = outlet.querySelector('#date-input');
   const dateErrorText = outlet.querySelector('#date-error-text');
   const scheduleList = outlet.querySelector('#schedule-list');
@@ -48,6 +55,25 @@ export function mount(outlet, params) {
 
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
+
+  function openForm() {
+    toggleFormButton.hidden = true;
+    dateForm.hidden = false;
+    dateInput.focus();
+  }
+
+  function closeForm() {
+    dateForm.hidden = true;
+    toggleFormButton.hidden = false;
+    dateErrorText.textContent = '';
+    dateInput.value = '';
+  }
+
+  const onToggleFormClick = () => openForm();
+  toggleFormButton.addEventListener('click', onToggleFormClick);
+
+  const onCancelFormClick = () => closeForm();
+  cancelFormButton.addEventListener('click', onCancelFormClick);
 
   let currentEntries = [];
   let memberCount = 0;
@@ -158,9 +184,9 @@ export function mount(outlet, params) {
     submitButton.disabled = true;
     try {
       await setDocumentMerged(`${schedulePath}/${date}`, { responses: {} });
-      dateInput.value = '';
       currentEntries = [...currentEntries, { id: date, responses: {} }];
       renderEntries();
+      closeForm();
     } catch (error) {
       console.error(error);
       dateErrorText.textContent = '候補日の追加に失敗しました。時間をおいて再度お試しください。';
@@ -173,6 +199,8 @@ export function mount(outlet, params) {
   loadEntries();
 
   return () => {
+    toggleFormButton.removeEventListener('click', onToggleFormClick);
+    cancelFormButton.removeEventListener('click', onCancelFormClick);
     dateForm.removeEventListener('submit', onDateSubmit);
   };
 }
