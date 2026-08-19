@@ -889,3 +889,25 @@
       確認。console/pageerrorは0件(2026-08-19)。`npm run check`(lint・test、
       新規7件含む計12件)成功。Firestoreへの書き込みは発生しないコンポーネントのため
       検証データの後始末は不要。
+
+## 27-2. F(日程調整)画面への複数選択モード適用(第5期「27」の2つ目のサブタスク)
+- [x] (M) F(日程調整)画面の「候補日を追加」フォーム(`src/views/schedule.js`)を、
+      `src/datePicker.js`の**複数選択モード**に置き換え。`<input type="date">`を
+      `#date-picker-container`(datePickerの描画先)と`#selected-dates-chips`
+      (選択済み日付のチップ一覧、`pages/shared.css`に新規`.chip`/`.chip-row`を追加)に
+      差し替えた。フォームを開くたびに`datePicker.setValue([])`で選択状態をリセットする
+      (月の表示状態自体はF画面滞在中維持される)。「追加する」押下時、選択された日付を
+      既存の`currentEntries`と突き合わせて重複を除外し、新規分だけ`setDocumentMerged`を
+      ループで呼ぶ(既存の重複チェックのロジックは維持しつつ、単一→複数に対応させた)。
+      全選択日が重複していた場合のみエラー表示、一部重複は無言でスキップして新規分のみ
+      追加する(chip等での重複通知UIは今回追加していない)。保存する
+      Firestoreデータ形式(`scheduleEntries/{date}`、1ドキュメント=1日付)自体は不変
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)上で3日分を複数選択し
+      チップに正しく表示されることを確認した上で送信し、3件のscheduleEntriesが作成され
+      一覧に反映されることを確認。続けて「既存1件+新規1件」を選択して送信すると
+      エラー無しで新規1件のみ追加されること(重複は無言スキップ)、「既存日のみ」を
+      選択して送信すると「選択した日付はすべてすでに候補にあります。」のエラーが出て
+      何も追加されないことを確認。375px/1200px幅ともに横スクロール・崩れなし、
+      console/pageerrorは0件(2026-08-19)。`npm run check`(lint・test)成功。検証で
+      作成した候補日(scheduleEntries 4件)・テスト用メンバー名はFirestoreから削除済み。

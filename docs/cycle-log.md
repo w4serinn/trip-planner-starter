@@ -1139,3 +1139,19 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
 - 次回予定: 「27」の2つ目のサブタスク(F(日程調整)画面の「候補日を追加」フォームを
   複数選択モードのdatePickerに置き換え)に着手。
 - blocked / partial: なし。
+
+## 2026-08-19 17:40
+- 実装: 「27」の2つ目のサブタスク(F画面への複数選択モード適用)を実施。
+  `src/views/schedule.js`の「候補日を追加」フォームの`<input type="date">`を
+  `datePicker.js`の複数選択モードに置き換え、選択済み日付を`.chip`で一覧表示。
+  「追加する」押下時は既存の重複チェックを維持しつつ、新規分のみ`setDocumentMerged`を
+  ループで呼ぶ形にした(全件重複はエラー表示、一部重複は無言スキップ)。
+  `pages/shared.css`に`.chip`/`.chip-row`を追加。
+- 動作確認: OK。Playwrightで、実Firestoreに3日分を複数選択して送信→3件作成、
+  既存+新規混在で送信→新規分のみ追加、全件重複で送信→エラー表示のみ、をそれぞれ確認。
+  375px/1200px幅とも横スクロール・崩れなし、console/pageerror 0件。`npm run check`
+  (lint・test)成功。検証データ(scheduleEntries 4件・テスト用メンバー名)は削除済み。
+- レビュー: OK。scheduleEntries/{date}のFirestoreスキーマは不変。画面構成・遷移も不変。
+- 次回予定: 「27」の3つ目のサブタスク(G/Hへの単一選択モード展開を判断)、または
+  第5期完了後の次の期の検討に着手。
+- blocked / partial: なし。

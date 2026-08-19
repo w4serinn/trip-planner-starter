@@ -11,6 +11,7 @@ import {
   sanitizeMapKey,
 } from '../firestore.js';
 import { icons } from '../icons.js';
+import { createDatePicker } from '../datePicker.js';
 
 const RESPONSE_SYMBOLS = ['○', '△', '×'];
 
@@ -31,10 +32,9 @@ export function mount(outlet, params) {
     <button type="button" id="toggle-date-form" class="btn-secondary">${icons.plus}<span>候補日を追加</span></button>
 
     <form id="date-form" novalidate hidden>
-      <div class="field">
-        <label for="date-input">候補日</label>
-        <input type="date" id="date-input" name="date" required />
-      </div>
+      <p class="subtitle">複数の日付をまとめて選択できます。</p>
+      <div id="date-picker-container"></div>
+      <div id="selected-dates-chips" class="chip-row"></div>
       <p class="error-text" id="date-error-text"></p>
       <div class="button-row">
         <button type="submit">追加する</button>
@@ -48,7 +48,8 @@ export function mount(outlet, params) {
   const toggleFormButton = outlet.querySelector('#toggle-date-form');
   const dateForm = outlet.querySelector('#date-form');
   const cancelFormButton = outlet.querySelector('#cancel-date-form');
-  const dateInput = outlet.querySelector('#date-input');
+  const datePickerContainer = outlet.querySelector('#date-picker-container');
+  const chipsContainer = outlet.querySelector('#selected-dates-chips');
   const dateErrorText = outlet.querySelector('#date-error-text');
   const scheduleList = outlet.querySelector('#schedule-list');
   const submitButton = dateForm.querySelector('button[type="submit"]');
@@ -56,17 +57,33 @@ export function mount(outlet, params) {
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
 
+  function renderChips(dates) {
+    chipsContainer.innerHTML = '';
+    for (const date of dates) {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = formatDateLabel(date);
+      chipsContainer.appendChild(chip);
+    }
+  }
+
+  // 複数選択モード(docs/ROADMAP.md「27」)。選択された日付はチップで一覧表示する。
+  const datePicker = createDatePicker(datePickerContainer, {
+    mode: 'multi',
+    onChange: renderChips,
+  });
+
   function openForm() {
     toggleFormButton.hidden = true;
     dateForm.hidden = false;
-    dateInput.focus();
   }
 
   function closeForm() {
     dateForm.hidden = true;
     toggleFormButton.hidden = false;
     dateErrorText.textContent = '';
-    dateInput.value = '';
+    datePicker.setValue([]);
+    renderChips([]);
   }
 
   const onToggleFormClick = () => openForm();
@@ -171,20 +188,29 @@ export function mount(outlet, params) {
     event.preventDefault();
     dateErrorText.textContent = '';
 
-    const date = dateInput.value;
-    if (!date) {
-      dateErrorText.textContent = '日付を選択してください。';
+    const selectedDates = datePicker.getValue();
+    if (selectedDates.length === 0) {
+      dateErrorText.textContent = '候補日を1つ以上選択してください。';
       return;
     }
-    if (currentEntries.some((entry) => entry.id === date)) {
-      dateErrorText.textContent = 'その日付はすでに候補にあります。';
+
+    const existingIds = new Set(currentEntries.map((entry) => entry.id));
+    const newDates = selectedDates.filter((date) => !existingIds.has(date));
+
+    if (newDates.length === 0) {
+      dateErrorText.textContent = '選択した日付はすべてすでに候補にあります。';
       return;
     }
 
     submitButton.disabled = true;
     try {
-      await setDocumentMerged(`${schedulePath}/${date}`, { responses: {} });
-      currentEntries = [...currentEntries, { id: date, responses: {} }];
+      // 既存の重複チェックを維持しつつ、選択された日付それぞれについて
+      // setDocumentMergedを呼ぶ(Firestoreスキーマ・書き込み方式は単一選択時と同じ)。
+      // 重複していた日付は無言でスキップし、新規分だけ追加する。
+      for (const date of newDates) {
+        await setDocumentMerged(`${schedulePath}/${date}`, { responses: {} });
+      }
+      currentEntries = [...currentEntries, ...newDates.map((date) => ({ id: date, responses: {} }))];
       renderEntries();
       closeForm();
     } catch (error) {
@@ -202,5 +228,6 @@ export function mount(outlet, params) {
     toggleFormButton.removeEventListener('click', onToggleFormClick);
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     dateForm.removeEventListener('submit', onDateSubmit);
+    datePicker.destroy();
   };
 }

@@ -681,3 +681,20 @@ button:disabled {
   color: var(--color-surface);
   border-color: var(--color-primary);
 }
+
+/* 2026-08-19(docs/ROADMAP.md「27」の2つ目のサブタスク): datePickerの複数選択モードで
+   選択した日付を一覧表示するチップ。F(日程調整)画面の「候補日を追加」フォームで使用。 */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.chip {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-size: var(--font-size-sm);
+}
