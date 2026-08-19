@@ -1061,3 +1061,17 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   完了しているが、`npm run firebase:deploy:rules`の実行がClaude Codeの自動モード
   安全装置によりブロックされ、本番Firebaseプロジェクト(`trip-planner-cd9b7`)への
   デプロイができなかった。人間の承認・実行待ちとして`docs/ROADMAP.md`に残置。
+
+## 2026-08-19 15:30
+- 実装: コード変更なし。人間から「デプロイしたよ」と連絡を受け、直前のサイクルで
+  ブロックされていた`firestore.rules`(`groups/{groupCode}`のupdate制限)の本番反映
+  (`trip-planner-cd9b7`)が人間の手動実行により完了したことを受けた確認作業のみ実施。
+- 動作確認: OK。Playwrightで実Firestoreに対し、(1)許可外フィールド
+  (`evolveVerifyDisallowedField`)への`groups/FMXRZYW7`のupdateが`permission-denied`で
+  拒否されること、(2)`src/views/join.js`の参加フロー(`members`フィールドへの
+  `arrayUnion`追記)は引き続き正常に成功することの両方を確認。検証で追加したテスト用
+  メンバー名2件(`evolveの検証用ルール確認`・`evolveの検証用ルール確認-members`)は
+  `arrayRemove`で削除済み。
+- レビュー: OK。
+- 次回予定: 「24. ヘッダーのテクスチャ強化」に着手。
+- blocked / partial: なし。バグ修正セクションの3件は全て完了・本番反映済みとなった。

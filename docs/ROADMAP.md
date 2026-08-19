@@ -9,24 +9,14 @@
 - サイズ目安: S = 数十行程度の変更、M = 1画面の主要機能一式
 
 ## バグ修正(最優先 — 通常タスクより先に上から順に着手する)
-2026-08-19、人間との会話で脆弱性の懸念を洗い出し、以下3件をタスク化した(人間から
-「操作性が変わらないのであれば」という条件付きで承認済み)。うち2件はコード修正のみで
-完結し実装・検証済み(詳細はdocs/roadmap-done.md参照)。残り1件はコードはすでに
-書き終えているが、本番Firebaseプロジェクトへのデプロイという取り返しが利きにくい操作を
-伴うため、evolveサイクルの自動実行では踏み込まず**人間の承認待ち**としている。
-
-- [ ] (S) **人間の承認待ち・デプロイ未実施**: `firestore.rules`の
-      `groups/{groupCode}`の`allow update`を`if true`から、
-      `members`フィールドの追記(参加者追加)・`creatorSecret`フィールドの削除のみに
-      限定する変更はファイル上には反映済み(2026-08-19)。現状のクライアントコードで
-      `groups/{code}`をupdateしているのは`src/views/join.js`の
-      `addToArray(..., 'members', name)`と、グループ作成直後の`creatorSecret`削除
-      (`removeField`)のみで、他に用途が無いことをsrc全体をgrepして確認済みのため、
-      参加・作成フローの挙動は変わらない見込み。ただし`npm run firebase:deploy:rules`
-      (`firebase deploy --only firestore:rules`)の実行がClaude Codeの自動モード
-      安全装置によりブロックされ、本番環境(`trip-planner-cd9b7`)へは未反映。
-      人間が手動で上記コマンドを実行してデプロイするか、実行の許可を出してほしい。
-      デプロイ後、実際に参加・グループ作成フローが壊れていないことの実機確認を推奨
+2026-08-19、人間との会話で脆弱性の懸念を洗い出し、タスク化した3件は全て完了した
+(詳細はdocs/roadmap-done.md参照)。`firestore.rules`の`groups/{groupCode}`の
+`update`制限は、Claude Codeの自動モード安全装置により自動デプロイがブロックされたため
+人間が手動で`npm run firebase:deploy:rules`を実行し、本番環境(`trip-planner-cd9b7`)へ
+反映済み(2026-08-19)。デプロイ後、許可外フィールドへのupdateが`permission-denied`で
+拒否されること・`members`フィールドへの正規の追記(参加フロー)は引き続き成功することを
+実Firestoreで確認済み。
+(現在、他に未対応のバグ無し)
 
 ## 新規タスク・画面提案(承認待ち)
 新しい画面の追加提案、または既存画面構成からの変更提案はここに書くこと。

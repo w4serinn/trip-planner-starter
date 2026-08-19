@@ -800,7 +800,12 @@
       あわせて`eslint.config.js`に`URL`グローバルを追加(`src/url.js`の
       `new URL(...)`使用のため、既存のno-undefエラーを解消)。
 
-      なお、`firestore.rules`の`groups/{groupCode}`updateをmembers追記・
-      creatorSecret削除のみに限定する変更(3件目のタスク)は、ファイル上には
-      反映済みだが本番デプロイがClaude Codeの自動モード安全装置によりブロックされ、
-      人間の承認待ちのため`docs/ROADMAP.md`に残置(このリストには移動しない)。
+- [x] (S) `firestore.rules`の`groups/{groupCode}`の`allow update`を`if true`から、
+      `members`フィールドの追記・`creatorSecret`フィールドの削除のみに限定。
+      Claude Codeの自動モード安全装置により自動デプロイはブロックされたため、
+      人間が`npm run firebase:deploy:rules`を手動実行し本番環境(`trip-planner-cd9b7`)へ
+      反映(2026-08-19)。デプロイ後、Playwrightで実Firestoreに対し、許可外フィールド
+      (例: `evolveVerifyDisallowedField`)へのupdateが`permission-denied`で拒否される
+      こと・`members`フィールドへの正規の追記(join.jsの参加フロー経由)は引き続き
+      成功することの両方を確認。検証で追加したテスト用メンバー名はmembers配列から
+      削除済み。
