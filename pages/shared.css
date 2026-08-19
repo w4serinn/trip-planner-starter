@@ -322,6 +322,49 @@ button:disabled {
   padding: 0;
 }
 
+.timeline-item {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.timeline-marker {
+  flex-shrink: 0;
+  width: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-marker::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: var(--space-sm);
+}
+
+.timeline-marker::after {
+  content: "";
+  flex: 1;
+  width: 2px;
+  /* --color-borderは暖色背景との明度差が小さく線がほぼ見えなくなるため、
+     視認性の高い--color-text-mutedを使う。 */
+  background: var(--color-text-muted);
+  opacity: 0.4;
+  margin-top: var(--space-xs);
+}
+
+.timeline-item:last-child .timeline-marker::after {
+  display: none;
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
 .destination-heading-row {
   display: flex;
   align-items: center;
