@@ -419,7 +419,7 @@ button:disabled {
 .rank-badge {
   flex-shrink: 0;
   padding: 2px var(--space-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: var(--color-bg);
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);

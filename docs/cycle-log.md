@@ -1014,3 +1014,22 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
 - 次回予定: 第5期(配色・タイポグラフィの統一感強化)の「23. デザイントークンの拡充」に
   着手。
 - blocked / partial: なし。
+
+## 2026-08-19 14:40
+- 実装: 「23. デザイントークンの拡充」(第5期)を実施。`styles/tokens.css`に
+  Google Fonts「Zen Kaku Gothic New」を`@import`し`--font-family-base`に採用、
+  `--font-weight-heading`(700→900)・`--font-weight-subheading`(600→700)を強化。
+  新規トークン`--color-primary-deep`(濃紺)・`--color-accent-green`(調和する緑、
+  `--color-success`とは独立)・`--radius-pill`(999px)を追加し、`--shadow-card`を
+  `rgb(29 78 216 / 10%)`の青みを帯びた影に変更。`pages/shared.css`の`.rank-badge`に
+  `--radius-pill`を適用。
+- 動作確認: OK。Playwrightで、Vite dev server(`http://localhost:5173/trip-planner-starter/`)
+  上の375px/1200px幅で`getComputedStyle`によりフォント適用を確認、横スクロール
+  発生なし、console/pageerror 0件。実Firestore(共有テストグループ`FMXRZYW7`)で
+  E(行き先決め)画面に検証用候補地を一時追加・★5投票し、`rank-badge`のピル形状化と
+  カード影の青み変化を目視確認後、Firestoreから削除済み。`npm run check`(lint・test)成功。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・セキュリティ方針、
+  `docs/screens.md`の画面構成・遷移から逸脱なし(CSSトークンのみの変更)。
+- 次回予定: 「24. ヘッダーのテクスチャ強化」(`--color-primary-deep`ベースのグラデーション
+  +ドット柄パターンをCSSのみで追加)に着手。
+- blocked / partial: なし。

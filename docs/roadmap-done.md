@@ -748,3 +748,25 @@
       (2026-08-19)。`npm run check`(lint・test)成功。検証で作成した候補地・宿泊候補は
       削除の上、旅行ドキュメントは名前を更新し`scratchText`を空文字にリセットして
       共有テストグループ`FMXRZYW7`内に残置。
+
+## 23. デザイントークンの拡充(第5期)
+- [x] (S) Google Fontsの「Zen Kaku Gothic New」(400;500;700;900)を
+      `styles/tokens.css`に`@import`で追加し、`--font-family-base`をこれに変更
+      (フォールバックとして既存の"Hiragino Sans"等は残す)。`--font-weight-heading`を
+      700→900、`--font-weight-subheading`を600→700に強化
+- [x] (S) `--color-primary-deep: #16234a`(藍のような濃紺)を新規追加。ヘッダー等、
+      一部セクションの背景に使う想定(適用は`24`・`26`で行う)
+- [x] (S) 差し色として`--color-accent-green: #4d9a7a`(青と調和する落ち着いた緑)を
+      新規追加。既存の`--color-success`(意味的な「成功」表現)とは独立させ、
+      装飾用の差し色として使う
+- [x] (S) `--shadow-card`を、中立グレー系の影から`0 4px 14px rgb(29 78 216 / 10%)`
+      (design-library.jpの実例を参考にした青みを帯びた影)に変更
+- [x] (S) `--radius-pill: 999px`を新規追加し、`.rank-badge`(E画面の順位バッジ)に適用
+
+      Playwrightで、375px/1200px幅ともにフォント(`Zen Kaku Gothic New`)が
+      `getComputedStyle`で正しく適用されていること・横スクロールが発生しないこと・
+      console/pageerrorが0件であることを確認。実Firestore(共有テストグループ
+      `FMXRZYW7`)上のE(行き先決め)画面に検証用候補地を一時追加し★5投票することで、
+      `rank-badge`がピル形状(`--radius-pill`)で表示され、`--shadow-card`の青みを
+      帯びた影がカードに反映されていることを目視確認。検証後、候補地はFirestoreから
+      削除済み(2026-08-19)。`npm run check`(lint・test)成功。

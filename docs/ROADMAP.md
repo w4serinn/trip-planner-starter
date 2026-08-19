@@ -123,22 +123,9 @@ g-mark.org受賞ギャラリー)を調査した上で方針を確定。「和風
   同カテゴリの製品だったが、JS描画のため詳細は自動取得できず、人間が直接確認したい
   場合は別途ブラウザで見る必要がある
 
-### 23. デザイントークンの拡充
-- [ ] (S) Google Fontsの「Zen Kaku Gothic New」(400;500;700;900)を
-      `styles/tokens.css`に`@import`で追加し、`--font-family-base`をこれに変更
-      (フォールバックとして既存の"Hiragino Sans"等は残す)。`--font-weight-heading`を
-      700→900、`--font-weight-subheading`を600→700に強化し、太さのジャンプ率を
-      大きくする
-- [ ] (S) `--color-primary`(青)を基準に、同系統の深色バリエーション
-      `--color-primary-deep`(藍のような、青をさらに沈めた濃紺系の色。具体的な値は
-      実装時に調整)を新規追加する。ヘッダー等、一部セクションの背景に使う
-- [ ] (S) 差し色として、青と調和する落ち着いた緑を1色新規に検討する
-      (既存の`--color-success`と統合できないか、独立させるべきかも合わせて検討する)
-- [ ] (S) `--shadow-card`を、現状の中立グレー系の影から、青みを帯びた影
-      (`rgba(29, 78, 216, ...)`系。design-library.jpの実例を参考)に変更し、
-      青ベース配色との統一感を強める
-- [ ] (S) ピル型(完全な丸み、`border-radius: 999px`程度)のボタン/バッジ用トークン
-      `--radius-pill`を新規追加し、`.rank-badge`等、適用先を検討する
+`23. デザイントークンの拡充`は完了済み(詳細はdocs/roadmap-done.md参照)。
+Zen Kaku Gothic New採用・`--color-primary-deep`/`--color-accent-green`追加・
+青みを帯びた`--shadow-card`・`--radius-pill`追加と`.rank-badge`への適用まで完了。
 
 ### 24. ヘッダーのテクスチャ強化
 - [ ] (M) `index.html`のアプリヘッダー(「旅行計画アプリ」の見出し部分)に、
