@@ -233,6 +233,12 @@ button:disabled {
   margin-bottom: var(--space-sm);
 }
 
+.icon-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
 .card-section-header h3 {
   display: flex;
   align-items: center;
