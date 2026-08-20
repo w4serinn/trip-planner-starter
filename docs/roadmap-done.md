@@ -1325,3 +1325,59 @@
       白(`rgb(255, 255, 255)`)になっていることを確認した(2026-08-20)。
       console/pageerrorは0件。`npm run check`(lint・test)成功。これで第11期
       「C. 概要タブ」の3タスクは全て完了。
+
+## 45. (取り下げ)`.card-dark`内テキストエリアのフォーカス時強調
+2026-08-20、実装検討で`pages/shared.css`の`.card-dark textarea:focus`
+(`border-color: var(--color-surface); box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);`)
+としてすでに実装済みであることが判明したため、追加対応不要と判断し取り下げた。
+
+## 46. (保留)簡易Markdown風装飾
+2026-08-20、実装検討で「雑多メモ・企画メモはどちらも常時編集可能な`<textarea>`で
+表示しており、特定の行だけをCSSで強調することは技術的に不可能」と判明したため保留
+とした。詳細はdocs/ROADMAP.md末尾の検討事項リスト(`65`と統合)参照。
+
+## 48. 雑多メモ・企画メモの視覚的差別化
+- [x] (S) `pages/shared.css`に`.card-dark-accent`(既存の`--color-accent-green`と
+      `--color-primary-deep`を使ったグラデーション)・`.card-dark .icon-heading`
+      (見出しの下マージン)を追加。`src/views/notes.js`の企画メモカードに
+      `card-dark-accent`クラスと`${icons.notes}企画メモ`の見出しを、
+      `src/views/scratch.js`の雑多メモカードに`${icons.scratch}雑多メモ`の見出しを
+      追加した(雑多メモ側は配色そのまま、企画メモ側だけ緑寄りにグラデーションを
+      差し替えて視覚的に差別化)。新規の色トークンは追加していない
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、雑多メモ
+      タブに「雑多メモ」見出しが表示されデフォルトの`.card-dark`のままであること、
+      企画メモタブに「企画メモ」見出しが表示され`.card-dark-accent`クラスが付与
+      されグラデーション背景が適用されていることを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 53. 自分が未回答の候補日をハイライト
+- [x] (S) `src/views/schedule.js`の`renderEntries()`で、自分(`myKey`)がまだ
+      回答していない候補日のカードに`.schedule-unanswered`クラス(`--color-accent`
+      の左ボーダー)と「あなたは未回答です」バッジ(`.unanswered-badge`)を追加した。
+      `pages/shared.css`に既存の`.schedule-complete`/`.complete-badge`と対になる
+      `.schedule-unanswered`/`.unanswered-badge`を追加(既存トークンのみ使用)。
+      全員回答済み(`isComplete`)なら自分の回答も含まれているはずのため、通常この
+      2つの状態は同時には起きない
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、候補日を
+      追加した直後は2件とも「あなたは未回答です」バッジと`.schedule-unanswered`が
+      付いていることを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test)成功。
+
+## 54. 候補日全体への一括回答ショートカット
+- [x] (S) `src/views/schedule.js`に「全部○にする」「全部△にする」「全部×にする」の
+      3ボタン(`#bulk-response-row`)を追加した。既存の`setResponse(date, value)`を
+      そのまま流用し、`Promise.all(currentEntries.map(...))`で全候補日に対して
+      並列に更新する。候補日が0件のときはボタン行自体を非表示にする
+      (`renderEntries()`内で`bulkResponseRow.hidden`をトグル)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、候補日が
+      0件のときはボタンが非表示であること、候補日追加後に表示されること、
+      「全部○にする」を押すと全候補日の自分の回答が○になり(`53`の)未回答
+      ハイライトが消えることを確認した(2026-08-20)。375px幅でもボタン3つが
+      横並びのまま収まり横スクロールが発生しないことをスクリーンショットで確認済み
+      (ボタン文言が2行に折り返されるがレイアウト崩れ・はみ出しは無し。軽微のため
+      対応不要と判断)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+      これで第11期「雑多メモタブ」「雑多メモ・企画メモタブ共通」「日程調整タブ」の
+      対応可能な項目は全て完了(`44`は実機確認が必要なため保留、`52`は未着手のまま)。

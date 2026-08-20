@@ -4,6 +4,8 @@
 // テキストエリアで選択した範囲を、「→企画メモへ」「→行き先決めへ」「→しおりへ」
 // 「→宿泊へ」ボタンで振り分けられる(日程調整は自由記述の入れ場所が無いため対象外)。
 // 詳細はdocs/firestore-design.md「雑多メモの振り分け方式の再設計」参照。
+// 企画メモ(src/views/notes.js)と見た目がほぼ同じで役割の違いが伝わりにくいとの
+// 指摘を受け、アイコン見出しで視覚的に差別化している(docs/ROADMAP.md「48」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, subscribeToDocument, updateDocument, addDocument, serverTimestamp } from '../firestore.js';
@@ -30,6 +32,7 @@ export function mount(outlet, params) {
     <p class="subtitle">まず自由に書きなぐって、後から他のタブに振り分けましょう。入力は自動的に保存されます。</p>
 
     <div class="card card-dark">
+      <h3 class="icon-heading">${icons.scratch}<span>雑多メモ</span></h3>
       <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
       <div class="button-row">
         <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>

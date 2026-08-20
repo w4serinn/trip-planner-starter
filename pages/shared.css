@@ -407,6 +407,19 @@ button:disabled {
   margin: var(--space-xs) 0 0;
 }
 
+/* 2026-08-20(docs/ROADMAP.md「53」): 「全員回答済み」バッジの逆で、自分がまだ
+   回答していない候補日を強調表示し、回答漏れを防ぐ。 */
+.schedule-unanswered {
+  border-left: 4px solid var(--color-accent);
+}
+
+.unanswered-badge {
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  margin: var(--space-xs) 0 0;
+}
+
 .star-row {
   display: flex;
   gap: var(--space-xs);
@@ -701,6 +714,20 @@ button:disabled {
     linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
   background-size: 18px 18px, 100% 100%;
   color: var(--color-surface);
+}
+
+/* 2026-08-20(docs/ROADMAP.md「48」): 雑多メモ・企画メモの.card-darkの見た目が
+   ほぼ同じで役割の違いが伝わりにくいとの指摘を受け、企画メモ側だけ
+   --color-accent-greenを混ぜたグラデーションに差し替えて視覚的に差別化する
+   (新規の色は追加せず、既存トークンの組み合わせのみ変更)。 */
+.card-dark-accent {
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 10%) 1px, transparent 1.5px),
+    linear-gradient(135deg, var(--color-accent-green), var(--color-primary-deep));
+}
+
+.card-dark .icon-heading {
+  margin-bottom: var(--space-sm);
 }
 
 .card-dark textarea {

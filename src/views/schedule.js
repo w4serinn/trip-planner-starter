@@ -1,5 +1,6 @@
 // F. 日程調整タブビュー(SPA)
-// 候補日ごとの○×△回答、メンバーごとの回答一覧表示、全員回答済みの日のハイライトを行う。
+// 候補日ごとの○×△回答、メンバーごとの回答一覧表示、全員回答済み/自分が未回答の日の
+// ハイライト(docs/ROADMAP.md「53」)、全候補日への一括回答(docs/ROADMAP.md「54」)を行う。
 // データモデルはdocs/firestore-design.md「scheduleEntries」参照。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
@@ -42,6 +43,12 @@ export function mount(outlet, params) {
       </div>
     </form>
 
+    <div id="bulk-response-row" class="button-row" hidden>
+      <button type="button" id="bulk-maru" class="btn-secondary">全部○にする</button>
+      <button type="button" id="bulk-sankaku" class="btn-secondary">全部△にする</button>
+      <button type="button" id="bulk-batsu" class="btn-secondary">全部×にする</button>
+    </div>
+
     <div id="schedule-list" class="card-grid"></div>
   `;
 
@@ -53,6 +60,8 @@ export function mount(outlet, params) {
   const dateErrorText = outlet.querySelector('#date-error-text');
   const scheduleList = outlet.querySelector('#schedule-list');
   const submitButton = dateForm.querySelector('button[type="submit"]');
+  const bulkResponseRow = outlet.querySelector('#bulk-response-row');
+  const bulkButtons = [...bulkResponseRow.querySelectorAll('button')];
 
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
@@ -103,6 +112,7 @@ export function mount(outlet, params) {
 
   function renderEntries() {
     scheduleList.innerHTML = '';
+    bulkResponseRow.hidden = currentEntries.length === 0;
 
     if (currentEntries.length === 0) {
       scheduleList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ候補日がありません。最初の候補日を追加しましょう。</p></div>`;
@@ -114,13 +124,26 @@ export function mount(outlet, params) {
     for (const entry of sorted) {
       const responses = entry.responses || {};
       const isComplete = memberCount > 0 && Object.keys(responses).length >= memberCount;
+      const isUnanswered = !responses[myKey];
 
       const card = document.createElement('div');
-      card.className = isComplete ? 'card schedule-complete' : 'card';
+      const cardClasses = ['card'];
+      if (isComplete) cardClasses.push('schedule-complete');
+      // isCompleteが真ならmyKey分の回答も含まれているはずなので、
+      // 全員回答済みと自分が未回答は基本的に同時には起きない。
+      if (isUnanswered) cardClasses.push('schedule-unanswered');
+      card.className = cardClasses.join(' ');
 
       const heading = document.createElement('h3');
       heading.textContent = formatDateLabel(entry.id);
       card.appendChild(heading);
+
+      if (isUnanswered) {
+        const unansweredText = document.createElement('p');
+        unansweredText.className = 'unanswered-badge';
+        unansweredText.textContent = 'あなたは未回答です';
+        card.appendChild(unansweredText);
+      }
 
       const myRow = document.createElement('div');
       myRow.className = 'button-row';
@@ -203,6 +226,25 @@ export function mount(outlet, params) {
     }
   }
 
+  // 候補日全体への一括回答(docs/ROADMAP.md「54」)。候補日が多いときに1件ずつ
+  // ボタンを押す手間を減らす。既存のsetResponse(単一日付の回答)をそのまま流用する。
+  async function setAllResponses(value) {
+    dateErrorText.textContent = '';
+    for (const button of bulkButtons) button.disabled = true;
+    try {
+      await Promise.all(currentEntries.map((entry) => setResponse(entry.id, value)));
+    } finally {
+      for (const button of bulkButtons) button.disabled = false;
+    }
+  }
+
+  const onBulkMaruClick = () => setAllResponses('○');
+  const onBulkSankakuClick = () => setAllResponses('△');
+  const onBulkBatsuClick = () => setAllResponses('×');
+  outlet.querySelector('#bulk-maru').addEventListener('click', onBulkMaruClick);
+  outlet.querySelector('#bulk-sankaku').addEventListener('click', onBulkSankakuClick);
+  outlet.querySelector('#bulk-batsu').addEventListener('click', onBulkBatsuClick);
+
   const onDateSubmit = async (event) => {
     event.preventDefault();
     dateErrorText.textContent = '';
@@ -247,6 +289,9 @@ export function mount(outlet, params) {
     toggleFormButton.removeEventListener('click', onToggleFormClick);
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     dateForm.removeEventListener('submit', onDateSubmit);
+    outlet.querySelector('#bulk-maru').removeEventListener('click', onBulkMaruClick);
+    outlet.querySelector('#bulk-sankaku').removeEventListener('click', onBulkSankakuClick);
+    outlet.querySelector('#bulk-batsu').removeEventListener('click', onBulkBatsuClick);
     datePicker.destroy();
     if (unsubscribeEntries) unsubscribeEntries();
   };

@@ -2,9 +2,13 @@
 // 旅行1件につき1つの共有テキスト(trips/{tripId}.planningNotesText)を、みんなで
 // 自由に書き足していく(hackmd的な1枚メモ)。入力はデバウンスして自動保存する。
 // 同時編集時の競合(後勝ち上書き)は許容する(docs/screens.md「設計判断」参照)。
+// 雑多メモ(src/views/scratch.js)と見た目がほぼ同じで役割の違いが伝わりにくいとの
+// 指摘を受け、アイコン見出し+緑寄りのアクセント配色(.card-dark-accent)で
+// 視覚的に差別化している(docs/ROADMAP.md「48」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { subscribeToDocument, updateDocument } from '../firestore.js';
+import { icons } from '../icons.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -21,7 +25,8 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">旅行が固まる前の「やりたいこと」を、みんなで自由に書き足していきましょう。入力は自動的に保存されます。</p>
 
-    <div class="card card-dark">
+    <div class="card card-dark card-dark-accent">
+      <h3 class="icon-heading">${icons.notes}<span>企画メモ</span></h3>
       <textarea id="planning-notes" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
       <p class="error-text" id="notes-error-text"></p>
       <p class="copy-feedback" id="notes-saved-text"></p>
