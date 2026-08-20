@@ -1514,3 +1514,32 @@
       確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)
       成功(vitest 19件全て成功)。雑多メモ・企画メモは`<textarea>`表示のため対象外
       (docs/ROADMAP.md末尾の検討事項参照)。
+
+## 58. しおり項目(時間未設定同士)の並び替え
+- [x] (M) `itineraryItems/{id}`に`order`(number、optional)フィールドを追加し
+      (2026-08-20、人間の承認済み)、同じ日の中で時間未設定の項目同士を並び替え
+      られるようにした。**ROADMAPの原文は「ドラッグ&ドロップ」だったが、
+      `docs/requirements.md`の非機能要件「モバイルブラウザ中心」を踏まえ、
+      HTML5標準のDrag-and-Drop APIはタッチ操作との相性が悪い(モバイルSafari等で
+      追加のpolyfillやタッチイベントの自前実装が必要)ため、実装は▲/▼ボタンに
+      変更した。この判断は`src/views/itinerary.js`冒頭のコメント・
+      `docs/firestore-design.md`の設計決定セクションにも明記した。**
+      `compareItems(a, b)`(時刻→`order`の順で比較する純粋関数)と
+      `moveUntimedItem(dayItems, item, direction)`(移動対象の日の時間未設定項目
+      だけを取り出し、配列内で1つ入れ替えた上で該当日の全時間未設定項目に
+      0,1,2...と`order`を振り直して`updateDocument`で一括保存する非同期関数)を
+      追加した。`renderItems()`内で、時間未設定かつ同じ日に2件以上ある場合のみ
+      「▲ 上へ」(先頭では無効)・「▼ 下へ」(末尾では無効)ボタンを表示する。
+      既存の`.button-row`/`.btn-secondary`を再利用したため新規CSSは不要。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、時間ありの
+      項目が常に先頭に来ること、時間未設定の項目が1件しかない日には並び替え
+      ボタンが表示されないこと、時間未設定が複数ある日では先頭要素の「▲上へ」・
+      末尾要素の「▼下へ」がそれぞれ無効になっていること、「▼下へ」→「▲上へ」の
+      連続操作で相対的な入れ替えが正しく行われること、2日目の項目が1日目の並び
+      替えの影響を受けないことを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test、vitest 19件)成功。
+      (Firestoreの`onSnapshot`は明示的な`orderBy`が無いと挿入順を保証しないため、
+      時間未設定項目同士の初期表示順は不定になりうる。これは本タスクの変更が
+      原因ではなくFirestore全体の既存の性質であり、テストでは絶対順ではなく
+      「朝食が常に先頭」「並び替え操作の前後での相対的な入れ替え」のみを検証した)

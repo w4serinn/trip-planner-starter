@@ -1759,3 +1759,40 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   `44`は引き続き実機確認待ちで保留。
 - blocked / partial: なし。
 
+## 2026-08-20 17:20
+- 実装: 前回見送った`58`(しおり項目・時間未設定同士の並び替え)を実施。
+  `itineraryItems/{id}`に`order`(number、optional)フィールドを追加(2026-08-20、
+  人間の承認済み)。ROADMAP原文は「ドラッグ&ドロップ」だったが、
+  `docs/requirements.md`の「モバイルブラウザ中心」という非機能要件を踏まえ、
+  HTML5標準Drag-and-Drop APIはタッチ操作との相性が悪い(モバイルSafari等で追加の
+  polyfill・自前タッチイベント実装が必要)ため、実装は▲/▼ボタンによる並び替えに
+  変更した(この判断は`src/views/itinerary.js`冒頭のコメント・
+  `docs/firestore-design.md`にも明記)。`compareItems(a, b)`(時刻→`order`の順で
+  比較する純粋関数)・`moveUntimedItem(dayItems, item, direction)`(該当日の
+  時間未設定項目を1つ入れ替えた上で0,1,2...と`order`を振り直して一括保存する
+  非同期関数)を追加し、`renderItems()`で時間未設定かつ同日に2件以上ある場合のみ
+  「▲ 上へ」「▼ 下へ」ボタンを表示するようにした。
+- 動作確認: OK。開発サーバーをローカルで起動し、`npm run check`(vitest 19件)成功を
+  確認した上で、Playwrightで実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+  時間ありの項目が常に先頭に来ること、時間未設定項目が1件のみの日には並び替え
+  ボタンが出ないこと、複数ある日では先頭の「▲上へ」・末尾の「▼下へ」がそれぞれ
+  無効になること、「▼下へ」→「▲上へ」の連続操作で相対的な入れ替えが正しく行われる
+  こと、2日目の項目が1日目の並び替えの影響を受けないことを確認した。
+  console/pageerrorは0件。検証で作成したFirestore上のトリップ3件(試行錯誤のため
+  複数作成)は、いずれも`itineraryItems`を削除し`scratchText`/`planningNotesText`を
+  空文字列にリセットの上、名前を「[検証用/削除不可] evolve cycle5 58検証で作成」に
+  更新して共有テストグループ`FMXRZYW7`内に残置。
+  (検証中に判明: Firestoreの`onSnapshot`は明示的な`orderBy`が無いと挿入順を
+  保証しないため、時間未設定項目同士の初期表示順は不定になりうる。本タスクの
+  変更が原因ではなくFirestore全体の既存の性質のため、テストは絶対順ではなく
+  相対的な入れ替えのみを検証する形に修正した)
+- レビュー: OK。`docs/firestore-design.md`へ`order`フィールドと設計決定セクションを
+  追記(事前承認済みのスキーマ変更)。`firestore.rules`の変更は無し。新規の色
+  トークンは追加していない(既存の`.button-row`/`.btn-secondary`を再利用)。
+  `docs/screens.md`の画面構成・遷移にも影響なし。375px幅相当のモバイル操作性を
+  踏まえてドラッグ&ドロップではなくボタン式に変更した点は、ROADMAP・
+  roadmap-done・cycle-log全てに明記済み。
+- 次回予定: `57`(確定宿泊のタイムライン表示)・`52`(日程調整の月カレンダー俯瞰
+  ビュー)のいずれかに着手予定。`44`は引き続き実機確認待ちで保留。
+- blocked / partial: なし。
+

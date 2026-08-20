@@ -11,6 +11,11 @@
 // (docs/ROADMAP.md「60」)。移動手段は交通手段の予約調整機能(Won't)とは別の、単なる
 // 自由記述メモ(docs/ROADMAP.md「61」・docs/requirements.md5.1参照)。メモ欄は
 // プレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
+// 同じ日の中で時間未設定の項目が複数あるとき、▲▼ボタンで手動並び替えできる
+// (docs/ROADMAP.md「58」。ネイティブのドラッグ&ドロップAPIはモバイルでの対応が
+// 弱く、この案件はモバイル中心(docs/requirements.md「6. 非機能要件」)のため、
+// タッチ操作でも確実に動く上下ボタン方式にした)。並び順は`order`(数値)フィールドに
+// 保存する(docs/firestore-design.md「itineraryItems」参照)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, updateDocument, deleteDocument, subscribeToCollection } from '../firestore.js';
@@ -194,6 +199,38 @@ export function mount(outlet, params) {
     return next;
   }
 
+  // 同じ日の中での並び替え(docs/ROADMAP.md「58」)。時間未設定の項目同士でのみ
+  // 意味を持つため、時間が設定されている項目には比較に使わない。並び順は
+  // 時刻文字列(未設定はNO_TIME_SENTINEL)を第一キー、`order`を第二キーにする。
+  function compareItems(a, b) {
+    const timeCompare = (a.time || NO_TIME_SENTINEL).localeCompare(b.time || NO_TIME_SENTINEL);
+    if (timeCompare !== 0) return timeCompare;
+    return (a.order ?? 0) - (b.order ?? 0);
+  }
+
+  // dayItems(その日のitem一覧、表示順)の中で時間未設定の項目のみを対象に、
+  // 指定した項目を1つ上/下(direction: -1 or 1)へ移動する。並び替えのたびに
+  // 対象全員のorderを0,1,2,...に振り直すことで、既存項目のorder未設定
+  // (undefined、0扱い)が混在していても一貫した順序に収束させる。
+  async function moveUntimedItem(dayItems, item, direction) {
+    const untimed = dayItems.filter((i) => !i.time);
+    const index = untimed.findIndex((i) => i.id === item.id);
+    const targetIndex = index + direction;
+    if (index === -1 || targetIndex < 0 || targetIndex >= untimed.length) return;
+
+    [untimed[index], untimed[targetIndex]] = [untimed[targetIndex], untimed[index]];
+
+    errorText.textContent = '';
+    try {
+      await Promise.all(untimed.map((i, newOrder) => updateDocument(`${itemsPath}/${i.id}`, { order: newOrder })));
+      // リアルタイム購読(docs/ROADMAP.md「32」)が新しい値を届けて再描画するため、
+      // ここでのローカル更新は行わない。
+    } catch (error) {
+      console.error(error);
+      errorText.textContent = '並び替えの保存に失敗しました。時間をおいて再度お試しください。';
+    }
+  }
+
   // 誤操作防止のため、ブラウザ標準の確認ダイアログを挟んでから削除する
   // (docs/ROADMAP.md「39」)。
   const onDeleteItemClick = async (item, deleteButton) => {
@@ -251,7 +288,9 @@ export function mount(outlet, params) {
       heading.addEventListener('keydown', onHeadingActivate);
       itemList.appendChild(heading);
 
-      const dayItems = groups.get(date).sort((a, b) => (a.time || NO_TIME_SENTINEL).localeCompare(b.time || NO_TIME_SENTINEL));
+      const dayItems = groups.get(date).sort(compareItems);
+      // 時間未設定の項目同士でのみ▲▼並び替えボタンを表示する(docs/ROADMAP.md「58」)。
+      const untimedItems = dayItems.filter((i) => !i.time);
 
       const timeline = document.createElement('div');
       timeline.className = 'timeline';
@@ -318,6 +357,30 @@ export function mount(outlet, params) {
         meta.className = 'subtitle';
         meta.textContent = `追加: ${item.addedBy}`;
         content.appendChild(meta);
+
+        if (!item.time && untimedItems.length > 1) {
+          const untimedIndex = untimedItems.findIndex((i) => i.id === item.id);
+          const moveRow = document.createElement('div');
+          moveRow.className = 'button-row';
+
+          const moveUpButton = document.createElement('button');
+          moveUpButton.type = 'button';
+          moveUpButton.className = 'btn-secondary';
+          moveUpButton.textContent = '▲ 上へ';
+          moveUpButton.disabled = untimedIndex === 0;
+          moveUpButton.addEventListener('click', () => moveUntimedItem(dayItems, item, -1));
+          moveRow.appendChild(moveUpButton);
+
+          const moveDownButton = document.createElement('button');
+          moveDownButton.type = 'button';
+          moveDownButton.className = 'btn-secondary';
+          moveDownButton.textContent = '▼ 下へ';
+          moveDownButton.disabled = untimedIndex === untimedItems.length - 1;
+          moveDownButton.addEventListener('click', () => moveUntimedItem(dayItems, item, 1));
+          moveRow.appendChild(moveDownButton);
+
+          content.appendChild(moveRow);
+        }
 
         const itemActions = document.createElement('div');
         itemActions.className = 'button-row';
