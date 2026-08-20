@@ -130,6 +130,12 @@ body {
   color: var(--color-surface);
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-family-heading);
+}
+
 h1 {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-heading);

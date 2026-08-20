@@ -402,11 +402,8 @@ docs/roadmap-done.md参照)・`59. 日付見出しのアコーディオン化`�
 質感)がズレているという指摘が中心。人間と口頭ですり合わせて対応方針を
 確定した項目のみ、以下タスク化する。
 
-`66. 色数整理(accent-green廃止)`は完了済み(詳細はdocs/roadmap-done.md参照)。
-- [ ] (S) `67`. 見出し用ディスプレイフォントの追加。Google Fontsから
-      Zen Maru Gothic等、丸みのある/しおりらしいトーンの書体を1つ追加し、
-      `--font-family-heading`としてh1〜h3にのみ適用する(本文の
-      `--font-family-base`はZen Kaku Gothic Newのまま維持)
+`66. 色数整理(accent-green廃止)`・`67. 見出し用ディスプレイフォントの追加`は
+完了済み(詳細はdocs/roadmap-done.md参照)。
 - [ ] (M) `68`. しおりモチーフの追加。(a) `.divider`を直線ではなく波線・点線風に
       する、(b) カードの一部(1〜2箇所程度)に`rotate(-1deg)`等の微妙な傾きを
       持たせる、(c) しおりタブのタイムラインマーカー(`.timeline-marker-badge`、

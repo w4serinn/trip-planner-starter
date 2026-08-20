@@ -1600,3 +1600,29 @@
       文書を作成していないため追加のクリーンアップ不要で、名前を
       「[検証用/削除不可] evolve cycle5 66検証で作成」に更新済みの状態で共有
       テストグループ`FMXRZYW7`内に残置。
+
+## 67. 見出し用ディスプレイフォントの追加
+- [x] (S) 外部レビューで「本文も見出しもZen Kaku Gothic New一本でウェイトだけの
+      差別化」と指摘され、見出し(h1〜h3)だけ丸みのある手書き風フォントを足すと
+      「しおり」らしいあたたかみが出るとの提案を受けた。人間との会話でレビューの
+      候補(Zen Maru Gothic・Kaisei Decol)のうち「Zen Maru Gothic」を採用。
+      `styles/tokens.css`のGoogle Fonts importに`family=Zen+Maru+Gothic:wght@700;900`を
+      追加し(既存の`Zen+Kaku+Gothic+New`のimportと1つの`@import url()`にまとめた)、
+      新規`--font-family-heading: "Zen Maru Gothic", "Zen Kaku Gothic New", ...`
+      (フォールバックは既存の`--font-family-base`と同じ並び)を追加。
+      `pages/shared.css`の`h1, h2, h3 { font-family: var(--font-family-heading); }`で
+      見出し要素にのみ適用した。本文の`--font-family-base`(Zen Kaku Gothic New)は
+      変更していない。`.icon-heading`(雑多メモ・企画メモ等の見出し)はh2/h3要素に
+      付与されているため、追加の変更なしに自動的に新フォントが適用される。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、h1の
+      `font-family`に`Zen Maru Gothic`が含まれること、`body`(本文)は引き続き
+      `Zen Kaku Gothic New`のままで`Zen Maru Gothic`を含まないこと、雑多メモの
+      `h3.icon-heading`にも`Zen Maru Gothic`が適用されていることを確認した
+      (2026-08-20)。スクリーンショットで、概要タブ・雑多メモタブの見出しが
+      丸みのある書体で表示され、本文・ボタン等は従来通りであることを目視確認した。
+      375px相当(390px)幅でもレイアウト崩れ・折り返し崩れは無し。
+      console/pageerrorは0件。`npm run check`(lint・test、vitest 26件)成功。
+      検証で作成したFirestore上のトリップ1件はサブコレクションを作成していない
+      ため追加クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle5 67検証で
+      作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。

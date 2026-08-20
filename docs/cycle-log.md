@@ -1855,3 +1855,29 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   実機確認待ちで保留。
 - blocked / partial: なし。
 
+## 2026-08-20 18:45
+- 実装: `67`(見出し用ディスプレイフォントの追加)を実施。外部レビューの
+  「本文も見出しもZen Kaku Gothic New一本」との指摘を受け、見出し(h1〜h3)にのみ
+  丸みのあるZen Maru Gothicを追加した。`styles/tokens.css`のGoogle Fonts import
+  (既存の`Zen Kaku Gothic New`と1つの`@import`にまとめた)に`Zen Maru Gothic`
+  (wght 700・900)を追加し、新規`--font-family-heading`トークンを定義。
+  `pages/shared.css`の`h1, h2, h3`セレクタに`font-family: var(--font-family-heading)`
+  を適用した。本文用の`--font-family-base`は変更なし。`.icon-heading`は既存の
+  h2/h3要素に付与されているため追加変更なしに新フォントが適用される。
+- 動作確認: OK。`npm run check`(lint・test、vitest 26件、変更なし)成功を確認した
+  上で、開発サーバーを起動しPlaywrightで実Firestore(共有テストグループ
+  `FMXRZYW7`)に対し、h1の`font-family`に`Zen Maru Gothic`が含まれること、
+  `body`は引き続き`Zen Kaku Gothic New`のままであること、雑多メモの
+  `h3.icon-heading`にも適用されていることを確認。スクリーンショットで概要・
+  雑多メモタブの見た目を目視確認し、390px幅でもレイアウト崩れ無し。
+  console/pageerrorは0件。検証で作成したFirestore上のトリップ1件はサブ
+  コレクションを作成していないため追加クリーンアップ不要、名前を
+  「[検証用/削除不可] evolve cycle5 67検証で作成」に更新済みの状態で共有
+  テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・`firestore.rules`の変更は
+  無し(CSSのみ)。`docs/screens.md`の画面構成・遷移にも影響なし。モバイル幅での
+  崩れも無し。
+- 次回予定: `68`(しおりモチーフの追加: 波線divider・カードの傾き・マーカー
+  アイコン変更)に着手予定。`44`は引き続き実機確認待ちで保留。
+- blocked / partial: なし。
+

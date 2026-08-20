@@ -1,6 +1,6 @@
 /* デザイントークン(仮決定)。配色・タイポグラフィ・余白などをCSS変数として定義する。
    すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。 */
-@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@700;900&display=swap");
 
 :root {
   /* カラー(2026-08-19再改訂: docs/ROADMAP.md「第3期: レイアウト刷新」参照。
@@ -30,6 +30,12 @@
   /* タイポグラフィ(2026-08-19: Zen Kaku Gothic Newを本文フォントに採用。
      未読込時・フォールバック用に既存フォントは維持する) */
   --font-family-base: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+
+  /* 2026-08-20(docs/ROADMAP.md「67」): 外部レビューで「本文も見出しもZen Kaku
+     Gothic New一本でウェイトだけの差別化」と指摘され、見出し(h1〜h3)だけ丸みの
+     ある手書き風フォントを足すことで「しおり」らしいあたたかみを補強した。
+     本文用のZen Kaku Gothic Newは維持し、見出しにのみ適用する。 */
+  --font-family-heading: "Zen Maru Gothic", "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-size-sm: 14px;
   --font-size-base: 16px;
   --font-size-lg: 20px;
