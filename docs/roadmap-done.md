@@ -1456,3 +1456,23 @@
       編集フォームに正しくプリフィルされ更新も反映されること、移動手段を空のまま
       保存した項目には「移動手段:」の表示自体が出ないこと(任意項目として機能する)を
       確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 62. 概要タブの集合情報への地図リンク追加
+- [x] (S) `trips/{tripId}`に`meetingLocationUrl`(任意のURL文字列)を追加した。
+      `src/views/tripOverview.js`の集合情報編集フォームに「地図リンク(任意)」の
+      入力欄(`#meeting-location-url`)を追加し、`meeting-summary`の表示に「地図」行
+      (`#meeting-location-display`)を追加した。表示は他のURLフィールド
+      (`itineraryItems.locationUrl`等)と同じく`src/url.js`の`isSafeUrl()`で検証し、
+      安全なURLのみクリック可能なリンク(`target="_blank"` `rel="noopener
+      noreferrer"`)にする(危険なスキームはプレーンテキスト表示のまま)。集合情報の
+      「まだ設定されていません」判定(`hasMeeting`)にも`meetingLocationUrl`を含めた。
+      `docs/firestore-design.md`にスキーマと設計判断の節を追記した(人間の事前承認に
+      基づく)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、編集フォームに
+      地図リンクの入力欄が存在すること、保存後にクリック可能なリンク(正しい`href`・
+      `target="_blank"`)として表示されること、編集フォームに正しくプリフィルされる
+      こと、危険なURLスキーム(`javascript:`)を入力した場合はリンク化されずプレーン
+      テキストのまま表示されることを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test)成功。これで第11期「実利用シーンからの気づき」の
+      承認済みスキーマ変更タスクは`58`を残すのみ。

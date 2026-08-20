@@ -12,6 +12,8 @@ groups/{groupCode}                          … グループ（合言葉がド�
     - name
     - createdAt
     - meetingPlace, meetingTime, meetingNote  （集合情報：単一の値なので旅行ドキュメントに直接持たせる）
+    - meetingLocationUrl(optional)            （集合場所の地図リンク。2026-08-20追加、下記
+      「概要タブの集合情報への地図リンク追加」参照）
     - warikaUrl                               （割り勘リンク：同上）
     - planningNotesText                       （企画メモ：単一の共有テキスト。2026-08-18変更、下記参照）
     - scratchText                             （雑多メモ：単一の共有テキスト。2026-08-18変更、下記参照）
@@ -227,3 +229,16 @@ Firestoreのマップキーには使える文字に制限があり（`.` `$` `/`
   (経緯の詳細は`docs/requirements.md`5.1の追記参照)。
 - 表示上は場所リンク(`locationUrl`)とメモ(`note`)の間に配置する
   (「そこへどう行くか」は「場所」の次に読みたい情報という位置づけ)。
+
+## 概要タブの集合情報への地図リンク追加（確定・実装済み / 2026-08-20）
+2026-08-20、人間との会話で「集合場所がテキストのみで、当日タップしてすぐ地図を
+開けない」という不便な点が見つかり、`docs/ROADMAP.md`「62」として承認済み。
+
+- `trips/{tripId}`に`meetingLocationUrl`(任意のURL文字列)を追加した。既存の
+  `meetingPlace`(テキスト)・`meetingTime`・`meetingNote`とは独立したフィールドで、
+  地図アプリ等へのリンクを想定する。
+- 表示は他のURLフィールド(`itineraryItems.locationUrl`等)と同じく、
+  `src/url.js`の`isSafeUrl()`で検証した上でクリック可能なリンクにする
+  (`javascript:`等の危険なスキームはリンク化せずプレーンテキスト表示)。
+- 「まだ設定されていません」の表示条件(`hasMeeting`)には`meetingLocationUrl`も含める
+  (場所・時間・メモ・地図リンクのいずれか1つでも設定されていれば表示する)。

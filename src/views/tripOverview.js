@@ -3,10 +3,12 @@
 // (docs/ROADMAP.md「40」)を行う。
 // 集合情報・割り勘リンクも、旅行名と同じ「表示モード+編集ボタンで編集フォームを開く」
 // パターンに揃え(docs/ROADMAP.md「18」)、画面を開いた時点でフォームが並ぶ煩雑さを避ける。
+// 集合情報には地図リンク(meetingLocationUrl)も持たせる(docs/ROADMAP.md「62」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, updateDocument, listCollection } from '../firestore.js';
 import { icons } from '../icons.js';
+import { isSafeUrl } from '../url.js';
 
 // D〜H各機能タブの件数サマリー(docs/ROADMAP.md「40」)に表示する項目定義。
 // keyはsrc/app.jsのTABS定義におけるルートsuffix(先頭の"/"を除いたもの)と一致させる。
@@ -57,6 +59,7 @@ export function mount(outlet, params) {
           <dl class="summary-list" id="meeting-summary" hidden>
             <dt>場所</dt><dd id="meeting-place-display"></dd>
             <dt>時間</dt><dd id="meeting-time-display"></dd>
+            <dt>地図</dt><dd id="meeting-location-display"></dd>
             <dt>メモ</dt><dd id="meeting-note-display"></dd>
           </dl>
         </div>
@@ -68,6 +71,10 @@ export function mount(outlet, params) {
           <div class="field">
             <label for="meeting-time">時間</label>
             <input type="text" id="meeting-time" name="meetingTime" />
+          </div>
+          <div class="field">
+            <label for="meeting-location-url">地図リンク(任意)</label>
+            <input type="url" id="meeting-location-url" name="meetingLocationUrl" placeholder="https://maps.app.goo.gl/..." />
           </div>
           <div class="field">
             <label for="meeting-note">メモ</label>
@@ -119,10 +126,12 @@ export function mount(outlet, params) {
   const meetingSummary = outlet.querySelector('#meeting-summary');
   const meetingPlaceDisplay = outlet.querySelector('#meeting-place-display');
   const meetingTimeDisplay = outlet.querySelector('#meeting-time-display');
+  const meetingLocationDisplay = outlet.querySelector('#meeting-location-display');
   const meetingNoteDisplay = outlet.querySelector('#meeting-note-display');
   const meetingForm = outlet.querySelector('#meeting-form');
   const meetingPlaceInput = outlet.querySelector('#meeting-place');
   const meetingTimeInput = outlet.querySelector('#meeting-time');
+  const meetingLocationUrlInput = outlet.querySelector('#meeting-location-url');
   const meetingNoteInput = outlet.querySelector('#meeting-note');
   const meetingErrorText = outlet.querySelector('#meeting-error-text');
   const cancelMeetingButton = outlet.querySelector('#cancel-meeting-button');
@@ -139,12 +148,30 @@ export function mount(outlet, params) {
   let currentTrip = {};
 
   function renderMeetingDisplay() {
-    const hasMeeting = currentTrip.meetingPlace || currentTrip.meetingTime || currentTrip.meetingNote;
+    const hasMeeting = currentTrip.meetingPlace || currentTrip.meetingTime
+      || currentTrip.meetingLocationUrl || currentTrip.meetingNote;
     meetingEmpty.hidden = !!hasMeeting;
     meetingSummary.hidden = !hasMeeting;
     meetingPlaceDisplay.textContent = currentTrip.meetingPlace || '(未設定)';
     meetingTimeDisplay.textContent = currentTrip.meetingTime || '(未設定)';
     meetingNoteDisplay.textContent = currentTrip.meetingNote || '(未設定)';
+
+    meetingLocationDisplay.innerHTML = '';
+    if (currentTrip.meetingLocationUrl) {
+      if (isSafeUrl(currentTrip.meetingLocationUrl)) {
+        const link = document.createElement('a');
+        link.className = 'candidate-link';
+        link.href = currentTrip.meetingLocationUrl;
+        link.textContent = currentTrip.meetingLocationUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        meetingLocationDisplay.appendChild(link);
+      } else {
+        meetingLocationDisplay.textContent = currentTrip.meetingLocationUrl;
+      }
+    } else {
+      meetingLocationDisplay.textContent = '(未設定)';
+    }
   }
 
   function renderWarikaDisplay() {
@@ -168,6 +195,7 @@ export function mount(outlet, params) {
       tripNameHeading.textContent = trip.name || '名称未設定の旅行';
       meetingPlaceInput.value = trip.meetingPlace || '';
       meetingTimeInput.value = trip.meetingTime || '';
+      meetingLocationUrlInput.value = trip.meetingLocationUrl || '';
       meetingNoteInput.value = trip.meetingNote || '';
       warikaUrlInput.value = trip.warikaUrl || '';
       renderMeetingDisplay();
@@ -283,6 +311,7 @@ export function mount(outlet, params) {
   const onCancelMeetingClick = () => {
     meetingPlaceInput.value = currentTrip.meetingPlace || '';
     meetingTimeInput.value = currentTrip.meetingTime || '';
+    meetingLocationUrlInput.value = currentTrip.meetingLocationUrl || '';
     meetingNoteInput.value = currentTrip.meetingNote || '';
     closeMeetingForm();
   };
@@ -297,9 +326,10 @@ export function mount(outlet, params) {
     try {
       const meetingPlace = meetingPlaceInput.value.trim();
       const meetingTime = meetingTimeInput.value.trim();
+      const meetingLocationUrl = meetingLocationUrlInput.value.trim();
       const meetingNote = meetingNoteInput.value.trim();
-      await updateDocument(tripPath, { meetingPlace, meetingTime, meetingNote });
-      currentTrip = { ...currentTrip, meetingPlace, meetingTime, meetingNote };
+      await updateDocument(tripPath, { meetingPlace, meetingTime, meetingLocationUrl, meetingNote });
+      currentTrip = { ...currentTrip, meetingPlace, meetingTime, meetingLocationUrl, meetingNote };
       renderMeetingDisplay();
       closeMeetingForm();
     } catch (error) {
