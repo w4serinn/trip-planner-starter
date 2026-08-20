@@ -62,8 +62,9 @@ export function mount(outlet, params) {
   notesTextarea.addEventListener('input', onNotesInput);
 
   // リアルタイム同期(docs/ROADMAP.md「第8期」参照)。他の参加者の更新を購読し、
-  // 自分が編集中(未保存の変更がある、またはテキストエリアにフォーカス中)の間は
-  // 上書きしない(入力中のカーソル位置・未保存分を壊さないため)。
+  // 自分が編集中(未保存の変更がある)間は上書きしない(入力中の未保存分を壊さないため)。
+  // フォーカスの有無自体は無関係(未保存の変更が無ければ、フォーカス中でも反映してよい。
+  // docs/ROADMAP.md「33」)。
   let isFirstSnapshot = true;
   const unsubscribe = subscribeToDocument(
     tripPath,
@@ -82,8 +83,7 @@ export function mount(outlet, params) {
 
       const remoteValue = trip?.planningNotesText || '';
       const hasUnsavedLocalEdit = saveTimer !== null;
-      const isFocused = document.activeElement === notesTextarea;
-      if (hasUnsavedLocalEdit || isFocused || remoteValue === lastSavedValue) return;
+      if (hasUnsavedLocalEdit || remoteValue === lastSavedValue) return;
       lastSavedValue = remoteValue;
       notesTextarea.value = remoteValue;
     },

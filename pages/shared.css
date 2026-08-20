@@ -39,6 +39,31 @@ body {
   padding: var(--space-lg) var(--space-md);
 }
 
+/* 2026-08-20(docs/ROADMAP.md「37. タブ(画面)遷移にもアニメーションを追加」):
+   src/router.jsのrender()が、ハッシュ切り替えのたびに#viewへこのクラスを
+   付け直す(全ビュー共通・ビュー側の実装変更は不要)。 */
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.view-enter {
+  animation: view-enter 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-enter {
+    animation: none;
+  }
+}
+
 /* PC等の広い画面向けレスポンシブ対応(docs/ROADMAP.md「第4期」参照)。
    モバイル幅(480px)は維持しつつ、広い画面では段階的にコンテナ幅を広げる。 */
 @media (width >= 768px) {
@@ -545,27 +570,42 @@ button:disabled {
 /* 2026-08-19(docs/ROADMAP.md「31. サイドバー(広い画面)・ハンバーガーメニュー
    (モバイル)への刷新」): 768px以上では常設の左サイドバー、未満ではハンバーガー
    ボタンで開閉するドロワーとして同じ#sidebar要素を共用する
-   (src/app.js「renderNav」参照)。横タブバー(.tabbar/.tab)は撤去した。 */
+   (src/app.js「renderNav」参照)。横タブバー(.tabbar/.tab)は撤去した。
+   2026-08-20(docs/ROADMAP.md「36. ハンバーガーメニューの開閉にアニメーションを
+   追加」): モバイルでは常時DOM上に描画したまま(display:noneで消さず)
+   transform: translateXの切り替え+transitionでスライド開閉させる方式に変更。
+   閉状態はpointer-events: noneで誤操作を防ぐ。旅行未選択の画面での
+   sidebar.hidden(nav自体を消す)は、authorスタイルのdisplay:flexが
+   [hidden]属性のUAスタイルに勝ってしまうため、明示的に.sidebar[hidden]で
+   上書きする。 */
 .sidebar {
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: var(--space-xs);
   width: 220px;
   flex-shrink: 0;
   padding: var(--space-lg) var(--space-md);
   border-right: 1px solid var(--color-border);
-}
-
-/* モバイルでの開閉状態(.sidebar-open): 画面左からのフルハイトドロワーとして
-   固定表示する。src/app.jsのopenMenu/closeMenuがこのクラスをトグルする。 */
-.sidebar.sidebar-open {
-  display: flex;
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
   background: var(--color-surface);
   box-shadow: 4px 0 20px rgb(0 0 0 / 15%);
   overflow-y: auto;
+  transform: translateX(-100%);
+  pointer-events: none;
+  transition: transform 0.25s ease;
+}
+
+.sidebar[hidden] {
+  display: none;
+}
+
+/* モバイルでの開閉状態(.sidebar-open): src/app.jsのopenMenu/closeMenuが
+   このクラスをトグルする。 */
+.sidebar.sidebar-open {
+  transform: translateX(0);
+  pointer-events: auto;
 }
 
 .sidebar-backdrop {
@@ -573,12 +613,18 @@ button:disabled {
   inset: 0;
   background: rgb(0 0 0 / 40%);
   z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.sidebar-backdrop-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 @media (width >= 768px) {
-  .sidebar,
-  .sidebar.sidebar-open {
-    display: flex;
+  .sidebar {
     position: sticky;
     inset: auto;
     top: 0;
@@ -586,6 +632,9 @@ button:disabled {
     overflow-y: auto;
     box-shadow: none;
     z-index: auto;
+    transform: none;
+    pointer-events: auto;
+    transition: none;
   }
 
   .sidebar-backdrop {

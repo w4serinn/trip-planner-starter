@@ -1160,3 +1160,89 @@
       これで第8期(リアルタイム同期)は全タスク完了(共有ドキュメント2画面+
       コレクション購読4画面、計6画面がリアルタイム化された。残るC・Bは効果が薄いと
       判断し見送り済み)。
+
+## 33. 雑多メモ・企画メモのリモート更新ガードが過剰(フォーカスのみで反映が止まる)
+- [x] (S) `src/views/notes.js`・`src/views/scratch.js`のリモート更新反映条件から
+      `isFocused`のチェックを外し、「未保存の変更があるか(`saveTimer !== null`)」
+      だけで判定するように修正した。フォーカス中でも未保存の変更が無ければ
+      (テキストエリアの中身が`lastSavedValue`と一致していれば)下から書き換わる
+      ようになった
+
+      Playwrightで、2つの独立したブラウザページ(実Firestore・共有テストグループ
+      `FMXRZYW7`)を使い、雑多メモ・企画メモそれぞれについて、ページBのテキストエリアに
+      フォーカスしただけ(未入力)の状態でページAが更新すると、ページBの表示が
+      リロード無しで反映されることを確認(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test)成功。検証用テキストはFirestore上で空文字列に
+      リセット済み。
+
+## 34. 雑多メモの振り分けを「カット」ではなく「コピー」にする
+- [x] (S) `src/views/scratch.js`の4つの振り分けボタン(→企画メモへ・→行き先決めへ・
+      →しおりへ・→宿泊へ)すべてで、移動先への追加はそのまま維持しつつ、雑多メモ側の
+      テキストを削除する処理(`removeSelectionLocally`の呼び出しと、それに伴う
+      `scratchText`の`updateDocument`)を撤去し、選択範囲を雑多メモ側にも残す(コピー)
+      ようにした。`docs/firestore-design.md`「雑多メモの振り分け方式の再設計」・
+      `docs/screens.md`「雑多メモも単一共有テキスト」もカット→コピーに変更した旨を
+      反映して更新した
+
+      Playwrightで、雑多メモに"TESTNOTE TESTDEST TESTITIN TESTLODGE"という
+      検証用テキストを入力し、各セグメントを選択して4つの振り分けボタンをそれぞれ
+      実行、いずれの操作後も雑多メモの全文が元のまま変化していないこと(完全な
+      コピー動作)・企画メモ/行き先決め/しおり/宿泊の各タブに移動先のデータが
+      正しく作成されていることを実Firestore(共有テストグループ`FMXRZYW7`)で確認
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+      検証で作成した候補地1件・しおり項目1件・宿泊候補1件はFirestoreから削除済み、
+      雑多メモ・企画メモのテキストは空文字列にリセット済み。
+
+## 35. 雑多メモ「→しおりへ」の簡易フォームがカスタムカレンダーピッカーになっていない
+- [x] (S) `src/views/scratch.js`の`#to-itinerary-date`(ブラウザ標準の
+      `input type="date"`)を、`src/datePicker.js`の単一選択モードに置き換えた。
+      `src/views/itinerary.js`の`#item-date-picker`と同じ実装パターン(フォーム
+      開閉時の`setValue(null)`によるリセット、アンマウント時の`destroy()`)を踏襲
+
+      Playwrightで、「→しおりへ」フォームにネイティブの`input[type="date"]`が
+      存在しないこと・代わりにカスタムカレンダーピッカー(`.date-picker`)が
+      描画されていること・日付セルをクリックして送信すると、しおりタブに正しい
+      日付の項目が作成されることを実Firestore(共有テストグループ`FMXRZYW7`)で確認
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+      検証で作成したしおり項目はFirestoreから削除済み。
+
+## 36. ハンバーガーメニューの開閉にアニメーションを追加
+- [x] (S) `.sidebar`(モバイルのドロワー状態)を、モバイル幅では常時DOM上に
+      `display: flex`で描画したまま、`transform: translateX(-100%)`(閉)⇔
+      `translateX(0)`(開)+`transition: transform 0.25s ease`で開閉させる方式に
+      変更した。閉状態は`pointer-events: none`にして誤操作を防いでいる。
+      `#sidebar-backdrop`も同様に`opacity`のフェード(`sidebar-backdrop-visible`
+      クラスのトグル。`src/app.js`のopenMenu/closeMenuが`hidden`属性の代わりに
+      このクラスをトグルするよう変更)で開閉させた。768px以上の常設サイドバー
+      表示では`transform: none; transition: none;`で上書きし、アニメーションを
+      無効化して常時表示のまま維持している。旅行未選択の画面での`sidebar.hidden`
+      (nav自体を消す)は、author側の`display: flex`が`[hidden]`属性のUAスタイル
+      より優先されてしまうため、`.sidebar[hidden] { display: none; }`を明示的に
+      追加して対処した
+
+      Playwrightで、モバイル幅(375px)で①閉状態は`transform`がオフスクリーン
+      (`matrix(1, 0, 0, 1, -220, 0)`)・`pointer-events: none`・バックドロップ
+      `opacity: 0`であること、②ハンバーガーボタンで開くと`transform`が解除され
+      (`matrix(1, 0, 0, 1, 0, 0)`)・`pointer-events: auto`・バックドロップ
+      `opacity: 1`になり、実際にサイドバー内リンクがクリックできること、③タブ
+      遷移後は自動的に閉状態に戻ること、④バックドロップをクリックしても閉じる
+      こと、⑤768px以上では常に`display: flex`・`transform: none`・
+      `pointer-events: auto`でハンバーガーボタン自体が非表示になること、⑥旅行
+      未選択の画面(旅行一覧)では`#sidebar`が`display: none`のままであること、を
+      確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)
+      成功。
+
+## 37. タブ(画面)遷移にもアニメーションを追加
+- [x] (M) `src/router.js`の`render()`で、ビューのマウント直後に`#view`へ
+      `view-enter`クラスを付け直す方式(選択肢(a): 全ビュー共通、ビュー側の実装
+      変更は不要)を採用した。同じクラスを連続で付け直してもCSSアニメーションは
+      再生されないため、一度`classList.remove`してから`offsetWidth`読み取りで
+      リフローを強制し、`classList.add`し直している。`pages/shared.css`に
+      `@keyframes view-enter`(フェードイン+8pxの`translateY`、0.2s ease)を追加し、
+      `prefers-reduced-motion: reduce`環境ではアニメーションを無効化する
+
+      Playwrightで、概要タブ表示直後・企画メモタブへの遷移直後いずれも`#view`に
+      `.view-enter`クラスが付与され、`getComputedStyle(view).animationName`が
+      `view-enter`になっていることを確認した(2026-08-20)。console/pageerrorは
+      0件。`npm run check`(lint・test)成功。これで第9期(運用フィードバック
+      その2)は全タスク完了。
