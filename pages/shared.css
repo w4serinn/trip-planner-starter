@@ -257,6 +257,10 @@ select:focus {
   min-height: 1.2em;
 }
 
+/* 2026-08-20(docs/ROADMAP.md「71」): 外部レビューで「フェード+scale(0.97)は
+   モーションデザインの教科書通りで没個性」と指摘され、押下解除時にわずかに
+   行き過ぎてから戻る(オーバーシュート)バウンド系のイージングに変更した。
+   付箋を指で押して離した時のような、物理的な弾力を感じさせる狙い。 */
 button {
   display: inline-flex;
   align-items: center;
@@ -272,7 +276,7 @@ button {
   color: var(--color-surface);
   box-shadow: var(--shadow-button);
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
 }
 
 button svg {
@@ -302,11 +306,13 @@ button:disabled {
   margin-bottom: var(--space-md);
 }
 
+/* 2026-08-20(docs/ROADMAP.md「71」): buttonと同じ理由で、タップ解除時に
+   オーバーシュートするバウンド系のイージングに変更した。 */
 .card-link {
   display: block;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
 }
 
 .card-link:active {
