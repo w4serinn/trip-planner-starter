@@ -7,6 +7,9 @@
 // confirmedStaysに記録し、候補側には「確定済み」バッジを表示して追跡できるようにする
 // (docs/ROADMAP.md「64」)。
 // メモ欄はプレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
+// 確定宿泊が2件以上のときは、期間を横棒で示すガントチャート風タイムラインを一覧の
+// 上に表示し、宿泊の流れを一目で把握できるようにする(docs/ROADMAP.md「57」。
+// 位置・幅の計算はDOM非依存の`src/stayTimeline.js`に切り出し済み)。
 // データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」
 // 「宿泊候補→確定宿泊のワンタップ変換」参照。
 import { navigate } from '../router.js';
@@ -16,6 +19,7 @@ import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
 import { appendLinkifiedText } from '../linkify.js';
+import { buildStayTimelineBars } from '../stayTimeline.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -83,6 +87,7 @@ export function mount(outlet, params) {
       </div>
     </form>
 
+    <div id="stay-timeline"></div>
     <div id="stay-list" class="card-grid"></div>
   `;
 
@@ -240,6 +245,7 @@ export function mount(outlet, params) {
   const stayCheckInContainer = outlet.querySelector('#stay-checkin-picker');
   const stayCheckOutContainer = outlet.querySelector('#stay-checkout-picker');
   const stayErrorText = outlet.querySelector('#stay-error-text');
+  const stayTimeline = outlet.querySelector('#stay-timeline');
   const stayList = outlet.querySelector('#stay-list');
   const staySubmitButton = stayForm.querySelector('button[type="submit"]');
 
@@ -300,16 +306,58 @@ export function mount(outlet, params) {
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  function formatShortDateLabel(dateString) {
+    const date = new Date(`${dateString}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
+  }
+
+  // 確定宿泊が2件以上のときのみ、期間を横棒で示すガントチャート風タイムラインを
+  // 表示する(docs/ROADMAP.md「57」)。1件だけの場合は一覧のカードで十分なため出さない。
+  function renderStayTimeline(sortedStays) {
+    stayTimeline.innerHTML = '';
+    if (sortedStays.length < 2) return;
+
+    const bars = buildStayTimelineBars(sortedStays);
+    const container = document.createElement('div');
+    container.className = 'card stay-timeline';
+
+    for (const bar of bars) {
+      const row = document.createElement('div');
+      row.className = 'stay-timeline-row';
+
+      const label = document.createElement('span');
+      label.className = 'stay-timeline-label';
+      label.textContent = `${formatShortDateLabel(bar.checkIn)}〜${formatShortDateLabel(bar.checkOut)}`;
+      row.appendChild(label);
+
+      const track = document.createElement('div');
+      track.className = 'stay-timeline-track';
+      const trackBar = document.createElement('div');
+      trackBar.className = 'stay-timeline-bar';
+      trackBar.style.left = `${bar.leftPercent}%`;
+      trackBar.style.width = `${bar.widthPercent}%`;
+      track.appendChild(trackBar);
+      row.appendChild(track);
+
+      container.appendChild(row);
+    }
+
+    stayTimeline.appendChild(container);
+  }
+
   function renderStays(stays) {
     stayList.innerHTML = '';
 
     if (stays.length === 0) {
+      stayTimeline.innerHTML = '';
       stayList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ確定宿泊がありません。</p></div>`;
       return;
     }
 
     // 期間順(チェックインの早い順)に表示する。
     const sorted = [...stays].sort((a, b) => a.checkIn.localeCompare(b.checkIn));
+    renderStayTimeline(sorted);
 
     for (const stay of sorted) {
       const card = document.createElement('div');

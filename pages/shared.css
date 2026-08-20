@@ -599,6 +599,48 @@ button:disabled {
   word-break: break-all;
 }
 
+/* 2026-08-20(docs/ROADMAP.md「57」): 確定宿泊が複数件あるとき、期間を横棒で示す
+   ガントチャート風タイムライン。位置・幅は`src/stayTimeline.js`が算出したパーセント値を
+   インラインstyleで反映する(.score-bar-fillと同じ、動的な値のみJSで設定する方針)。 */
+.stay-timeline {
+  margin-bottom: var(--space-md);
+}
+
+.stay-timeline-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.stay-timeline-row + .stay-timeline-row {
+  margin-top: var(--space-xs);
+}
+
+.stay-timeline-label {
+  flex-shrink: 0;
+  width: 84px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: right;
+}
+
+.stay-timeline-track {
+  position: relative;
+  flex: 1;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.stay-timeline-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+}
+
 .star-button:hover {
   background: none;
   opacity: 0.8;
