@@ -34,13 +34,15 @@ export function mount(outlet, params) {
     <div class="card card-dark">
       <h3 class="icon-heading">${icons.scratch}<span>雑多メモ</span></h3>
       <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
-      <div class="button-row">
-        <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>
-        <button type="button" id="to-destinations-button" class="btn-secondary">${icons.destinations}<span>→行き先決めへ</span></button>
-      </div>
-      <div class="button-row">
-        <button type="button" id="to-itinerary-button" class="btn-secondary">${icons.itinerary}<span>→しおりへ</span></button>
-        <button type="button" id="to-lodging-button" class="btn-secondary">${icons.lodging}<span>→宿泊へ</span></button>
+      <div class="scratch-actions" id="scratch-actions">
+        <div class="button-row">
+          <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>
+          <button type="button" id="to-destinations-button" class="btn-secondary">${icons.destinations}<span>→行き先決めへ</span></button>
+        </div>
+        <div class="button-row">
+          <button type="button" id="to-itinerary-button" class="btn-secondary">${icons.itinerary}<span>→しおりへ</span></button>
+          <button type="button" id="to-lodging-button" class="btn-secondary">${icons.lodging}<span>→宿泊へ</span></button>
+        </div>
       </div>
       <p class="error-text" id="scratch-error-text"></p>
       <p class="copy-feedback" id="scratch-saved-text"></p>
@@ -97,9 +99,13 @@ export function mount(outlet, params) {
         <button type="button" id="to-lodging-cancel" class="btn-secondary">キャンセル</button>
       </div>
     </form>
+
+    <div id="scratch-actions-spacer"></div>
   `;
 
   const scratchTextarea = outlet.querySelector('#scratch-text');
+  const scratchActions = outlet.querySelector('#scratch-actions');
+  const scratchActionsSpacer = outlet.querySelector('#scratch-actions-spacer');
   const errorText = outlet.querySelector('#scratch-error-text');
   const savedText = outlet.querySelector('#scratch-saved-text');
   const toNotesButton = outlet.querySelector('#to-notes-button');
@@ -382,7 +388,35 @@ export function mount(outlet, params) {
   };
   toLodgingForm.addEventListener('submit', onToLodgingSubmit);
 
+  // 振り分けボタンを画面下部に固定表示にする対応(docs/ROADMAP.md「44」)。
+  // モバイル(768px未満)でのみ.scratch-actionsがposition: fixedになる(pages/shared.css
+  // 参照)ため、その分の高さを最後尾のスペーサーで確保し、末尾のコンテンツが
+  // バーに隠れないようにする。加えて、スマホの入力キーボード表示中はバーと
+  // キーボードが重なってしまうため、visualViewportの高さがウィンドウ高さに対して
+  // 大きく縮んだ場合(=キーボードが出ている)は.keyboard-openを付けてバーを
+  // 画面外へスライドさせる。
+  const isMobileWidth = () => window.matchMedia('(width < 768px)').matches;
+  const KEYBOARD_HEIGHT_RATIO_THRESHOLD = 0.75;
+
+  const updateActionsSpacerHeight = () => {
+    scratchActionsSpacer.style.height = isMobileWidth() ? `${scratchActions.offsetHeight}px` : '0px';
+  };
+  updateActionsSpacerHeight();
+  window.addEventListener('resize', updateActionsSpacerHeight);
+
+  const updateKeyboardOpenState = () => {
+    if (!window.visualViewport || !isMobileWidth()) {
+      scratchActions.classList.remove('keyboard-open');
+      return;
+    }
+    const ratio = window.visualViewport.height / window.innerHeight;
+    scratchActions.classList.toggle('keyboard-open', ratio < KEYBOARD_HEIGHT_RATIO_THRESHOLD);
+  };
+  window.visualViewport?.addEventListener('resize', updateKeyboardOpenState);
+
   return () => {
+    window.removeEventListener('resize', updateActionsSpacerHeight);
+    window.visualViewport?.removeEventListener('resize', updateKeyboardOpenState);
     scratchTextarea.removeEventListener('input', onScratchInput);
     toNotesButton.removeEventListener('click', onToNotesClick);
     toDestinationsButton.removeEventListener('click', onToDestinationsClick);
