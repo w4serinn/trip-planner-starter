@@ -1282,3 +1282,46 @@
       開くと送信ボタンが「追加する」に戻ること、「削除」ボタン→確認ダイアログでOKする
       と項目が削除され空状態表示になることを確認した(2026-08-20)。console/pageerrorは
       0件。`npm run check`(lint・test)成功。これで第10期は全タスク完了。
+
+## 40. D〜H各機能の件数サマリーカード
+- [x] (S) `src/views/tripOverview.js`に、集合情報・割り勘リンクカードの上に
+      D〜H各機能(行き先決め・日程調整・宿泊・しおり)の件数サマリーカードを追加した。
+      `SUMMARY_TABS`定義に沿って`listCollection`で各サブコレクション
+      (`destinations`・`scheduleEntries`・`lodgingCandidates`・`confirmedStays`・
+      `itineraryItems`)を一度きり取得し(概要タブ自体は第8期でリアルタイム購読を
+      見送り済みのため、他のB画面等と同じ一度きり取得の方針を踏襲)、「候補地○件」
+      「候補日○件」「候補 ○件・確定 ○件」「○件」を表示する。各カードは既存の
+      `.card`・`.card-link`・`.trip-card`・`.trip-card-chevron`クラスを再利用した
+      タップ可能なリンク(該当タブへ遷移)。新規フィールド追加は無し
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、初期状態で
+      4枚とも「0件」表示になること、サマリーカードのクリックで該当タブ(行き先決め)へ
+      遷移すること、行き先決めタブで候補地を1件追加した後に概要タブへ戻ると
+      サマリーが「候補地 1件」に更新されることを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 41. 集合情報・割り勘リンクの2カラム化
+- [x] (S) `src/views/tripOverview.js`の集合情報・割り勘リンクの2つの`<section
+      class="card">`を、既存の`.card-grid`共通クラスを持つ`<div>`で囲んだ。
+      768px以上では2カラム、1024px以上では既存の`.card-grid`の仕様通り(このページは
+      要素が2つしか無いため実質2カラムのまま)、375px未満(モバイル)では従来通り縦積み。
+      新規CSSは追加していない(既存の`.card-grid`ルールをそのまま利用)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、1024px幅では
+      集合情報・割り勘リンクの2カードの上端が揃い割り勘リンクが右側に配置される
+      (横並び)こと、375px幅では従来通り縦積みのままであることを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 42. 旅行名エリアの装飾強化
+- [x] (S) `src/views/tripOverview.js`の`.trip-name-row`に、既存の`.card`・
+      `.card-dark`クラスを追加しただけで、`.page-header`と同系統の
+      `--color-primary-deep`グラデーション+ドット柄・白文字・`.btn-secondary`の
+      コントラスト調整(いずれも`.card-dark`に既存)を適用できた。新規CSSの追加は
+      不要だった
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+      `.trip-name-row`に`card`/`card-dark`クラスが付与されグラデーション背景
+      (`background-image`に`gradient`を含む)が適用されていること、旅行名の文字色が
+      白(`rgb(255, 255, 255)`)になっていることを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。これで第11期
+      「C. 概要タブ」の3タスクは全て完了。
