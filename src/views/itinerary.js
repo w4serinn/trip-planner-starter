@@ -6,7 +6,9 @@
 // 「分(00/15/30/45)」の3セレクトボックスにする(docs/ROADMAP.md「15」)。保存する
 // データ形式("HH:MM"の24時間表記文字列)自体は変えない。時間セレクトのロジックは
 // src/timeSelect.jsに切り出し、src/views/scratch.jsの簡易フォームと共用する
-// (docs/ROADMAP.md「38」)。
+// (docs/ROADMAP.md「38」)。日付見出しはクリックで開閉できるアコーディオンにし
+// (docs/ROADMAP.md「59」)、現在時刻に最も近い未来の予定を強調表示する
+// (docs/ROADMAP.md「60」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, updateDocument, deleteDocument, subscribeToCollection } from '../firestore.js';
@@ -148,10 +150,38 @@ export function mount(outlet, params) {
 
   let currentItems = [];
 
+  // 開閉状態(docs/ROADMAP.md「59」)。閉じている日付の集合。renderItems()呼び出しを
+  // またいで状態を保つため、この関数の外側(mountのスコープ)で保持する。
+  const collapsedDates = new Set();
+
+  function toggleDateCollapse(date) {
+    if (collapsedDates.has(date)) collapsedDates.delete(date);
+    else collapsedDates.add(date);
+    renderItems(currentItems);
+  }
+
   function formatDateLabel(dateString) {
     const date = new Date(`${dateString}T00:00:00`);
     if (Number.isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  }
+
+  // 現在時刻に最も近い未来の予定を探す(docs/ROADMAP.md「60」)。時間目安が未入力の
+  // 項目は「その日のいつか」としてその日の終わり(23:59)扱いにする(一覧表示の並び順
+  // (NO_TIME_SENTINEL)と同じく、その日の最後に来る想定のため)。
+  function findNextItem(items) {
+    const now = Date.now();
+    let next = null;
+    let nextTime = Infinity;
+    for (const item of items) {
+      const time = new Date(`${item.date}T${item.time || '23:59'}:00`).getTime();
+      if (Number.isNaN(time) || time < now) continue;
+      if (time < nextTime) {
+        next = item;
+        nextTime = time;
+      }
+    }
+    return next;
   }
 
   // 誤操作防止のため、ブラウザ標準の確認ダイアログを挟んでから削除する
@@ -177,6 +207,8 @@ export function mount(outlet, params) {
       return;
     }
 
+    const nextItem = findNextItem(items);
+
     const groups = new Map();
     for (const item of items) {
       if (!groups.has(item.date)) groups.set(item.date, []);
@@ -186,14 +218,34 @@ export function mount(outlet, params) {
     const sortedDates = [...groups.keys()].sort();
 
     for (const date of sortedDates) {
-      const heading = document.createElement('h2');
-      heading.textContent = formatDateLabel(date);
+      const isCollapsed = collapsedDates.has(date);
+
+      const heading = document.createElement('div');
+      heading.className = 'itinerary-day-heading';
+      heading.setAttribute('role', 'button');
+      heading.setAttribute('tabindex', '0');
+      heading.setAttribute('aria-expanded', String(!isCollapsed));
+      const headingText = document.createElement('h2');
+      headingText.textContent = formatDateLabel(date);
+      heading.appendChild(headingText);
+      const chevron = document.createElement('span');
+      chevron.className = isCollapsed ? 'itinerary-day-chevron itinerary-day-chevron-collapsed' : 'itinerary-day-chevron';
+      chevron.innerHTML = icons.chevron;
+      heading.appendChild(chevron);
+      const onHeadingActivate = (event) => {
+        if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        toggleDateCollapse(date);
+      };
+      heading.addEventListener('click', onHeadingActivate);
+      heading.addEventListener('keydown', onHeadingActivate);
       itemList.appendChild(heading);
 
       const dayItems = groups.get(date).sort((a, b) => (a.time || NO_TIME_SENTINEL).localeCompare(b.time || NO_TIME_SENTINEL));
 
       const timeline = document.createElement('div');
       timeline.className = 'timeline';
+      timeline.hidden = isCollapsed;
 
       dayItems.forEach((item, index) => {
         const timelineItem = document.createElement('div');
@@ -207,8 +259,17 @@ export function mount(outlet, params) {
         marker.appendChild(badge);
         timelineItem.appendChild(marker);
 
+        const isNext = nextItem?.id === item.id;
+
         const content = document.createElement('div');
-        content.className = 'timeline-content card';
+        content.className = isNext ? 'timeline-content card timeline-content-next' : 'timeline-content card';
+
+        if (isNext) {
+          const nextBadge = document.createElement('span');
+          nextBadge.className = 'next-badge';
+          nextBadge.textContent = '次の予定';
+          content.appendChild(nextBadge);
+        }
 
         const title = document.createElement('h3');
         title.textContent = item.time ? `${item.time} ${item.title}` : item.title;
@@ -268,6 +329,19 @@ export function mount(outlet, params) {
       itemList.appendChild(timeline);
     }
   }
+
+  // 「次の予定」(docs/ROADMAP.md「60」)はデータの変更が無くても時間経過だけで
+  // 変わりうるため、1分ごとに再描画して追随させる。setIntervalはeslint設定の
+  // グローバル一覧に無いため、既に許可されているsetTimeoutの自己再スケジュールで
+  // 代用する。
+  let nextItemRefreshTimer = null;
+  function scheduleNextItemRefresh() {
+    nextItemRefreshTimer = setTimeout(() => {
+      renderItems(currentItems);
+      scheduleNextItemRefresh();
+    }, 60000);
+  }
+  scheduleNextItemRefresh();
 
   // リアルタイム同期(docs/ROADMAP.md「32」参照)。以前は追加のたびにローカルの配列を
   // 楽観的に更新していたが、購読による再描画と二重になりちらつきの原因になるため、
@@ -338,6 +412,7 @@ export function mount(outlet, params) {
     cancelFormButton.removeEventListener('click', onCancelFormClick);
     itemForm.removeEventListener('submit', onItemSubmit);
     datePicker.destroy();
+    clearTimeout(nextItemRefreshTimer);
     unsubscribeItems();
   };
 }

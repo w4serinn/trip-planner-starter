@@ -487,6 +487,63 @@ button:disabled {
   min-width: 0;
 }
 
+/* 2026-08-20(docs/ROADMAP.md「59」): 日数が多い旅行で一覧が長大になるのを防ぐため、
+   日付見出しをクリックで開閉できるアコーディオンにする。globalな`button`スタイル
+   (青いピル型ボタン)を打ち消し、見出しらしい見た目に戻す。 */
+.itinerary-day-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: var(--space-sm) 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.itinerary-day-heading:hover {
+  background: none;
+  opacity: 0.7;
+}
+
+.itinerary-day-heading:active {
+  transform: none;
+}
+
+.itinerary-day-heading h2 {
+  margin: 0;
+}
+
+.itinerary-day-chevron {
+  display: flex;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.itinerary-day-chevron-collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 2026-08-20(docs/ROADMAP.md「60」): 現在時刻に最も近い未来の予定を強調表示する。 */
+.timeline-content-next {
+  border: 2px solid var(--color-accent);
+}
+
+.next-badge {
+  display: block;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  margin: 0 0 var(--space-xs);
+}
+
 .destination-heading-row {
   display: flex;
   align-items: center;

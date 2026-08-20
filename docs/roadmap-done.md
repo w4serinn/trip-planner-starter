@@ -1405,3 +1405,38 @@
       候補カードに「確定済み」バッジがリアルタイムで表示されること、通常の
       「確定宿泊を追加」ボタンでは空の状態で開き候補一覧に影響しないことを確認した
       (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 59. 日付見出しのアコーディオン化
+- [x] (S) `src/views/itinerary.js`の日付見出しを、`<h2>`のみから
+      `.itinerary-day-heading`(`role="button"` `tabindex="0"`、内部に`<h2>`と
+      シェブロンアイコン`icons.chevron`)を持つクリック可能な行に変更した。
+      クリック(またはキーボードのEnter/Space)で、その日の`.timeline`要素の
+      `hidden`を切り替える。開閉状態は`renderItems()`のスコープ外(`mount()`内)の
+      `collapsedDates`(`Set`)で保持するため、リアルタイム更新による再描画をまたいでも
+      折りたたみ状態が維持される。`pages/shared.css`に`.itinerary-day-heading`
+      (globalな青いピル型`button`スタイルを打ち消して見出しらしい見た目に戻す)・
+      `.itinerary-day-chevron`(開閉で90度回転)を追加した
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、初期状態は
+      全日程が展開済み(`aria-expanded="true"`)であること、見出しクリックで該当日の
+      `.timeline`が非表示になり`aria-expanded`・シェブロンのクラスが切り替わること、
+      再クリックで展開に戻ること、キーボード(Enter)でも開閉できること、別の項目を
+      追加(リアルタイム再描画)しても既存の折りたたみ状態が維持されることを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 60. 「次の予定」の強調表示
+- [x] (S) `src/views/itinerary.js`に`findNextItem(items)`を追加し、現在時刻
+      (`Date.now()`)以降で最も近い`${item.date}T${item.time || '23:59'}:00`を持つ
+      項目を探す(時間目安が未入力の項目は、一覧のソート方式(`NO_TIME_SENTINEL`)と
+      同じ考え方で「その日の最後(23:59)」扱いにする)。該当する項目のカードに
+      `.timeline-content-next`(`--color-accent`の枠線)クラスと「次の予定」バッジ
+      (`.next-badge`)を付与する。データの変更が無くても時間経過だけで「次の予定」が
+      変わりうるため、1分ごとに`renderItems(currentItems)`を再実行するタイマーを
+      追加した(`setInterval`はeslint設定のグローバル一覧に無いため、既に許可されている
+      `setTimeout`の自己再スケジュールで代用し、アンマウント時に`clearTimeout`する)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、過去の日付・
+      明日・明後日の3件を登録し、一番近い未来の予定(明日)にのみ「次の予定」
+      ハイライトが付き、過去の予定には付かないことを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。これで第11期
+      「しおりタブ」の対応可能な項目は全て完了(`58`は承認済みだが未着手のまま)。
