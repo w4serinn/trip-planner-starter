@@ -186,6 +186,9 @@ GitHub Pages（publicリポジトリ）を使う。
 Firestoreのセキュリティはコードやキーの秘匿ではなく、セキュリティルール
 (list禁止等、上記「セキュリティ方針」参照)側で担保する。
 
-## 未確定・要注意点
-- **投票・回答のキーに使う「名前」の扱い**：Firestoreのマップキーやドキュメント名には使える文字に制限がある
-  （ピリオドやスラッシュ等）。実装時に名前を軽くサニタイズしてキーとして使う処理を挟む必要がある。
+## 投票・回答のマップキーに使う「名前」のサニタイズ（確定・実装済み）
+Firestoreのマップキーには使える文字に制限があり（`.` `$` `/` `[` `]` `#`）、
+`updateDocument`のドット記法パス指定ともキーの中の`.`が衝突しうるため、`src/firestore.js`の
+`sanitizeMapKey(key)`でこれらの文字を`_`に置換してからマップキーとして使う。
+`src/views/destinations.js`（`votes`マップ）・`src/views/schedule.js`（`responses`マップ）が
+それぞれ`sanitizeMapKey(session.name)`を呼び出している。
