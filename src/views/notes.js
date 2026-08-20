@@ -3,8 +3,8 @@
 // 自由に書き足していく(hackmd的な1枚メモ)。入力はデバウンスして自動保存する。
 // 同時編集時の競合(後勝ち上書き)は許容する(docs/screens.md「設計判断」参照)。
 // 雑多メモ(src/views/scratch.js)と見た目がほぼ同じで役割の違いが伝わりにくいとの
-// 指摘を受け、アイコン見出し+緑寄りのアクセント配色(.card-dark-accent)で
-// 視覚的に差別化している(docs/ROADMAP.md「48」)。
+// 指摘を受け、アイコン見出し+オレンジ寄りのアクセント配色(.card-dark-accent)で
+// 視覚的に差別化している(docs/ROADMAP.md「48」・配色は「66」で見直し済み)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { subscribeToDocument, updateDocument } from '../firestore.js';

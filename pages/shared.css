@@ -824,13 +824,17 @@ button:disabled {
 }
 
 /* 2026-08-20(docs/ROADMAP.md「48」): 雑多メモ・企画メモの.card-darkの見た目が
-   ほぼ同じで役割の違いが伝わりにくいとの指摘を受け、企画メモ側だけ
-   --color-accent-greenを混ぜたグラデーションに差し替えて視覚的に差別化する
+   ほぼ同じで役割の違いが伝わりにくいとの指摘を受け、企画メモ側だけ配色を
+   差し替えて視覚的に差別化する。
+   2026-08-20(docs/ROADMAP.md「66」): 外部レビューで「--color-successと
+   --color-accent-greenが近い色相で役割が被る」と指摘され、装飾専用だった
+   --color-accent-greenを廃止(色数整理)。ここでの差別化は、既存の
+   --color-accent(オレンジ)と--color-primary-deepの組み合わせに変更した
    (新規の色は追加せず、既存トークンの組み合わせのみ変更)。 */
 .card-dark-accent {
   background-image:
     radial-gradient(circle, rgb(255 255 255 / 10%) 1px, transparent 1.5px),
-    linear-gradient(135deg, var(--color-accent-green), var(--color-primary-deep));
+    linear-gradient(135deg, var(--color-accent), var(--color-primary-deep));
 }
 
 .card-dark .icon-heading {

@@ -1574,3 +1574,29 @@
       表示されることを確認した(2026-08-20)。console/pageerrorは0件。
       `npm run check`(lint・test、vitest 26件、うち`stayTimeline.test.js`7件が新規)
       成功。
+
+## 66. 色数整理(accent-green廃止)
+- [x] (S) 2026-08-20、人間が二人のレビュアーに現在のビジュアルデザインを見てもらった
+      結果、「`--color-success`と`--color-accent-green`が近い色相で役割が被って
+      見える」と指摘された。人間との会話で「A案(重複解消のみ)」を採用することが
+      確定し、状態を表す意味的な色である`--color-success`はそのまま残し、装飾専用の
+      `--color-accent-green`(#4d9a7a)を`styles/tokens.css`から廃止した。
+      唯一の使用箇所だった`pages/shared.css`の`.card-dark-accent`(企画メモを
+      雑多メモと視覚的に区別するためのグラデーション、`48`参照)は、
+      `--color-accent-green`と`--color-primary-deep`の組み合わせから、
+      `--color-accent`(オレンジ)と`--color-primary-deep`の組み合わせに置き換えた。
+      新規の色トークンは追加していない(既存の`--color-accent`を転用)。
+      `--color-primary-deep`自体の廃止(レビューのB案=徹底整理)は今回見送った。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、雑多メモの
+      `.card-dark`(青→濃紺のグラデーション)・企画メモの`.card-dark-accent`
+      (オレンジ→濃紺のグラデーション)がそれぞれ引き続き適用され、両者の
+      グラデーションが異なる(視覚的差別化が維持されている)ことを確認した
+      (2026-08-20)。スクリーンショットで、タブ遷移フェードインの完了後は
+      オレンジ→濃紺の対角グラデーションが正しく表示されることを目視確認した
+      (フェードイン完了前に撮影すると一時的に薄く見えるだけで、実装上の不具合では
+      ないことを確認済み)。console/pageerrorは0件。`npm run check`(lint・test、
+      vitest 26件)成功。検証で作成したFirestore上のトリップ1件は、サブコレクション
+      文書を作成していないため追加のクリーンアップ不要で、名前を
+      「[検証用/削除不可] evolve cycle5 66検証で作成」に更新済みの状態で共有
+      テストグループ`FMXRZYW7`内に残置。
