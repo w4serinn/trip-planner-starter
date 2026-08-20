@@ -1440,3 +1440,19 @@
       ハイライトが付き、過去の予定には付かないことを確認した(2026-08-20)。
       console/pageerrorは0件。`npm run check`(lint・test)成功。これで第11期
       「しおりタブ」の対応可能な項目は全て完了(`58`は承認済みだが未着手のまま)。
+
+## 61. しおり項目への移動手段メモ欄の追加
+- [x] (S) `itineraryItems/{id}`に`transportation`(任意の自由記述文字列)を追加した。
+      `src/views/itinerary.js`の追加・編集フォームに「移動手段(任意)」の入力欄
+      (`#item-transportation`、プレースホルダー「電車で移動、レンタカー等」)を追加し、
+      一覧表示では場所リンクとメモの間に「移動手段: ○○」として表示する。編集時は
+      `openFormForEdit()`で既存の`transportation`をプリフィルする。
+      `docs/firestore-design.md`にスキーマ追加と設計判断の節を、`docs/requirements.md`
+      5.1に「交通手段の予約調整機能」のWon't判断とは別物という経緯の追記、9.1の
+      ItineraryItemエンティティ説明の更新を行った(いずれも人間の事前承認に基づく)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、追加フォームに
+      移動手段の入力欄が存在すること、入力した移動手段が一覧カードに表示されること、
+      編集フォームに正しくプリフィルされ更新も反映されること、移動手段を空のまま
+      保存した項目には「移動手段:」の表示自体が出ないこと(任意項目として機能する)を
+      確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。

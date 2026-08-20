@@ -1,6 +1,6 @@
 // H. しおりタブビュー(SPA)
 // しおり項目の追加・編集・削除(やること名・日付・時間目安(任意)・場所リンク(任意)・
-// メモ(任意))と、日付グルーピング＋各日内での時間順自動ソート表示を行う。
+// 移動手段(任意)・メモ(任意))と、日付グルーピング＋各日内での時間順自動ソート表示を行う。
 // データモデルはdocs/firestore-design.md「itineraryItems」参照。
 // 時間入力は<input type="time">のネイティブUIではなく、「午前/午後」「時(0〜12)」
 // 「分(00/15/30/45)」の3セレクトボックスにする(docs/ROADMAP.md「15」)。保存する
@@ -8,7 +8,8 @@
 // src/timeSelect.jsに切り出し、src/views/scratch.jsの簡易フォームと共用する
 // (docs/ROADMAP.md「38」)。日付見出しはクリックで開閉できるアコーディオンにし
 // (docs/ROADMAP.md「59」)、現在時刻に最も近い未来の予定を強調表示する
-// (docs/ROADMAP.md「60」)。
+// (docs/ROADMAP.md「60」)。移動手段は交通手段の予約調整機能(Won't)とは別の、単なる
+// 自由記述メモ(docs/ROADMAP.md「61」・docs/requirements.md5.1参照)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, updateDocument, deleteDocument, subscribeToCollection } from '../firestore.js';
@@ -67,6 +68,10 @@ export function mount(outlet, params) {
         <input type="url" id="item-location" name="locationUrl" placeholder="https://maps.app.goo.gl/..." />
       </div>
       <div class="field">
+        <label for="item-transportation">移動手段(任意)</label>
+        <input type="text" id="item-transportation" name="transportation" placeholder="電車で移動、レンタカー等" />
+      </div>
+      <div class="field">
         <label for="item-note">メモ(任意)</label>
         <input type="text" id="item-note" name="note" />
       </div>
@@ -89,6 +94,7 @@ export function mount(outlet, params) {
   const timeHourSelect = outlet.querySelector('#item-time-hour');
   const timeMinuteSelect = outlet.querySelector('#item-time-minute');
   const locationInput = outlet.querySelector('#item-location');
+  const transportationInput = outlet.querySelector('#item-transportation');
   const noteInput = outlet.querySelector('#item-note');
   const errorText = outlet.querySelector('#item-error-text');
   const itemList = outlet.querySelector('#item-list');
@@ -123,6 +129,7 @@ export function mount(outlet, params) {
     timeHourSelect.value = hour;
     timeMinuteSelect.value = minute;
     locationInput.value = item.locationUrl || '';
+    transportationInput.value = item.transportation || '';
     noteInput.value = item.note || '';
     openForm();
   }
@@ -137,6 +144,7 @@ export function mount(outlet, params) {
     timeHourSelect.value = '';
     timeMinuteSelect.value = '';
     locationInput.value = '';
+    transportationInput.value = '';
     noteInput.value = '';
     editingItemId = null;
     submitButton.textContent = '追加する';
@@ -292,6 +300,12 @@ export function mount(outlet, params) {
           }
         }
 
+        if (item.transportation) {
+          const transportation = document.createElement('p');
+          transportation.textContent = `移動手段: ${item.transportation}`;
+          content.appendChild(transportation);
+        }
+
         if (item.note) {
           const note = document.createElement('p');
           note.textContent = item.note;
@@ -374,6 +388,7 @@ export function mount(outlet, params) {
     const hour = timeHourSelect.value;
     const minute = timeMinuteSelect.value;
     const locationUrl = locationInput.value.trim();
+    const transportation = transportationInput.value.trim();
     const note = noteInput.value.trim();
     if (!title || !date) {
       errorText.textContent = 'やること名と日付を入力してください。';
@@ -391,9 +406,9 @@ export function mount(outlet, params) {
     try {
       if (editingItemId) {
         // 編集時はaddedBy(追加者)を書き換えない。
-        await updateDocument(`${itemsPath}/${editingItemId}`, { title, date, time, locationUrl, note });
+        await updateDocument(`${itemsPath}/${editingItemId}`, { title, date, time, locationUrl, transportation, note });
       } else {
-        await addDocument(itemsPath, { title, date, time, locationUrl, note, addedBy: session.name });
+        await addDocument(itemsPath, { title, date, time, locationUrl, transportation, note, addedBy: session.name });
       }
       closeForm();
     } catch (error) {
