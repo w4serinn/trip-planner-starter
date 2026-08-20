@@ -6,6 +6,7 @@
 // 開ける(docs/ROADMAP.md「56」)。確定時、元候補のIDを`sourceCandidateId`として
 // confirmedStaysに記録し、候補側には「確定済み」バッジを表示して追跡できるようにする
 // (docs/ROADMAP.md「64」)。
+// メモ欄はプレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
 // データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」
 // 「宿泊候補→確定宿泊のワンタップ変換」参照。
 import { navigate } from '../router.js';
@@ -14,6 +15,7 @@ import { addDocument, subscribeToCollection, serverTimestamp } from '../firestor
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
+import { appendLinkifiedText } from '../linkify.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -152,7 +154,7 @@ export function mount(outlet, params) {
 
       if (candidate.note) {
         const note = document.createElement('p');
-        note.textContent = candidate.note;
+        appendLinkifiedText(note, candidate.note);
         card.appendChild(note);
       }
 
@@ -334,7 +336,7 @@ export function mount(outlet, params) {
 
       if (stay.note) {
         const note = document.createElement('p');
-        note.textContent = stay.note;
+        appendLinkifiedText(note, stay.note);
         card.appendChild(note);
       }
 

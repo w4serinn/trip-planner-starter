@@ -1476,3 +1476,41 @@
       テキストのまま表示されることを確認した(2026-08-20)。console/pageerrorは0件。
       `npm run check`(lint・test)成功。これで第11期「実利用シーンからの気づき」の
       承認済みスキーマ変更タスクは`58`を残すのみ。
+
+## 63. 日程調整の○×△内訳サマリー
+- [x] (S) `src/views/schedule.js`の`renderEntries()`で、各候補日の`responses`
+      マップを`RESPONSE_SYMBOLS`(○/△/×)ごとに集計し、「○3 △1 ×0」のようなサマリー
+      (`.subtitle`)を見出しの直後に表示する。1件も回答が無い候補日ではサマリー自体を
+      表示しない。既存の回答者名一覧(「たく: ○」等)はそのまま維持し、サマリーは
+      その手前に追加する形。新規フィールドは不要(既存の`responses`マップを
+      集計するだけ)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、未回答の
+      候補日にはサマリーが表示されないこと、1人が○で回答すると「○1 △0 ×0」に
+      なること、回答を△に変更すると「○0 △1 ×0」に正しく更新されることを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 65. メモ欄のURLリンク化
+- [x] (S) 新規`src/linkify.js`を作成した。テキストをURLセグメントとそれ以外の
+      セグメントに分割する`tokenizeLinks(text)`をDOM非依存の純粋関数として切り出し
+      (`src/datePicker.js`と同じ設計方針)、`src/linkify.test.js`で検証する。
+      `isSafeUrl()`で安全と判定されたURLのみ`<a class="inline-link" target="_blank"
+      rel="noopener noreferrer">`に変換する`linkifyToNodes()`・要素に追加する
+      `appendLinkifiedText()`を提供する。URL直後の句読点・閉じ括弧
+      (`.,;:!?)]}、。」』`)はリンクに含めない。`pages/shared.css`に
+      `.inline-link`(既存の`.candidate-link`と異なり`display: block`を持たない
+      インライン用)を追加した。`src/views/destinations.js`(候補の`note`)・
+      `src/views/lodging.js`(宿泊候補・確定宿泊の`note`)・`src/views/itinerary.js`
+      (しおり項目の`note`)・`src/views/tripOverview.js`(`meetingNote`)の
+      `note.textContent = ...`をそれぞれ`appendLinkifiedText(note, ...)`に置き換えた
+
+      `src/linkify.test.js`で、URLを含まないテキスト・文中/文頭/文末のURL・複数の
+      URL・URL直後の句読点の除外・`new URL()`が失敗する不正なURL文字列
+      (`safe: false`になること)・http/https以外のスキーム(そもそも正規表現に
+      マッチしないこと)を検証した。Playwrightでは、実Firestore(共有テストグループ
+      `FMXRZYW7`)に対し、行き先決め・宿泊候補・しおり項目・概要タブの集合メモの
+      4箇所いずれも、メモ内のURLがクリック可能なリンクになること(hrefが末尾の
+      空白を含まず正しいこと)、URLを含まないメモにはリンクが生成されないことを
+      確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)
+      成功(vitest 19件全て成功)。雑多メモ・企画メモは`<textarea>`表示のため対象外
+      (docs/ROADMAP.md末尾の検討事項参照)。

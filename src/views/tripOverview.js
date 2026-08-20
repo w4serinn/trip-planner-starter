@@ -4,11 +4,13 @@
 // 集合情報・割り勘リンクも、旅行名と同じ「表示モード+編集ボタンで編集フォームを開く」
 // パターンに揃え(docs/ROADMAP.md「18」)、画面を開いた時点でフォームが並ぶ煩雑さを避ける。
 // 集合情報には地図リンク(meetingLocationUrl)も持たせる(docs/ROADMAP.md「62」)。
+// 集合メモはプレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, updateDocument, listCollection } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
+import { appendLinkifiedText } from '../linkify.js';
 
 // D〜H各機能タブの件数サマリー(docs/ROADMAP.md「40」)に表示する項目定義。
 // keyはsrc/app.jsのTABS定義におけるルートsuffix(先頭の"/"を除いたもの)と一致させる。
@@ -154,7 +156,12 @@ export function mount(outlet, params) {
     meetingSummary.hidden = !hasMeeting;
     meetingPlaceDisplay.textContent = currentTrip.meetingPlace || '(未設定)';
     meetingTimeDisplay.textContent = currentTrip.meetingTime || '(未設定)';
-    meetingNoteDisplay.textContent = currentTrip.meetingNote || '(未設定)';
+    meetingNoteDisplay.innerHTML = '';
+    if (currentTrip.meetingNote) {
+      appendLinkifiedText(meetingNoteDisplay, currentTrip.meetingNote);
+    } else {
+      meetingNoteDisplay.textContent = '(未設定)';
+    }
 
     meetingLocationDisplay.innerHTML = '';
     if (currentTrip.meetingLocationUrl) {

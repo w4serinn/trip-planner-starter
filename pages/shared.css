@@ -591,6 +591,14 @@ button:disabled {
   word-break: break-all;
 }
 
+/* 2026-08-20(docs/ROADMAP.md「65」): メモ欄等のテキスト中に含まれるURLを
+   リンク化する際に使う。.candidate-linkはdisplay:blockで独立した行になるため、
+   文章の途中に混ざるインラインリンクには使えず、この専用クラスを用意した。 */
+.inline-link {
+  color: var(--color-primary);
+  word-break: break-all;
+}
+
 .star-button:hover {
   background: none;
   opacity: 0.8;

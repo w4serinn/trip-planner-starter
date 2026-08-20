@@ -1,6 +1,7 @@
 // F. 日程調整タブビュー(SPA)
 // 候補日ごとの○×△回答、メンバーごとの回答一覧表示、全員回答済み/自分が未回答の日の
-// ハイライト(docs/ROADMAP.md「53」)、全候補日への一括回答(docs/ROADMAP.md「54」)を行う。
+// ハイライト(docs/ROADMAP.md「53」)、全候補日への一括回答(docs/ROADMAP.md「54」)、
+// ○×△の内訳サマリー表示(docs/ROADMAP.md「63」)を行う。
 // データモデルはdocs/firestore-design.md「scheduleEntries」参照。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
@@ -137,6 +138,20 @@ export function mount(outlet, params) {
       const heading = document.createElement('h3');
       heading.textContent = formatDateLabel(entry.id);
       card.appendChild(heading);
+
+      // 内訳サマリー(docs/ROADMAP.md「63」)。候補日が多いと各カードの回答者名を
+      // 1件ずつ読まないと状況がわからないため、○×△の集計を先に一目で見せる。
+      const responseValues = Object.values(responses);
+      if (responseValues.length > 0) {
+        const counts = { '○': 0, '△': 0, '×': 0 };
+        for (const value of responseValues) {
+          if (counts[value] !== undefined) counts[value] += 1;
+        }
+        const tally = document.createElement('p');
+        tally.className = 'subtitle';
+        tally.textContent = RESPONSE_SYMBOLS.map((symbol) => `${symbol}${counts[symbol]}`).join(' ');
+        card.appendChild(tally);
+      }
 
       if (isUnanswered) {
         const unansweredText = document.createElement('p');

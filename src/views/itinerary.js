@@ -9,7 +9,8 @@
 // (docs/ROADMAP.md「38」)。日付見出しはクリックで開閉できるアコーディオンにし
 // (docs/ROADMAP.md「59」)、現在時刻に最も近い未来の予定を強調表示する
 // (docs/ROADMAP.md「60」)。移動手段は交通手段の予約調整機能(Won't)とは別の、単なる
-// 自由記述メモ(docs/ROADMAP.md「61」・docs/requirements.md5.1参照)。
+// 自由記述メモ(docs/ROADMAP.md「61」・docs/requirements.md5.1参照)。メモ欄は
+// プレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, updateDocument, deleteDocument, subscribeToCollection } from '../firestore.js';
@@ -17,6 +18,7 @@ import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
 import { HOUR_OPTIONS, MINUTE_OPTIONS, buildTimeString, parseTimeString } from '../timeSelect.js';
+import { appendLinkifiedText } from '../linkify.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -308,7 +310,7 @@ export function mount(outlet, params) {
 
         if (item.note) {
           const note = document.createElement('p');
-          note.textContent = item.note;
+          appendLinkifiedText(note, item.note);
           content.appendChild(note);
         }
 
