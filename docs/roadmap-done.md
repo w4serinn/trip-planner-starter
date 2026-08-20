@@ -1160,3 +1160,48 @@
       これで第8期(リアルタイム同期)は全タスク完了(共有ドキュメント2画面+
       コレクション購読4画面、計6画面がリアルタイム化された。残るC・Bは効果が薄いと
       判断し見送り済み)。
+
+## 33. 雑多メモ・企画メモのリモート更新ガードが過剰(フォーカスのみで反映が止まる)
+- [x] (S) `src/views/notes.js`・`src/views/scratch.js`のリモート更新反映条件から
+      `isFocused`のチェックを外し、「未保存の変更があるか(`saveTimer !== null`)」
+      だけで判定するように修正した。フォーカス中でも未保存の変更が無ければ
+      (テキストエリアの中身が`lastSavedValue`と一致していれば)下から書き換わる
+      ようになった
+
+      Playwrightで、2つの独立したブラウザページ(実Firestore・共有テストグループ
+      `FMXRZYW7`)を使い、雑多メモ・企画メモそれぞれについて、ページBのテキストエリアに
+      フォーカスしただけ(未入力)の状態でページAが更新すると、ページBの表示が
+      リロード無しで反映されることを確認(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test)成功。検証用テキストはFirestore上で空文字列に
+      リセット済み。
+
+## 34. 雑多メモの振り分けを「カット」ではなく「コピー」にする
+- [x] (S) `src/views/scratch.js`の4つの振り分けボタン(→企画メモへ・→行き先決めへ・
+      →しおりへ・→宿泊へ)すべてで、移動先への追加はそのまま維持しつつ、雑多メモ側の
+      テキストを削除する処理(`removeSelectionLocally`の呼び出しと、それに伴う
+      `scratchText`の`updateDocument`)を撤去し、選択範囲を雑多メモ側にも残す(コピー)
+      ようにした。`docs/firestore-design.md`「雑多メモの振り分け方式の再設計」・
+      `docs/screens.md`「雑多メモも単一共有テキスト」もカット→コピーに変更した旨を
+      反映して更新した
+
+      Playwrightで、雑多メモに"TESTNOTE TESTDEST TESTITIN TESTLODGE"という
+      検証用テキストを入力し、各セグメントを選択して4つの振り分けボタンをそれぞれ
+      実行、いずれの操作後も雑多メモの全文が元のまま変化していないこと(完全な
+      コピー動作)・企画メモ/行き先決め/しおり/宿泊の各タブに移動先のデータが
+      正しく作成されていることを実Firestore(共有テストグループ`FMXRZYW7`)で確認
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+      検証で作成した候補地1件・しおり項目1件・宿泊候補1件はFirestoreから削除済み、
+      雑多メモ・企画メモのテキストは空文字列にリセット済み。
+
+## 35. 雑多メモ「→しおりへ」の簡易フォームがカスタムカレンダーピッカーになっていない
+- [x] (S) `src/views/scratch.js`の`#to-itinerary-date`(ブラウザ標準の
+      `input type="date"`)を、`src/datePicker.js`の単一選択モードに置き換えた。
+      `src/views/itinerary.js`の`#item-date-picker`と同じ実装パターン(フォーム
+      開閉時の`setValue(null)`によるリセット、アンマウント時の`destroy()`)を踏襲
+
+      Playwrightで、「→しおりへ」フォームにネイティブの`input[type="date"]`が
+      存在しないこと・代わりにカスタムカレンダーピッカー(`.date-picker`)が
+      描画されていること・日付セルをクリックして送信すると、しおりタブに正しい
+      日付の項目が作成されることを実Firestore(共有テストグループ`FMXRZYW7`)で確認
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+      検証で作成したしおり項目はFirestoreから削除済み。

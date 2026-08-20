@@ -8,6 +8,7 @@ import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, subscribeToDocument, updateDocument, addDocument, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
+import { createDatePicker } from '../datePicker.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -44,8 +45,8 @@ export function mount(outlet, params) {
     <form id="to-itinerary-form" class="card" novalidate hidden>
       <p class="subtitle">選択した内容をしおりの項目として追加します。日付を選んでください。</p>
       <div class="field">
-        <label for="to-itinerary-date">日付</label>
-        <input type="date" id="to-itinerary-date" name="date" required />
+        <label>日付</label>
+        <div id="to-itinerary-date-picker"></div>
       </div>
       <p class="error-text" id="to-itinerary-error-text"></p>
       <div class="button-row">
@@ -75,7 +76,7 @@ export function mount(outlet, params) {
   const toDestinationsButton = outlet.querySelector('#to-destinations-button');
   const toItineraryButton = outlet.querySelector('#to-itinerary-button');
   const toItineraryForm = outlet.querySelector('#to-itinerary-form');
-  const toItineraryDateInput = outlet.querySelector('#to-itinerary-date');
+  const toItineraryDatePickerContainer = outlet.querySelector('#to-itinerary-date-picker');
   const toItineraryErrorText = outlet.querySelector('#to-itinerary-error-text');
   const toItineraryCancelButton = outlet.querySelector('#to-itinerary-cancel');
   const toLodgingButton = outlet.querySelector('#to-lodging-button');
@@ -83,6 +84,10 @@ export function mount(outlet, params) {
   const toLodgingUrlInput = outlet.querySelector('#to-lodging-url');
   const toLodgingErrorText = outlet.querySelector('#to-lodging-error-text');
   const toLodgingCancelButton = outlet.querySelector('#to-lodging-cancel');
+
+  // 単一選択モード(docs/ROADMAP.md「35」)。src/views/itinerary.jsの#item-date-pickerと
+  // 同じ実装パターン(フォーム開閉時のリセット、アンマウント時のdestroy())を踏襲する。
+  const toItineraryDatePicker = createDatePicker(toItineraryDatePickerContainer, { mode: 'single' });
 
   let saveTimer = null;
   let lastSavedValue = '';
@@ -117,8 +122,9 @@ export function mount(outlet, params) {
   scratchTextarea.addEventListener('input', onScratchInput);
 
   // リアルタイム同期(docs/ROADMAP.md「第8期」参照)。他の参加者の更新を購読し、
-  // 自分が編集中(未保存の変更がある、またはテキストエリアにフォーカス中)の間は
-  // 上書きしない(入力中のカーソル位置・未保存分を壊さないため)。
+  // 自分が編集中(未保存の変更がある)間は上書きしない(入力中の未保存分を壊さないため)。
+  // フォーカスの有無自体は無関係(未保存の変更が無ければ、フォーカス中でも反映してよい。
+  // docs/ROADMAP.md「33」)。
   let isFirstSnapshot = true;
   const unsubscribeScratch = subscribeToDocument(
     tripPath,
@@ -137,8 +143,7 @@ export function mount(outlet, params) {
 
       const remoteValue = trip?.scratchText || '';
       const hasUnsavedLocalEdit = saveTimer !== null;
-      const isFocused = document.activeElement === scratchTextarea;
-      if (hasUnsavedLocalEdit || isFocused || remoteValue === lastSavedValue) return;
+      if (hasUnsavedLocalEdit || remoteValue === lastSavedValue) return;
       lastSavedValue = remoteValue;
       scratchTextarea.value = remoteValue;
     },
@@ -156,19 +161,11 @@ export function mount(outlet, params) {
     return { start, end, text: scratchTextarea.value.slice(start, end) };
   }
 
-  // 選択範囲だけをローカルの値から取り除き、保存済みとして即座に確定する
-  // (デバウンス待ちにせず、振り分け操作の一部として同期的に保存を確定させるため)。
-  function removeSelectionLocally(selection) {
-    const newValue = scratchTextarea.value.slice(0, selection.start) + scratchTextarea.value.slice(selection.end);
-    scratchTextarea.value = newValue;
-    return newValue;
-  }
-
   const onToNotesClick = async () => {
     errorText.textContent = '';
     const selection = getSelection();
     if (!selection) {
-      errorText.textContent = '企画メモへ移動するテキストを選択してください。';
+      errorText.textContent = '企画メモへコピーするテキストを選択してください。';
       return;
     }
 
@@ -178,21 +175,12 @@ export function mount(outlet, params) {
       const currentNotes = trip?.planningNotesText || '';
       const separator = currentNotes && !currentNotes.endsWith('\n') ? '\n' : '';
       const newNotes = `${currentNotes}${separator}${selection.text}`;
-      const newScratchValue = removeSelectionLocally(selection);
 
-      if (saveTimer) {
-        clearTimeout(saveTimer);
-        saveTimer = null;
-      }
-      await updateDocument(tripPath, {
-        planningNotesText: newNotes,
-        scratchText: newScratchValue,
-      });
-      lastSavedValue = newScratchValue;
-      savedText.textContent = '企画メモへ移動しました。';
+      await updateDocument(tripPath, { planningNotesText: newNotes });
+      savedText.textContent = '企画メモへコピーしました。';
     } catch (error) {
       console.error(error);
-      errorText.textContent = '企画メモへの移動に失敗しました。時間をおいて再度お試しください。';
+      errorText.textContent = '企画メモへのコピーに失敗しました。時間をおいて再度お試しください。';
     } finally {
       toNotesButton.disabled = false;
     }
@@ -203,18 +191,12 @@ export function mount(outlet, params) {
     errorText.textContent = '';
     const selection = getSelection();
     if (!selection) {
-      errorText.textContent = '行き先決めへ移動するテキストを選択してください。';
+      errorText.textContent = '行き先決めへコピーするテキストを選択してください。';
       return;
     }
 
     toDestinationsButton.disabled = true;
     try {
-      const newScratchValue = removeSelectionLocally(selection);
-
-      if (saveTimer) {
-        clearTimeout(saveTimer);
-        saveTimer = null;
-      }
       await addDocument(destinationsPath, {
         name: selection.text,
         note: '',
@@ -222,12 +204,10 @@ export function mount(outlet, params) {
         addedAt: serverTimestamp(),
         votes: {},
       });
-      await updateDocument(tripPath, { scratchText: newScratchValue });
-      lastSavedValue = newScratchValue;
-      savedText.textContent = '行き先決めへ移動しました。';
+      savedText.textContent = '行き先決めへコピーしました。';
     } catch (error) {
       console.error(error);
-      errorText.textContent = '行き先決めへの移動に失敗しました。時間をおいて再度お試しください。';
+      errorText.textContent = '行き先決めへのコピーに失敗しました。時間をおいて再度お試しください。';
     } finally {
       toDestinationsButton.disabled = false;
     }
@@ -238,12 +218,12 @@ export function mount(outlet, params) {
     errorText.textContent = '';
     const selection = getSelection();
     if (!selection) {
-      errorText.textContent = 'しおりへ移動するテキストを選択してください。';
+      errorText.textContent = 'しおりへコピーするテキストを選択してください。';
       return;
     }
     pendingItineraryRange = selection;
     toItineraryErrorText.textContent = '';
-    toItineraryDateInput.value = '';
+    toItineraryDatePicker.setValue(null);
     toItineraryForm.hidden = false;
   };
   toItineraryButton.addEventListener('click', onToItineraryClick);
@@ -263,7 +243,7 @@ export function mount(outlet, params) {
       return;
     }
 
-    const date = toItineraryDateInput.value;
+    const date = toItineraryDatePicker.getValue();
     if (!date) {
       toItineraryErrorText.textContent = '日付を選択してください。';
       return;
@@ -281,17 +261,9 @@ export function mount(outlet, params) {
         addedBy: session.name,
       });
 
-      const newScratchValue = removeSelectionLocally(pendingItineraryRange);
-      if (saveTimer) {
-        clearTimeout(saveTimer);
-        saveTimer = null;
-      }
-      await updateDocument(tripPath, { scratchText: newScratchValue });
-      lastSavedValue = newScratchValue;
-
       pendingItineraryRange = null;
       toItineraryForm.hidden = true;
-      savedText.textContent = 'しおりへ移動しました。';
+      savedText.textContent = 'しおりへコピーしました。';
     } catch (error) {
       console.error(error);
       toItineraryErrorText.textContent = 'しおりへの追加に失敗しました。時間をおいて再度お試しください。';
@@ -305,7 +277,7 @@ export function mount(outlet, params) {
     errorText.textContent = '';
     const selection = getSelection();
     if (!selection) {
-      errorText.textContent = '宿泊へ移動するテキストを選択してください。';
+      errorText.textContent = '宿泊へコピーするテキストを選択してください。';
       return;
     }
     pendingLodgingRange = selection;
@@ -346,17 +318,9 @@ export function mount(outlet, params) {
         addedAt: serverTimestamp(),
       });
 
-      const newScratchValue = removeSelectionLocally(pendingLodgingRange);
-      if (saveTimer) {
-        clearTimeout(saveTimer);
-        saveTimer = null;
-      }
-      await updateDocument(tripPath, { scratchText: newScratchValue });
-      lastSavedValue = newScratchValue;
-
       pendingLodgingRange = null;
       toLodgingForm.hidden = true;
-      savedText.textContent = '宿泊へ移動しました。';
+      savedText.textContent = '宿泊へコピーしました。';
     } catch (error) {
       console.error(error);
       toLodgingErrorText.textContent = '宿泊への追加に失敗しました。時間をおいて再度お試しください。';
@@ -376,6 +340,7 @@ export function mount(outlet, params) {
     toLodgingButton.removeEventListener('click', onToLodgingClick);
     toLodgingCancelButton.removeEventListener('click', onToLodgingCancel);
     toLodgingForm.removeEventListener('submit', onToLodgingSubmit);
+    toItineraryDatePicker.destroy();
     unsubscribeScratch();
     // タブ離脱時、デバウンス待ちの未保存分があれば取りこぼさないよう即座に保存する。
     flushSave();
