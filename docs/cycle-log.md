@@ -1881,3 +1881,31 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   アイコン変更)に着手予定。`44`は引き続き実機確認待ちで保留。
 - blocked / partial: なし。
 
+## 2026-08-20 19:20
+- 実装: `68`(しおりモチーフの追加)を実施。(a) `.divider`をミシン目風の点線
+  (`border-top: 2px dotted var(--color-border)`)に変更。(b) テキスト編集を伴わない
+  静的表示のみの2箇所(概要タブの旅行名カード`.trip-name-row`・参加画面の合言葉
+  表示`.passphrase`)に、写真を傾けて貼ったような`rotate()`を追加(textareaを含む
+  カードは読み書きしにくくなるため対象外)。(c) しおりタブの
+  `.timeline-marker-badge`(連番の数字バッジ)を、新規追加した`footprint`(足あと)・
+  `flag`(旗、「次の予定」の項目のみ)のインラインSVGアイコンに差し替えた。
+  `src/views/itinerary.js`の未使用になった`index`引数を削除。
+- 動作確認: OK。`npm run check`(lint・test、vitest 26件、変更なし)成功を確認した
+  上で、開発サーバーを起動しPlaywrightで実Firestore(共有テストグループ
+  `FMXRZYW7`)に対し、`.passphrase`・`.trip-name-row`にrotateが適用されていること、
+  `.divider`が点線になっていること、しおりの`.timeline-marker-badge`に数字では
+  なくSVGアイコンが描画されていることを確認。アイコン単体を拡大表示するHTML
+  プレビューで足あと・旗として認識できる見た目であることも確認した。
+  スクリーンショットで概要・宿泊・しおりタブを目視確認し、390px幅でも崩れなし。
+  console/pageerrorは0件。検証で作成したFirestore上のトリップ1件は
+  `itineraryItems`を削除の上、名前を「[検証用/削除不可] evolve cycle5 68検証で
+  作成」に更新して共有テストグループ`FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・`firestore.rules`の変更は
+  無し(CSS・アイコンのみ)。`docs/screens.md`の画面構成・遷移にも影響なし。
+  モバイル幅での崩れも無し。**本タスクは「やりすぎるとチープに見えるリスクが
+  あるため実装後は特に人間の目で確認すること」と注記されていたため、evolve
+  サイクルでの確認に加えて人間による実機/実画面での最終確認を推奨する。**
+- 次回予定: `69`(カードシャドウの調整: 不透明度低減・暖色寄りに変更)に着手予定。
+  `44`は引き続き実機確認待ちで保留。`68`は人間の最終確認待ち。
+- blocked / partial: なし。
+

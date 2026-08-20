@@ -296,19 +296,23 @@ export function mount(outlet, params) {
       timeline.className = 'timeline';
       timeline.hidden = isCollapsed;
 
-      dayItems.forEach((item, index) => {
+      dayItems.forEach((item) => {
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
 
+        const isNext = nextItem?.id === item.id;
+
+        // 2026-08-20(docs/ROADMAP.md「68」): 外部レビューで「丸バッジではなく足あと/
+        // 旗のアイコンにする」と提案され、連番の数字バッジから、道のりの1歩を表す
+        // 足あとアイコンに変更した。「次の予定」(60で追加)の項目だけは旗アイコンに
+        // して、これから向かう目印であることを視覚的に補強する。
         const marker = document.createElement('div');
         marker.className = 'timeline-marker';
         const badge = document.createElement('span');
         badge.className = 'timeline-marker-badge';
-        badge.textContent = String(index + 1);
+        badge.innerHTML = isNext ? icons.flag : icons.footprint;
         marker.appendChild(badge);
         timelineItem.appendChild(marker);
-
-        const isNext = nextItem?.id === item.id;
 
         const content = document.createElement('div');
         content.className = isNext ? 'timeline-content card timeline-content-next' : 'timeline-content card';

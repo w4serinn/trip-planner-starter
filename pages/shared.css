@@ -375,12 +375,17 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+/* 2026-08-20(docs/ROADMAP.md「68」): 外部レビューで「完璧に整列させない」揺らぎが
+   しおりらしさを演出するとの提案を受け、写真を少し傾けて貼ったような遊びを
+   1〜2箇所に限定して加える(テキスト編集を伴うカードは読み書きしにくくなるため
+   対象外とし、常時静的な表示のみの箇所に絞った)。旅行名カードはその1箇所。 */
 .trip-name-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
+  transform: rotate(-0.6deg);
 }
 
 .trip-name-row h2 {
@@ -456,8 +461,10 @@ button:disabled {
 }
 
 /* 2026-08-19(docs/ROADMAP.md「25. しおりタイムラインの装飾強化」): 単なる丸ドットから、
-   その日の何番目の予定かを表示する連番バッジに強化。時刻は既に予定タイトル側に
-   表示されているため、ここでは時刻の重複表示ではなく連番にして時系列の見通しを補う。 */
+   連番バッジに強化(時系列の見通しを補う)。
+   2026-08-20(docs/ROADMAP.md「68」): 外部レビューで「丸バッジではなく足あと/旗の
+   アイコンにする」と提案され、連番の数字から足あと/旗アイコン(src/icons.js)に
+   差し替えた。丸いピル型の見た目自体は維持する。 */
 .timeline-marker-badge {
   width: 22px;
   height: 22px;
@@ -468,8 +475,6 @@ button:disabled {
   border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: var(--color-surface);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-subheading);
 }
 
 .timeline-marker::after {
@@ -665,14 +670,19 @@ button:disabled {
   font-size: var(--font-size-sm);
 }
 
+/* 2026-08-20(docs/ROADMAP.md「68」): 外部レビューで「直線ではなく波線・点線に」と
+   提案され、ミシン目・切り取り線のような点線に変更した(しおりのページの
+   切れ目を思わせる意図)。 */
 .divider::before,
 .divider::after {
   content: "";
   flex: 1;
-  height: 1px;
-  background: var(--color-border);
+  height: 0;
+  border-top: 2px dotted var(--color-border);
 }
 
+/* 2026-08-20(docs/ROADMAP.md「68」): 傾き演出の2箇所目。発行された合言葉を、
+   チケットに刻印されたような遊び心のある見た目にする。 */
 .passphrase {
   font-size: var(--font-size-xl);
   font-weight: bold;
@@ -680,6 +690,7 @@ button:disabled {
   text-align: center;
   color: var(--color-primary-dark);
   margin: var(--space-sm) 0;
+  transform: rotate(0.8deg);
 }
 
 .copy-feedback {
