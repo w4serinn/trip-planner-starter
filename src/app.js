@@ -36,7 +36,7 @@ let isMenuOpen = false;
 function closeMenu() {
   isMenuOpen = false;
   sidebar.classList.remove('sidebar-open');
-  sidebarBackdrop.hidden = true;
+  sidebarBackdrop.classList.remove('sidebar-backdrop-visible');
   menuToggle.setAttribute('aria-expanded', 'false');
   menuToggle.innerHTML = icons.menu;
 }
@@ -44,7 +44,7 @@ function closeMenu() {
 function openMenu() {
   isMenuOpen = true;
   sidebar.classList.add('sidebar-open');
-  sidebarBackdrop.hidden = false;
+  sidebarBackdrop.classList.add('sidebar-backdrop-visible');
   menuToggle.setAttribute('aria-expanded', 'true');
   menuToggle.innerHTML = icons.close;
   // ドロワー内の最初のリンクへフォーカスを移す(キーボード操作時、開いた直後に

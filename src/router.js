@@ -61,6 +61,13 @@ async function render() {
 
   const cleanup = await matched.route.mount(outlet, matched.params);
   currentCleanup = typeof cleanup === 'function' ? cleanup : null;
+
+  // 画面切り替えのフェードイン(docs/ROADMAP.md「37」)。同じクラスを連続で
+  // 付け直してもCSSアニメーションは再生されないため、一度外してリフローを
+  // 強制してから付け直す。
+  outlet.classList.remove('view-enter');
+  void outlet.offsetWidth;
+  outlet.classList.add('view-enter');
 }
 
 // 同じハッシュへのnavigateでも(hashchangeが発火しないため)強制的に再描画する。

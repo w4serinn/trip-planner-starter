@@ -1410,3 +1410,44 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   タブ遷移アニメーション)に着手。
 - blocked / partial: なし。
 
+## 2026-08-20 11:48
+- 実装: 第9期の残タスク2つを実施し、第9期を完了させた。(1) `36`:
+  `pages/shared.css`の`.sidebar`をモバイル幅では常時`display: flex`で描画したまま
+  `transform: translateX(-100%)`(閉)⇔`translateX(0)`(開)+`transition`で
+  スライド開閉させる方式に変更(閉状態は`pointer-events: none`)。
+  `#sidebar-backdrop`も`hidden`属性トグルから`sidebar-backdrop-visible`クラスの
+  トグル(`src/app.js`のopenMenu/closeMenu)による`opacity`フェードに変更。768px
+  以上の常設サイドバー表示は`transform: none; transition: none;`で無効化。
+  `display: flex`が`[hidden]`属性のUAスタイルに勝ってしまう問題に対応するため
+  `.sidebar[hidden] { display: none; }`を追加。(2) `37`: `src/router.js`の
+  `render()`で、ビューマウント直後に`#view`へ`view-enter`クラスを付け直す方式
+  (全ビュー共通、ビュー側の実装変更は不要)を採用。`pages/shared.css`に
+  `@keyframes view-enter`(フェードイン+8pxのtranslateY、0.2s)を追加し、
+  `prefers-reduced-motion: reduce`では無効化する。
+- 動作確認: OK。開発サーバーをローカルで起動し、Playwright(npxキャッシュ経由で
+  インストール済みのものを利用)でモバイル幅(375px)・デスクトップ幅(1280px)
+  両方を検証した。(36) 閉状態の`transform`がオフスクリーン・`pointer-events:
+  none`・バックドロップ`opacity: 0`であること、ハンバーガーボタンで開くと
+  `transform`が解除され`pointer-events: auto`・バックドロップ`opacity: 1`になり
+  実際にサイドバーリンクがクリックできること、タブ遷移後は自動的に閉じること、
+  バックドロップクリックでも閉じること、768px以上では常に表示されハンバーガー
+  ボタンが非表示になること、旅行未選択の画面(旅行一覧)では`#sidebar`が
+  `display: none`のままであることを確認。(37) 概要タブ・企画メモタブいずれも
+  表示直後に`#view`へ`.view-enter`クラスが付与され、
+  `getComputedStyle(view).animationName`が`view-enter`になっていることを確認。
+  console/pageerrorは0件。`npm run check`(lint・test)成功。検証で作成した
+  Firestore上のトリップ4件(実装修正の試行錯誤中に作成。いずれもサブコレクション
+  文書・scratchText/planningNotesTextへの書き込みは無し)は、名前を
+  「[検証用/削除不可] evolve cycle4 36/37検証で作成」に更新して共有テストグループ
+  `FMXRZYW7`内に残置(旅行ドキュメント自体は`firestore.rules`の方針上delete不可の
+  ため。前サイクルまでと同じ慣習)。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・セキュリティ方針への影響
+  なし(CSS/JSのみの変更)。`docs/screens.md`のタブ=ルート対応・画面構成は不変
+  (見た目のアニメーションのみ)。モバイル幅(375px)での動作はPlaywrightで実際に
+  確認済み。
+- 次回予定: 第9期完了によりROADMAPに実行可能なタスクが無い状態。次回サイクルは
+  前回(第8期完了直後)と同様、ドキュメント(docs/firestore-design.md・
+  docs/screens.md)が最新の実装(第9期の33〜37)を反映できているかの整合性確認、
+  または人間からの次の方向性を待つ。
+- blocked / partial: なし。
+

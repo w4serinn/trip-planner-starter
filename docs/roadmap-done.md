@@ -1205,3 +1205,44 @@
       日付の項目が作成されることを実Firestore(共有テストグループ`FMXRZYW7`)で確認
       (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
       検証で作成したしおり項目はFirestoreから削除済み。
+
+## 36. ハンバーガーメニューの開閉にアニメーションを追加
+- [x] (S) `.sidebar`(モバイルのドロワー状態)を、モバイル幅では常時DOM上に
+      `display: flex`で描画したまま、`transform: translateX(-100%)`(閉)⇔
+      `translateX(0)`(開)+`transition: transform 0.25s ease`で開閉させる方式に
+      変更した。閉状態は`pointer-events: none`にして誤操作を防いでいる。
+      `#sidebar-backdrop`も同様に`opacity`のフェード(`sidebar-backdrop-visible`
+      クラスのトグル。`src/app.js`のopenMenu/closeMenuが`hidden`属性の代わりに
+      このクラスをトグルするよう変更)で開閉させた。768px以上の常設サイドバー
+      表示では`transform: none; transition: none;`で上書きし、アニメーションを
+      無効化して常時表示のまま維持している。旅行未選択の画面での`sidebar.hidden`
+      (nav自体を消す)は、author側の`display: flex`が`[hidden]`属性のUAスタイル
+      より優先されてしまうため、`.sidebar[hidden] { display: none; }`を明示的に
+      追加して対処した
+
+      Playwrightで、モバイル幅(375px)で①閉状態は`transform`がオフスクリーン
+      (`matrix(1, 0, 0, 1, -220, 0)`)・`pointer-events: none`・バックドロップ
+      `opacity: 0`であること、②ハンバーガーボタンで開くと`transform`が解除され
+      (`matrix(1, 0, 0, 1, 0, 0)`)・`pointer-events: auto`・バックドロップ
+      `opacity: 1`になり、実際にサイドバー内リンクがクリックできること、③タブ
+      遷移後は自動的に閉状態に戻ること、④バックドロップをクリックしても閉じる
+      こと、⑤768px以上では常に`display: flex`・`transform: none`・
+      `pointer-events: auto`でハンバーガーボタン自体が非表示になること、⑥旅行
+      未選択の画面(旅行一覧)では`#sidebar`が`display: none`のままであること、を
+      確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)
+      成功。
+
+## 37. タブ(画面)遷移にもアニメーションを追加
+- [x] (M) `src/router.js`の`render()`で、ビューのマウント直後に`#view`へ
+      `view-enter`クラスを付け直す方式(選択肢(a): 全ビュー共通、ビュー側の実装
+      変更は不要)を採用した。同じクラスを連続で付け直してもCSSアニメーションは
+      再生されないため、一度`classList.remove`してから`offsetWidth`読み取りで
+      リフローを強制し、`classList.add`し直している。`pages/shared.css`に
+      `@keyframes view-enter`(フェードイン+8pxの`translateY`、0.2s ease)を追加し、
+      `prefers-reduced-motion: reduce`環境ではアニメーションを無効化する
+
+      Playwrightで、概要タブ表示直後・企画メモタブへの遷移直後いずれも`#view`に
+      `.view-enter`クラスが付与され、`getComputedStyle(view).animationName`が
+      `view-enter`になっていることを確認した(2026-08-20)。console/pageerrorは
+      0件。`npm run check`(lint・test)成功。これで第9期(運用フィードバック
+      その2)は全タスク完了。
