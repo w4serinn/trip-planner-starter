@@ -1,31 +1,22 @@
 // H. しおりタブビュー(SPA)
-// しおり項目の追加(やること名・日付・時間目安(任意)・場所リンク(任意)・メモ(任意))と、
-// 日付グルーピング＋各日内での時間順自動ソート表示を行う。
+// しおり項目の追加・編集・削除(やること名・日付・時間目安(任意)・場所リンク(任意)・
+// メモ(任意))と、日付グルーピング＋各日内での時間順自動ソート表示を行う。
 // データモデルはdocs/firestore-design.md「itineraryItems」参照。
 // 時間入力は<input type="time">のネイティブUIではなく、「午前/午後」「時(0〜12)」
 // 「分(00/15/30/45)」の3セレクトボックスにする(docs/ROADMAP.md「15」)。保存する
-// データ形式("HH:MM"の24時間表記文字列)自体は変えない。
+// データ形式("HH:MM"の24時間表記文字列)自体は変えない。時間セレクトのロジックは
+// src/timeSelect.jsに切り出し、src/views/scratch.jsの簡易フォームと共用する
+// (docs/ROADMAP.md「38」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { addDocument, subscribeToCollection } from '../firestore.js';
+import { addDocument, updateDocument, deleteDocument, subscribeToCollection } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
+import { HOUR_OPTIONS, MINUTE_OPTIONS, buildTimeString, parseTimeString } from '../timeSelect.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
-
-const HOUR_OPTIONS = Array.from({ length: 13 }, (_, i) => String(i)); // 0〜12
-const MINUTE_OPTIONS = ['00', '15', '30', '45'];
-
-// 「午前/午後」+「0〜12時」+「分」から24時間表記の"HH:MM"文字列を組み立てる。
-// 0時・12時はそれぞれのAM/PM内で同じ境界時刻を指すエイリアスとして扱う
-// (午前0時=午前12時=00:00、午後0時=午後12時=12:00)。
-function buildTimeString(amPm, hour, minute) {
-  const hourNum = Number(hour);
-  const hour24 = (hourNum % 12) + (amPm === 'PM' ? 12 : 0);
-  return `${String(hour24).padStart(2, '0')}:${minute}`;
-}
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -108,10 +99,30 @@ export function mount(outlet, params) {
   // 置き換え。
   const datePicker = createDatePicker(datePickerContainer, { mode: 'single' });
 
+  // 編集中の項目ID(docs/ROADMAP.md「39」)。nullなら新規追加モード。
+  let editingItemId = null;
+
   function openForm() {
     toggleFormButton.hidden = true;
     itemForm.hidden = false;
     titleInput.focus();
+  }
+
+  // 既存項目の内容をフォームへ流し込み、編集モードとして開く。
+  // 追加フォームを再利用するため、Firestoreへの書き込み処理(onItemSubmit)は
+  // editingItemIdの有無でaddDocument/updateDocumentを切り替える。
+  function openFormForEdit(item) {
+    editingItemId = item.id;
+    submitButton.textContent = '保存する';
+    titleInput.value = item.title;
+    datePicker.setValue(item.date);
+    const { amPm, hour, minute } = parseTimeString(item.time);
+    timeAmPmSelect.value = amPm;
+    timeHourSelect.value = hour;
+    timeMinuteSelect.value = minute;
+    locationInput.value = item.locationUrl || '';
+    noteInput.value = item.note || '';
+    openForm();
   }
 
   function closeForm() {
@@ -125,6 +136,8 @@ export function mount(outlet, params) {
     timeMinuteSelect.value = '';
     locationInput.value = '';
     noteInput.value = '';
+    editingItemId = null;
+    submitButton.textContent = '追加する';
   }
 
   const onToggleFormClick = () => openForm();
@@ -140,6 +153,21 @@ export function mount(outlet, params) {
     if (Number.isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   }
+
+  // 誤操作防止のため、ブラウザ標準の確認ダイアログを挟んでから削除する
+  // (docs/ROADMAP.md「39」)。
+  const onDeleteItemClick = async (item, deleteButton) => {
+    if (!window.confirm(`「${item.title}」を削除しますか?`)) return;
+    deleteButton.disabled = true;
+    try {
+      await deleteDocument(`${itemsPath}/${item.id}`);
+      if (editingItemId === item.id) closeForm();
+    } catch (error) {
+      console.error(error);
+      errorText.textContent = 'しおり項目の削除に失敗しました。時間をおいて再度お試しください。';
+      deleteButton.disabled = false;
+    }
+  };
 
   function renderItems(items) {
     itemList.innerHTML = '';
@@ -214,6 +242,25 @@ export function mount(outlet, params) {
         meta.textContent = `追加: ${item.addedBy}`;
         content.appendChild(meta);
 
+        const itemActions = document.createElement('div');
+        itemActions.className = 'button-row';
+
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'btn-secondary';
+        editButton.textContent = '編集';
+        editButton.addEventListener('click', () => openFormForEdit(item));
+        itemActions.appendChild(editButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn-secondary';
+        deleteButton.textContent = '削除';
+        deleteButton.addEventListener('click', () => onDeleteItemClick(item, deleteButton));
+        itemActions.appendChild(deleteButton);
+
+        content.appendChild(itemActions);
+
         timelineItem.appendChild(content);
         timeline.appendChild(timelineItem);
       });
@@ -268,18 +315,18 @@ export function mount(outlet, params) {
 
     submitButton.disabled = true;
     try {
-      await addDocument(itemsPath, {
-        title,
-        date,
-        time,
-        locationUrl,
-        note,
-        addedBy: session.name,
-      });
+      if (editingItemId) {
+        // 編集時はaddedBy(追加者)を書き換えない。
+        await updateDocument(`${itemsPath}/${editingItemId}`, { title, date, time, locationUrl, note });
+      } else {
+        await addDocument(itemsPath, { title, date, time, locationUrl, note, addedBy: session.name });
+      }
       closeForm();
     } catch (error) {
       console.error(error);
-      errorText.textContent = 'しおり項目の追加に失敗しました。時間をおいて再度お試しください。';
+      errorText.textContent = editingItemId
+        ? 'しおり項目の更新に失敗しました。時間をおいて再度お試しください。'
+        : 'しおり項目の追加に失敗しました。時間をおいて再度お試しください。';
     } finally {
       submitButton.disabled = false;
     }

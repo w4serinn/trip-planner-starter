@@ -1246,3 +1246,39 @@
       `view-enter`になっていることを確認した(2026-08-20)。console/pageerrorは
       0件。`npm run check`(lint・test)成功。これで第9期(運用フィードバック
       その2)は全タスク完了。
+
+## 38. 雑多メモ「→しおりへ」の簡易フォームで日付以外も入力できるようにする
+- [x] (S) `src/views/scratch.js`の`#to-itinerary-form`に、`src/views/itinerary.js`と
+      同様の時間目安(午前/午後・時・分の3セレクトボックス)・場所リンク(任意)・
+      メモ(任意)の入力欄を追加した。時間セレクトの選択肢配列(`HOUR_OPTIONS`・
+      `MINUTE_OPTIONS`)と`buildTimeString()`(3セレクト→"HH:MM"文字列への変換)は
+      `src/views/itinerary.js`に重複定義されていたため、新規`src/timeSelect.js`に
+      切り出し、両ビューから共用する形にした(あわせて編集フォームのプリフィル用に
+      `parseTimeString()`("HH:MM"→3セレクトの値への逆変換)も追加。`39`で使用)。
+      タイトルは引き続き雑多メモの選択範囲をそのまま使う(編集不可のまま)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、「→しおりへ」
+      フォームに時間目安3セレクト・場所リンク・メモの入力欄が存在すること、それぞれに
+      値(19:30・URL・メモ文)を入力して送信すると、しおりタブの該当項目に正しく
+      反映されることを確認した(2026-08-20)。console/pageerrorは0件。`npm run check`
+      (lint・test)成功。
+
+## 39. しおり項目の編集・削除機能を追加
+- [x] (M) `src/views/itinerary.js`にしおり項目のカードごとの「編集」「削除」ボタンを
+      追加した。編集は既存の追加フォーム(`#item-form`)を再利用し、`editingItemId`
+      (null=新規追加モード)の有無で送信ボタンの文言(「追加する」⇔「保存する」)・
+      `addDocument`/`updateDocument`の呼び分けを行う。`openFormForEdit(item)`が
+      タイトル・日付(`datePicker.setValue`)・時間目安(`parseTimeString`で逆変換)・
+      場所リンク・メモをフォームへ流し込む。編集時は`addedBy`(追加者)を更新ペイロード
+      に含めず、元の追加者名を保持する。削除は`window.confirm()`による確認後、
+      `src/firestore.js`に新規追加した`deleteDocument(path)`(`deleteDoc`のラッパー)を
+      呼ぶ。`firestore.rules`は`{subcollection}/{docId}`の`update`/`delete`をすでに
+      `if true`で許可済みのため、ルール変更は無し
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、しおり項目の
+      「編集」ボタンを押すとフォームにタイトル・日付・時間・場所リンク・メモが
+      正しくプリフィルされ送信ボタンが「保存する」になること、メモを書き換えて
+      保存すると一覧に反映されaddedByは元のまま保たれること、通常の「追加」ボタンから
+      開くと送信ボタンが「追加する」に戻ること、「削除」ボタン→確認ダイアログでOKする
+      と項目が削除され空状態表示になることを確認した(2026-08-20)。console/pageerrorは
+      0件。`npm run check`(lint・test)成功。これで第10期は全タスク完了。

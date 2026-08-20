@@ -1483,3 +1483,42 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   (新機能の要望、既存画面のさらなる改善案等)を待つ。
 - blocked / partial: なし。
 
+## 2026-08-20 12:47
+- 実装: 人間との会話中に追記された第10期の2タスクを実施。(1) `38`:
+  `src/views/scratch.js`の「→しおりへ」簡易フォームに、時間目安(午前/午後・時・分の
+  3セレクトボックス)・場所リンク(任意)・メモ(任意)の入力欄を追加した。
+  `src/views/itinerary.js`に重複定義されていた`HOUR_OPTIONS`・`MINUTE_OPTIONS`・
+  `buildTimeString()`を新規`src/timeSelect.js`に切り出し、両ビューから共用する形に
+  リファクタリングした(あわせて編集フォームのプリフィル用に`parseTimeString()`も
+  追加)。(2) `39`: `src/views/itinerary.js`にしおり項目カードごとの「編集」
+  「削除」ボタンを追加した。編集は既存の追加フォームを再利用し、`editingItemId`の
+  有無で`addDocument`/`updateDocument`を切り替える(`addedBy`は編集時に書き換え
+  ない)。削除は`window.confirm()`の確認後、`src/firestore.js`に新規追加した
+  `deleteDocument(path)`を呼ぶ。`firestore.rules`はサブコレクション文書の
+  `update`/`delete`をすでに許可済みのため、ルール変更は無し。
+- 動作確認: OK。開発サーバーをローカルで起動し、Playwright(npxキャッシュ経由で
+  インストール済みのものを利用)で実Firestore(共有テストグループ`FMXRZYW7`)に
+  対し検証した。(38) 「→しおりへ」フォームに時間・場所・メモの入力欄が存在し、
+  入力した値(19:30・URL・メモ文)がしおり項目に正しく反映されることを確認。
+  (39) 「編集」ボタンでフォームにタイトル・日付・時間・場所リンク・メモが正しく
+  プリフィルされ送信ボタンが「保存する」に変わること、保存すると一覧に反映され
+  `addedBy`は元のまま保たれること、通常の「追加」ボタンから開くと「追加する」に
+  戻ること、「削除」→確認ダイアログでOKすると項目が削除され空状態表示になることを
+  確認。console/pageerrorは0件。`npm run check`(lint・test)成功。検証で作成した
+  Firestore上のトリップ2件(試行錯誤中に作成)は、名前を「[検証用/削除不可] evolve
+  cycle5 38/39検証で作成」に更新し、作成したしおり項目・雑多メモのテキストは
+  テスト終了時に削除・空文字列リセット済みで共有テストグループ`FMXRZYW7`内に残置
+  (旅行ドキューメント自体はfirestore.rulesの方針上delete不可のため。前サイクル
+  までと同じ慣習)。
+- レビュー: OK。`docs/firestore-design.md`のitineraryItemsのフィールド構造
+  (title/date/time/locationUrl/note/addedBy)から逸脱なし、新規フィールドの追加は
+  無い(既存フィールドに実際に値を入れられるようにしただけ)。`firestore.rules`の
+  変更も無し(既存のupdate/delete許可をUIから使えるようにしただけ)。
+  `docs/screens.md`の画面構成・遷移にも影響なし。追加したフォーム項目・編集削除
+  ボタンはいずれも既存のCSSクラス(`.field`・`.time-select-row`・`.button-row`・
+  `.btn-secondary`)を再利用しており、モバイル幅で崩れる心配なし。
+- 次回予定: 引き続きROADMAPに実行可能なタスクが無い状態。編集・削除UIは今回
+  しおりのみに対応したため、行き先決め・宿泊候補・確定宿泊等の他サブコレクションへの
+  拡張が今後の候補(現時点では人間から明示的な要望なし)。人間からの次の方向性を待つ。
+- blocked / partial: なし。
+

@@ -6,6 +6,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   collection,
   getDocs,
   addDoc,
@@ -50,6 +51,13 @@ export async function removeField(path, field) {
 export async function addDocument(collectionPath, data) {
   const ref = await addDoc(collection(db, collectionPath), data);
   return ref.id;
+}
+
+// サブコレクション文書の削除(docs/firestore-design.md「削除権限の方針」参照。
+// groups/trips自体はfirestore.rulesでdelete禁止のため、このモジュールにも
+// 対応する削除関数を用意していない)。
+export async function deleteDocument(path) {
+  await deleteDoc(doc(db, path));
 }
 
 export async function listCollection(collectionPath) {

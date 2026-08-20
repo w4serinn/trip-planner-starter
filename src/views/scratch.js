@@ -9,6 +9,7 @@ import { loadSession } from '../session.js';
 import { getDocument, subscribeToDocument, updateDocument, addDocument, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 import { createDatePicker } from '../datePicker.js';
+import { HOUR_OPTIONS, MINUTE_OPTIONS, buildTimeString } from '../timeSelect.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -48,6 +49,32 @@ export function mount(outlet, params) {
         <label>日付</label>
         <div id="to-itinerary-date-picker"></div>
       </div>
+      <div class="field">
+        <label for="to-itinerary-time-ampm">時間目安(任意)</label>
+        <div class="time-select-row">
+          <select id="to-itinerary-time-ampm" name="timeAmPm">
+            <option value="">--</option>
+            <option value="AM">午前</option>
+            <option value="PM">午後</option>
+          </select>
+          <select id="to-itinerary-time-hour" name="timeHour">
+            <option value="">時</option>
+            ${HOUR_OPTIONS.map((h) => `<option value="${h}">${h}</option>`).join('')}
+          </select>
+          <select id="to-itinerary-time-minute" name="timeMinute">
+            <option value="">分</option>
+            ${MINUTE_OPTIONS.map((m) => `<option value="${m}">${m}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="to-itinerary-location">場所リンク(任意)</label>
+        <input type="url" id="to-itinerary-location" name="locationUrl" placeholder="https://maps.app.goo.gl/..." />
+      </div>
+      <div class="field">
+        <label for="to-itinerary-note">メモ(任意)</label>
+        <input type="text" id="to-itinerary-note" name="note" />
+      </div>
       <p class="error-text" id="to-itinerary-error-text"></p>
       <div class="button-row">
         <button type="submit">作成する</button>
@@ -77,6 +104,11 @@ export function mount(outlet, params) {
   const toItineraryButton = outlet.querySelector('#to-itinerary-button');
   const toItineraryForm = outlet.querySelector('#to-itinerary-form');
   const toItineraryDatePickerContainer = outlet.querySelector('#to-itinerary-date-picker');
+  const toItineraryTimeAmPmSelect = outlet.querySelector('#to-itinerary-time-ampm');
+  const toItineraryTimeHourSelect = outlet.querySelector('#to-itinerary-time-hour');
+  const toItineraryTimeMinuteSelect = outlet.querySelector('#to-itinerary-time-minute');
+  const toItineraryLocationInput = outlet.querySelector('#to-itinerary-location');
+  const toItineraryNoteInput = outlet.querySelector('#to-itinerary-note');
   const toItineraryErrorText = outlet.querySelector('#to-itinerary-error-text');
   const toItineraryCancelButton = outlet.querySelector('#to-itinerary-cancel');
   const toLodgingButton = outlet.querySelector('#to-lodging-button');
@@ -224,6 +256,11 @@ export function mount(outlet, params) {
     pendingItineraryRange = selection;
     toItineraryErrorText.textContent = '';
     toItineraryDatePicker.setValue(null);
+    toItineraryTimeAmPmSelect.value = '';
+    toItineraryTimeHourSelect.value = '';
+    toItineraryTimeMinuteSelect.value = '';
+    toItineraryLocationInput.value = '';
+    toItineraryNoteInput.value = '';
     toItineraryForm.hidden = false;
   };
   toItineraryButton.addEventListener('click', onToItineraryClick);
@@ -249,15 +286,27 @@ export function mount(outlet, params) {
       return;
     }
 
+    const amPm = toItineraryTimeAmPmSelect.value;
+    const hour = toItineraryTimeHourSelect.value;
+    const minute = toItineraryTimeMinuteSelect.value;
+    const timeFieldsFilled = [amPm, hour, minute].filter((v) => v !== '').length;
+    if (timeFieldsFilled > 0 && timeFieldsFilled < 3) {
+      toItineraryErrorText.textContent = '時間を指定する場合は、午前/午後・時・分をすべて選択してください。';
+      return;
+    }
+    const time = timeFieldsFilled === 3 ? buildTimeString(amPm, hour, minute) : '';
+    const locationUrl = toItineraryLocationInput.value.trim();
+    const note = toItineraryNoteInput.value.trim();
+
     const submitButton = toItineraryForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     try {
       await addDocument(itemsPath, {
         title: pendingItineraryRange.text,
         date,
-        time: '',
-        locationUrl: '',
-        note: '',
+        time,
+        locationUrl,
+        note,
         addedBy: session.name,
       });
 
