@@ -1381,3 +1381,27 @@
       対応不要と判断)。console/pageerrorは0件。`npm run check`(lint・test)成功。
       これで第11期「雑多メモタブ」「雑多メモ・企画メモタブ共通」「日程調整タブ」の
       対応可能な項目は全て完了(`44`は実機確認が必要なため保留、`52`は未着手のまま)。
+
+## 56. 宿泊候補→確定宿泊のワンタップ変換 / 64. 宿泊候補と確定宿泊のつながりの追跡
+2つのタスクは1つの機能として一緒に実装した(`64`のROADMAP記載通り)。
+- [x] (M) `src/views/lodging.js`の宿泊候補カードに「確定にする」ボタンを追加した。
+      押すと既存の「確定宿泊を追加」フォーム(`#stay-form`)を再利用して開き、
+      候補の`url`・`note`をあらかじめ入力した状態にする(チェックイン/チェックアウト
+      日のみ追加入力すればよい)。フォーム送信時、`pendingSourceCandidateId`
+      (「確定にする」ボタン経由の場合のみ設定される)があれば`confirmedStays`
+      ドキュメントに`sourceCandidateId`として記録する。通常の「確定宿泊を追加」
+      ボタン(候補を経由しない直接追加)ではこのフィールド自体を持たせない
+- [x] (M) `confirmedStays`のいずれかから`sourceCandidateId`で参照されている候補には
+      「確定済み」バッジ(既存の`.complete-badge`を再利用)を表示する。元の
+      `lodgingCandidates`ドキュメントは削除・変更しない(第9期「34」のカット→コピー
+      変更と同じ方針で、データを失わない方向を優先)。confirmedStaysの購読
+      コールバック内で`renderCandidates(currentCandidates)`も呼び、確定宿泊の変更が
+      候補側のバッジにリアルタイムで反映されるようにした。`docs/firestore-design.md`
+      に`confirmedStays.sourceCandidateId(optional)`と設計判断のセクションを追記した
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、宿泊候補
+      カードに「確定にする」ボタンが表示されること、押すと確定宿泊フォームに
+      URL・メモが引き継がれた状態で開くこと、送信すると確定宿泊一覧に反映され
+      候補カードに「確定済み」バッジがリアルタイムで表示されること、通常の
+      「確定宿泊を追加」ボタンでは空の状態で開き候補一覧に影響しないことを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。

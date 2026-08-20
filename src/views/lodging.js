@@ -2,7 +2,12 @@
 // 宿泊候補の追加(URL・メモ)・一覧表示(投票機能は持たない。docs/requirements.md 7-3参照。
 // 決定は口頭・Discord等で行う想定)と、確定宿泊の追加(URL・メモ・チェックイン/アウト日、
 // 複数件・飛び飛びの日程に対応)・一覧表示(期間順)を行う。
-// データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」参照。
+// 宿泊候補カードの「確定にする」ボタンから、URL・メモを引き継いだ確定宿泊フォームを
+// 開ける(docs/ROADMAP.md「56」)。確定時、元候補のIDを`sourceCandidateId`として
+// confirmedStaysに記録し、候補側には「確定済み」バッジを表示して追跡できるようにする
+// (docs/ROADMAP.md「64」)。
+// データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」
+// 「宿泊候補→確定宿泊のワンタップ変換」参照。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, subscribeToCollection, serverTimestamp } from '../firestore.js';
@@ -121,6 +126,9 @@ export function mount(outlet, params) {
       return;
     }
 
+    // どの候補がすでに確定宿泊になったか(docs/ROADMAP.md「64」)。
+    const confirmedCandidateIds = new Set(currentStays.map((stay) => stay.sourceCandidateId).filter(Boolean));
+
     const sorted = [...candidates].sort((a, b) => (b.addedAt?.seconds ?? 0) - (a.addedAt?.seconds ?? 0));
 
     for (const candidate of sorted) {
@@ -152,6 +160,20 @@ export function mount(outlet, params) {
       meta.className = 'subtitle';
       meta.textContent = `追加: ${candidate.addedBy}`;
       card.appendChild(meta);
+
+      if (confirmedCandidateIds.has(candidate.id)) {
+        const confirmedText = document.createElement('p');
+        confirmedText.className = 'complete-badge';
+        confirmedText.textContent = '確定済み';
+        card.appendChild(confirmedText);
+      }
+
+      const confirmButton = document.createElement('button');
+      confirmButton.type = 'button';
+      confirmButton.className = 'btn-secondary';
+      confirmButton.textContent = '確定にする';
+      confirmButton.addEventListener('click', () => onConfirmCandidateClick(candidate));
+      card.appendChild(confirmButton);
 
       candidateList.appendChild(card);
     }
@@ -226,6 +248,10 @@ export function mount(outlet, params) {
   const stayCheckInPicker = createDatePicker(stayCheckInContainer, { mode: 'single' });
   const stayCheckOutPicker = createDatePicker(stayCheckOutContainer, { mode: 'single' });
 
+  // 宿泊候補の「確定にする」ボタン経由で開いた場合、由来の候補ID(docs/ROADMAP.md
+  // 「64」)を保持しておく。通常の「確定宿泊を追加」ボタン経由ではnullのまま。
+  let pendingSourceCandidateId = null;
+
   function openStayForm() {
     toggleStayFormButton.hidden = true;
     stayForm.hidden = false;
@@ -240,13 +266,29 @@ export function mount(outlet, params) {
     stayNoteInput.value = '';
     stayCheckInPicker.setValue(null);
     stayCheckOutPicker.setValue(null);
+    pendingSourceCandidateId = null;
   }
 
-  const onToggleStayFormClick = () => openStayForm();
+  const onToggleStayFormClick = () => {
+    pendingSourceCandidateId = null;
+    openStayForm();
+  };
   toggleStayFormButton.addEventListener('click', onToggleStayFormClick);
 
   const onCancelStayFormClick = () => closeStayForm();
   cancelStayFormButton.addEventListener('click', onCancelStayFormClick);
+
+  // 宿泊候補カードの「確定にする」ボタン(docs/ROADMAP.md「56」)。既存の
+  // 「確定宿泊を追加」フォームを再利用し、URL・メモを候補から引き継いで開く。
+  const onConfirmCandidateClick = (candidate) => {
+    pendingSourceCandidateId = candidate.id;
+    stayErrorText.textContent = '';
+    stayUrlInput.value = candidate.url;
+    stayNoteInput.value = candidate.note || '';
+    stayCheckInPicker.setValue(null);
+    stayCheckOutPicker.setValue(null);
+    openStayForm();
+  };
 
   let currentStays = [];
 
@@ -311,6 +353,9 @@ export function mount(outlet, params) {
     (stays) => {
       currentStays = stays;
       renderStays(currentStays);
+      // 確定宿泊が変わると、候補側の「確定済み」バッジ(docs/ROADMAP.md「64」)も
+      // 追随させる必要があるため、候補一覧も再描画する。
+      renderCandidates(currentCandidates);
       if (isFirstStaysSnapshot) {
         isFirstStaysSnapshot = false;
         staySubmitButton.disabled = false;
@@ -342,13 +387,11 @@ export function mount(outlet, params) {
 
     staySubmitButton.disabled = true;
     try {
-      await addDocument(confirmedStaysPath, {
-        url,
-        note,
-        checkIn,
-        checkOut,
-        addedBy: session.name,
-      });
+      const payload = { url, note, checkIn, checkOut, addedBy: session.name };
+      // 「確定にする」ボタン経由(docs/ROADMAP.md「56」)の場合のみ、由来の候補IDを
+      // 記録する(docs/ROADMAP.md「64」)。通常の直接追加ではフィールド自体を持たせない。
+      if (pendingSourceCandidateId) payload.sourceCandidateId = pendingSourceCandidateId;
+      await addDocument(confirmedStaysPath, payload);
       closeStayForm();
     } catch (error) {
       console.error(error);

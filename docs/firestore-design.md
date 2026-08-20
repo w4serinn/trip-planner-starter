@@ -28,6 +28,9 @@ groups/{groupCode}                          … グループ（合言葉がド�
 
     confirmedStays/{id}
       - url, note, checkIn, checkOut, addedBy
+      - sourceCandidateId(optional)              （由来となったlodgingCandidatesのID。
+        「確定にする」ボタン経由の作成時のみ設定される。2026-08-20追加、下記
+        「宿泊候補→確定宿泊のワンタップ変換」参照）
 
     itineraryItems/{id}
       - title, date, time(optional), locationUrl(optional), note(optional), addedBy
@@ -192,3 +195,19 @@ Firestoreのマップキーには使える文字に制限があり（`.` `$` `/`
 `sanitizeMapKey(key)`でこれらの文字を`_`に置換してからマップキーとして使う。
 `src/views/destinations.js`（`votes`マップ）・`src/views/schedule.js`（`responses`マップ）が
 それぞれ`sanitizeMapKey(session.name)`を呼び出している。
+
+## 宿泊候補→確定宿泊のワンタップ変換（確定・実装済み / 2026-08-20）
+2026-08-20、人間との会話で「あのAirbnbの候補、結局確定したんだっけ?」を確認する手段が
+無いという不便な点が見つかり、`docs/ROADMAP.md`「56」「64」として承認済み。
+
+- 宿泊候補カードに「確定にする」ボタンを追加した。押すと既存の「確定宿泊を追加」フォーム
+  (`#stay-form`)が開き、候補の`url`・`note`があらかじめ入力された状態になる
+  (チェックイン/チェックアウト日のみ追加入力すればよい)。
+- フォーム送信時、`confirmedStays`ドキュメントに`sourceCandidateId`(元候補の
+  `lodgingCandidates`ドキュメントID)を追加で記録する。通常の「確定宿泊を追加」
+  ボタン(候補を経由しない直接追加)から作成した場合は`sourceCandidateId`を持たない。
+- 元の`lodgingCandidates`ドキュメントは削除・変更しない(第9期「34」のカット→コピー
+  変更と同じ方針で、データを失わない方向を優先する)。代わりに、`confirmedStays`の
+  いずれかから`sourceCandidateId`で参照されている候補には「確定済み」バッジを表示し、
+  どの候補が確定したかを視覚的に追跡できるようにする。1つの候補から複数回「確定にする」
+  を行うこと(日程を分けて複数の確定宿泊を作る等)も許容する。
