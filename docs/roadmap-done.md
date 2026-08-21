@@ -1991,3 +1991,57 @@
       (`--color-primary`=`#3b82f6`と同じRGB値・15%不透明度)になっている
       ことを確認した(2026-08-21)。`npm run check`(lint・test、vitest 35件)
       成功。
+
+## 第13期: 実機/実画面フィードバック対応(その4)
+
+## 74. パーフォレーション廃止(左端の綴じ穴のみ残す)
+- [x] (S) `70`で追加したヘッダー(`.page-header::after`)・ダーク系カード
+      (`.card-dark::after`)下部のパーフォレーション風ドット柄を廃止した。
+      2026-08-21、人間から「旅行計画アプリの下のリング穴とかはいらないな。
+      ページ左のものだけ残す形で」とのフィードバックを受け、`72`で追加した
+      `.page`左端の綴じ穴装飾(`.page::before`)はそのまま残し、ヘッダー・
+      ダーク系カード側の`::after`パーフォレーションのみ削除した。それに伴い
+      不要になった付随スタイルも整理: `.page-header`のパーフォレーション用に
+      空けていた下端の余分なpadding(`calc(var(--space-md) + 6px)`)を通常の
+      `var(--space-md)`に戻し、`.card-dark`のクリッピング用`overflow: hidden`・
+      `position: relative`・同様の余分な`padding-bottom`も削除した(`.card`から
+      継承する通常のpaddingに戻る)。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、`.page-header::after`・`.card-dark::after`の`content`が
+      いずれも`none`(=描画されない)になっていること、`.page-header`の
+      `padding`が`16px 24px`(モバイル、対称)になっていること、`.card-dark`の
+      `overflow`が`visible`・`position`が`static`に戻っていること、`.page::before`
+      (`72`の綴じ穴)の`background-image`は変更なくそのまま残っていることを
+      確認した(2026-08-21)。スクリーンショットで概要・雑多メモタブの見た目を
+      目視確認し、ヘッダー・ダーク系カードの下端が滑らかになり、左端の綴じ穴
+      だけが残っていることを確認した。375px幅で全7タブとも横スクロールが
+      発生しないこと(回帰なし)も確認した。console/pageerrorは0件。
+      `npm run check`(lint・test、vitest 35件)成功。
+
+## 75. しおりタイムラインバッジの過去/次/未来3アイコン化
+- [x] (S) しおりタブの`.timeline-marker-badge`アイコン(`68`(c))を、従来の
+      2種類(`footprint`=次の予定以外全部/`flag`=次の予定)から、時系列に
+      応じた3種類に分けた。2026-08-21、人間からのフィードバックで仕様確定:
+      次の予定→`flag`(現状維持)・過去の予定(すでに終わった)→新規追加の
+      `checkmark`アイコン・未来の予定(次の予定より後)→新規追加の`waypoint`
+      アイコン(いずれも`footprint`とは別の新規SVGを`src/icons.js`に追加。
+      `footprint`は項目間の連結線上の軌跡装飾(`80`)専用として温存する)。
+      `src/views/itinerary.js`の`findNextItem`を`(items, now)`のシグネチャに
+      変更して`now`を`renderItems`側で1回だけ計算するようにし、各項目の
+      日時タイムスタンプ化ロジックを`itemTimestamp(item)`として共通化した上で、
+      `isPast`(`!isNext && !Number.isNaN(itemTime) && itemTime < now`)を
+      新たに算出してバッジのアイコンを`isNext ? flag : isPast ? checkmark :
+      waypoint`で分岐させる。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、しおりタブに過去(2026-08-15)・次の予定になる日
+      (2026-08-22)・未来(2026-08-25)の3件を追加した上で、`.timeline-marker-
+      badge`の中身(SVGのpath/circle)からそれぞれ`checkmark`・`flag`・
+      `waypoint`が正しく描画されていることを確認した(2026-08-21)。
+      スクリーンショットで、過去=チェックマーク・次=旗(オレンジ枠のハイライト
+      カードと共に)・未来=中抜き円、と3種類のバッジが視覚的に区別できることを
+      確認した。console/pageerrorは0件。`npm run check`(lint・test、
+      vitest 35件)成功。検証で作成したFirestore上のトリップ1件・しおり項目3件は
+      名前を「[検証用/削除不可] evolve cycle5 74-75検証で作成」に更新済みの
+      状態で共有テストグループ`FMXRZYW7`内に残置。

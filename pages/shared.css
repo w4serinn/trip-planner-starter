@@ -156,40 +156,24 @@ body {
    .pageの内側に収まるカード状のセクションとして塗る(ページ端まではみ出す
    フルブリードにはしない)。
    2026-08-20(docs/ROADMAP.md「70」): 外部レビューで「radial-gradientのドット柄は
-   2023〜2024年頃のSaaS系LPで擦り倒された表現」と指摘され、廃止した。代替として
-   「紙のグレインノイズ(feTurbulence)」「切手の縁のようなパーフォレーション」の
-   両方を実装して比較し、`68`の点線dividerとの統一感・独自性の観点からパー
-   フォレーション案を採用した(人間との会話で「両方実装して良い方を採用」と
-   確定済み。ノイズ案は不採用のためコミットに残していない)。下端に、ページ背景色
-   (--color-bg)の小さな半円を並べることで「切り取られた」ような見た目を作る
-   (実際に切り抜いているわけではなく、背景色の円を重ねて錯視させる手法)。 */
+   2023〜2024年頃のSaaS系LPで擦り倒された表現」と指摘され、切手の縁のような
+   パーフォレーション(下端の半円切り抜き)に変更した。
+   2026-08-21(docs/ROADMAP.md「74」): 人間から「`72`で追加した.page左端の
+   綴じ穴は良いが、ヘッダー下部・ダーク系カード下部のパーフォレーションは
+   不要、ページ左のものだけ残してほしい」とのフィードバックを受け、この
+   パーフォレーション自体を廃止した(`.card-dark`側の`::after`も同様に廃止。
+   直下のコメント参照)。それに伴い、パーフォレーション用に空けていた下端の
+   余分な padding(`calc(var(--space-md) + 6px)`)も不要になったため、通常の
+   `var(--space-md)`に戻した。 */
 .page-header {
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
-  padding: var(--space-md) var(--space-lg) calc(var(--space-md) + 6px);
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
-}
-
-.page-header::after,
-.card-dark::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 10px;
-  background-image: radial-gradient(circle 5px at 8px 5px, var(--color-bg) 5px, transparent 5.5px);
-  background-repeat: repeat-x;
-  background-size: 16px 10px;
-}
-
-.page-header::after {
-  border-bottom-left-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
 }
 
 .back-link {
@@ -948,12 +932,12 @@ button:disabled {
    指摘を受け、`.card-dark`に改称して企画メモ(src/views/notes.js)にも同様に適用する
    形で両者の見た目を揃えた。
    2026-08-20(docs/ROADMAP.md「70」): ドット柄を廃止し、ヘッダーと同じパー
-   フォレーション演出(下端の`::after`、104行目付近のコメント参照)に統一した。
-   `.card-dark-accent`はこのクラスと併用されるため`::after`は共有で効く。 */
+   フォレーション演出(下端の`::after`)に統一した。
+   2026-08-21(docs/ROADMAP.md「74」): 人間のフィードバックにより、`.page`左端の
+   綴じ穴(`72`)だけを残しパーフォレーションは廃止したため、下端の`::after`・
+   それ用に空けていた余分なpadding-bottom・クリッピング用のoverflow: hiddenを
+   いずれも削除した(`.card`から継承する通常のpaddingに戻る)。 */
 .card-dark {
-  position: relative;
-  overflow: hidden;
-  padding-bottom: calc(var(--space-md) + 6px);
   background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
   color: var(--color-surface);
 }

@@ -181,15 +181,19 @@ export function mount(outlet, params) {
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   }
 
-  // 現在時刻に最も近い未来の予定を探す(docs/ROADMAP.md「60」)。時間目安が未入力の
-  // 項目は「その日のいつか」としてその日の終わり(23:59)扱いにする(一覧表示の並び順
-  // (NO_TIME_SENTINEL)と同じく、その日の最後に来る想定のため)。
-  function findNextItem(items) {
-    const now = Date.now();
+  // 項目の日時をタイムスタンプ化する(時間目安が未入力の項目は「その日のいつか」
+  // としてその日の終わり(23:59)扱いにする。一覧表示の並び順(NO_TIME_SENTINEL)と
+  // 同じ考え方)。docs/ROADMAP.md「60」「75」で共用する。
+  function itemTimestamp(item) {
+    return new Date(`${item.date}T${item.time || '23:59'}:00`).getTime();
+  }
+
+  // 現在時刻に最も近い未来の予定を探す(docs/ROADMAP.md「60」)。
+  function findNextItem(items, now) {
     let next = null;
     let nextTime = Infinity;
     for (const item of items) {
-      const time = new Date(`${item.date}T${item.time || '23:59'}:00`).getTime();
+      const time = itemTimestamp(item);
       if (Number.isNaN(time) || time < now) continue;
       if (time < nextTime) {
         next = item;
@@ -254,7 +258,8 @@ export function mount(outlet, params) {
       return;
     }
 
-    const nextItem = findNextItem(items);
+    const now = Date.now();
+    const nextItem = findNextItem(items, now);
 
     const groups = new Map();
     for (const item of items) {
@@ -301,16 +306,21 @@ export function mount(outlet, params) {
         timelineItem.className = 'timeline-item';
 
         const isNext = nextItem?.id === item.id;
+        const itemTime = itemTimestamp(item);
+        const isPast = !isNext && !Number.isNaN(itemTime) && itemTime < now;
 
         // 2026-08-20(docs/ROADMAP.md「68」): 外部レビューで「丸バッジではなく足あと/
-        // 旗のアイコンにする」と提案され、連番の数字バッジから、道のりの1歩を表す
-        // 足あとアイコンに変更した。「次の予定」(60で追加)の項目だけは旗アイコンに
-        // して、これから向かう目印であることを視覚的に補強する。
+        // 旗のアイコンにする」と提案され、連番の数字バッジから道のりを表すアイコンに
+        // 変更した。
+        // 2026-08-21(docs/ROADMAP.md「75」): 人間から「次=旗、過去/未来はそれぞれ
+        // 別のアイコンに」とのフィードバックを受け、次の予定(flag)・過去(すでに
+        // 終わった予定、checkmark)・未来(次の予定より後、waypoint)の3種類に
+        // 分けた。footprintは項目間の連結線上の軌跡装飾(`80`)専用にする。
         const marker = document.createElement('div');
         marker.className = 'timeline-marker';
         const badge = document.createElement('span');
         badge.className = 'timeline-marker-badge';
-        badge.innerHTML = isNext ? icons.flag : icons.footprint;
+        badge.innerHTML = isNext ? icons.flag : isPast ? icons.checkmark : icons.waypoint;
         marker.appendChild(badge);
         timelineItem.appendChild(marker);
 
