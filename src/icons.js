@@ -23,6 +23,11 @@ export const icons = {
   // 2026-08-20(docs/ROADMAP.md「68」): しおりタブのタイムラインマーカー用。
   // 足あと(道のりの1歩)・旗(次の予定の目印)。塗りつぶし表現のためfill/strokeを
   // 個別指定する(icon()デフォルトのstroke-onlyを上書き)。
+  // 2026-08-21(docs/ROADMAP.md「75」): footprintは項目間の連結線上の軌跡装飾
+  // (`80`)専用とし、バッジ自体は次の予定(flag)・過去(checkmark)・未来
+  // (waypoint)の3種類に分けた。
   footprint: icon('<ellipse cx="12" cy="14" rx="4.2" ry="6.2" fill="currentColor" stroke="none"/><circle cx="8.4" cy="5.6" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="4.4" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.6" cy="5.6" r="1.3" fill="currentColor" stroke="none"/>', 14),
   flag: icon('<path d="M5 21V4"/><path d="M5 5h12l-3 3.5L17 12H5"/>', 14),
+  checkmark: icon('<path d="M5 13l4 4L19 7"/>', 14),
+  waypoint: icon('<circle cx="12" cy="12" r="7"/>', 14),
 };

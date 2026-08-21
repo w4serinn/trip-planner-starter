@@ -24,6 +24,7 @@ import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
 import { HOUR_OPTIONS, MINUTE_OPTIONS, buildTimeString, parseTimeString } from '../timeSelect.js';
 import { appendLinkifiedText } from '../linkify.js';
+import { createFootprintTrail } from '../footprintTrail.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -117,6 +118,11 @@ export function mount(outlet, params) {
   // 編集中の項目ID(docs/ROADMAP.md「39」)。nullなら新規追加モード。
   let editingItemId = null;
 
+  // 直前に▲/▼で並び替えた項目ID(docs/ROADMAP.md「78」)。次のrenderItems呼び出し
+  // (Firestoreの購読が新しいorderを届けたタイミング)で該当カードへハイライト
+  // 点滅クラスを1回だけ付与し、使い終わったらnullに戻す。
+  let justMovedItemId = null;
+
   function openForm() {
     toggleFormButton.hidden = true;
     itemForm.hidden = false;
@@ -181,15 +187,19 @@ export function mount(outlet, params) {
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   }
 
-  // 現在時刻に最も近い未来の予定を探す(docs/ROADMAP.md「60」)。時間目安が未入力の
-  // 項目は「その日のいつか」としてその日の終わり(23:59)扱いにする(一覧表示の並び順
-  // (NO_TIME_SENTINEL)と同じく、その日の最後に来る想定のため)。
-  function findNextItem(items) {
-    const now = Date.now();
+  // 項目の日時をタイムスタンプ化する(時間目安が未入力の項目は「その日のいつか」
+  // としてその日の終わり(23:59)扱いにする。一覧表示の並び順(NO_TIME_SENTINEL)と
+  // 同じ考え方)。docs/ROADMAP.md「60」「75」で共用する。
+  function itemTimestamp(item) {
+    return new Date(`${item.date}T${item.time || '23:59'}:00`).getTime();
+  }
+
+  // 現在時刻に最も近い未来の予定を探す(docs/ROADMAP.md「60」)。
+  function findNextItem(items, now) {
     let next = null;
     let nextTime = Infinity;
     for (const item of items) {
-      const time = new Date(`${item.date}T${item.time || '23:59'}:00`).getTime();
+      const time = itemTimestamp(item);
       if (Number.isNaN(time) || time < now) continue;
       if (time < nextTime) {
         next = item;
@@ -197,6 +207,31 @@ export function mount(outlet, params) {
       }
     }
     return next;
+  }
+
+  // 項目間をつなぐ足あと付きの小道(docs/ROADMAP.md「80」)。src/footprintTrail.jsの
+  // DOM非依存な軌跡生成ロジックを使い、SVGのマークアップ文字列を組み立てる。
+  // 経路(緑の線、--color-successを想定してcurrentColorで継承)・足あと(小道の
+  // 進行方向に合わせて回転)ともstroke/fillはcurrentColor経由にし、色そのものは
+  // CSS側(.timeline-trail)のcolorプロパティで指定する(トークン経由のルールを守る)。
+  // 呼び出しのたびにMath.randomで軌跡を生成し直すため、再描画のたびに形が変わる
+  // (「同じ軌跡にならないように」との要望)。
+  function buildTrailSvg() {
+    const { pathD, footprints } = createFootprintTrail(Math.random, { footprintCount: 3 });
+    const footprintMarks = footprints
+      .map(({ x, y, rotation }) => `
+        <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation.toFixed(1)}) scale(0.15) translate(-12 -14)">
+          <ellipse cx="12" cy="14" rx="4.2" ry="6.2" fill="currentColor" stroke="none" />
+          <circle cx="8.4" cy="5.6" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="4.4" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="15.6" cy="5.6" r="1.3" fill="currentColor" stroke="none" />
+        </g>`)
+      .join('');
+    return `
+      <svg class="timeline-trail" viewBox="0 0 22 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${pathD}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        ${footprintMarks}
+      </svg>`;
   }
 
   // 同じ日の中での並び替え(docs/ROADMAP.md「58」)。時間未設定の項目同士でのみ
@@ -221,6 +256,7 @@ export function mount(outlet, params) {
     [untimed[index], untimed[targetIndex]] = [untimed[targetIndex], untimed[index]];
 
     errorText.textContent = '';
+    justMovedItemId = item.id;
     try {
       await Promise.all(untimed.map((i, newOrder) => updateDocument(`${itemsPath}/${i.id}`, { order: newOrder })));
       // リアルタイム購読(docs/ROADMAP.md「32」)が新しい値を届けて再描画するため、
@@ -228,6 +264,7 @@ export function mount(outlet, params) {
     } catch (error) {
       console.error(error);
       errorText.textContent = '並び替えの保存に失敗しました。時間をおいて再度お試しください。';
+      justMovedItemId = null;
     }
   }
 
@@ -254,7 +291,8 @@ export function mount(outlet, params) {
       return;
     }
 
-    const nextItem = findNextItem(items);
+    const now = Date.now();
+    const nextItem = findNextItem(items, now);
 
     const groups = new Map();
     for (const item of items) {
@@ -296,26 +334,42 @@ export function mount(outlet, params) {
       timeline.className = 'timeline';
       timeline.hidden = isCollapsed;
 
-      dayItems.forEach((item) => {
+      dayItems.forEach((item, index) => {
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
 
         const isNext = nextItem?.id === item.id;
+        const itemTime = itemTimestamp(item);
+        const isPast = !isNext && !Number.isNaN(itemTime) && itemTime < now;
 
         // 2026-08-20(docs/ROADMAP.md「68」): 外部レビューで「丸バッジではなく足あと/
-        // 旗のアイコンにする」と提案され、連番の数字バッジから、道のりの1歩を表す
-        // 足あとアイコンに変更した。「次の予定」(60で追加)の項目だけは旗アイコンに
-        // して、これから向かう目印であることを視覚的に補強する。
+        // 旗のアイコンにする」と提案され、連番の数字バッジから道のりを表すアイコンに
+        // 変更した。
+        // 2026-08-21(docs/ROADMAP.md「75」): 人間から「次=旗、過去/未来はそれぞれ
+        // 別のアイコンに」とのフィードバックを受け、次の予定(flag)・過去(すでに
+        // 終わった予定、checkmark)・未来(次の予定より後、waypoint)の3種類に
+        // 分けた。footprintは項目間の連結線上の軌跡装飾(`80`)専用にする。
         const marker = document.createElement('div');
         marker.className = 'timeline-marker';
         const badge = document.createElement('span');
         badge.className = 'timeline-marker-badge';
-        badge.innerHTML = isNext ? icons.flag : icons.footprint;
+        badge.innerHTML = isNext ? icons.flag : isPast ? icons.checkmark : icons.waypoint;
         marker.appendChild(badge);
+        // 日をまたぐ場合(その日最後の項目)は連結線を表示しない(従来のCSS版と同じ挙動)。
+        if (index < dayItems.length - 1) {
+          marker.insertAdjacentHTML('beforeend', buildTrailSvg());
+        }
         timelineItem.appendChild(marker);
 
         const content = document.createElement('div');
         content.className = isNext ? 'timeline-content card timeline-content-next' : 'timeline-content card';
+        // 直前に並び替えた項目なら、一瞬ハイライトして変化に気付かせる
+        // (docs/ROADMAP.md「78」)。1回使ったらリセットし、以降の無関係な
+        // 再描画では光らないようにする。
+        if (item.id === justMovedItemId) {
+          content.classList.add('item-moved-flash');
+          justMovedItemId = null;
+        }
 
         if (isNext) {
           const nextBadge = document.createElement('span');

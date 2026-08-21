@@ -107,9 +107,36 @@ body {
   animation: view-enter-flat 0.2s ease;
 }
 
+/* 2026-08-21(docs/ROADMAP.md「78」): しおりの▲/▼並び替え(`58`)は、クリック後
+   Firestoreへの書き込み→リアルタイム購読(`32`)による全項目の再描画という
+   流れで反映されるため、DOM要素が使い回されずアニメーションの起点が無く、
+   移動しても何も起きたように見えないという人間からのフィードバックがあった
+   (「なにもエフェクトが無いので変わったことが分かりづらい」)。全再描画の
+   都度アイテムのDOM要素が作り直される構造上、位置を滑らかにスライドさせる
+   (FLIP)アニメーションは複雑になるため、代わりに「移動した項目そのものが
+   一瞬光る」ハイライト点滅で変化に気付かせる方式にした
+   (src/views/itinerary.jsが移動直後の項目idを覚えておき、次の再描画時に
+   このクラスを付与する)。他のanimationクラスと同様、下のreduced-motion
+   メディアクエリより前に定義する必要がある(CSSは同じ詳細度なら後勝ちのため、
+   後ろに置くとメディアクエリでのanimation: noneが打ち消されてしまう)。 */
+@keyframes item-moved-flash {
+  0% {
+    background-color: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
+  }
+
+  100% {
+    background-color: var(--color-surface);
+  }
+}
+
+.item-moved-flash {
+  animation: item-moved-flash 0.8s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .view-enter,
-  .view-enter-flat {
+  .view-enter-flat,
+  .item-moved-flash {
     animation: none;
   }
 }
@@ -156,51 +183,31 @@ body {
    .pageの内側に収まるカード状のセクションとして塗る(ページ端まではみ出す
    フルブリードにはしない)。
    2026-08-20(docs/ROADMAP.md「70」): 外部レビューで「radial-gradientのドット柄は
-   2023〜2024年頃のSaaS系LPで擦り倒された表現」と指摘され、廃止した。代替として
-   「紙のグレインノイズ(feTurbulence)」「切手の縁のようなパーフォレーション」の
-   両方を実装して比較し、`68`の点線dividerとの統一感・独自性の観点からパー
-   フォレーション案を採用した(人間との会話で「両方実装して良い方を採用」と
-   確定済み。ノイズ案は不採用のためコミットに残していない)。下端に、ページ背景色
-   (--color-bg)の小さな半円を並べることで「切り取られた」ような見た目を作る
-   (実際に切り抜いているわけではなく、背景色の円を重ねて錯視させる手法)。 */
+   2023〜2024年頃のSaaS系LPで擦り倒された表現」と指摘され、切手の縁のような
+   パーフォレーション(下端の半円切り抜き)に変更した。
+   2026-08-21(docs/ROADMAP.md「74」): 人間から「`72`で追加した.page左端の
+   綴じ穴は良いが、ヘッダー下部・ダーク系カード下部のパーフォレーションは
+   不要、ページ左のものだけ残してほしい」とのフィードバックを受け、この
+   パーフォレーション自体を廃止した(`.card-dark`側の`::after`も同様に廃止。
+   直下のコメント参照)。それに伴い、パーフォレーション用に空けていた下端の
+   余分な padding(`calc(var(--space-md) + 6px)`)も不要になったため、通常の
+   `var(--space-md)`に戻した。
+   2026-08-21(docs/ROADMAP.md「83」): 外部レビュー2巡目で、この濃紺
+   グラデーションが`.card-dark`・`.scratch-actions`(`44`)と完全に同一の
+   見た目で使い回されており、「ヘッダー」「特別なメモ欄」「固定操作バー」の
+   役割の違いが色だけでは区別できないと指摘された。色は変えず角度だけを
+   役割ごとに変えることで微差をつけた: ヘッダーはアプリ全体の「顔」として
+   最初に確立した135degを基準のまま維持し、他の2箇所をそこから変化させる
+   側にした(詳細は各箇所のコメント参照)。 */
 .page-header {
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
-  padding: var(--space-md) var(--space-lg) calc(var(--space-md) + 6px);
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
-}
-
-.page-header::after,
-.card-dark::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 10px;
-  background-image: radial-gradient(circle 5px at 8px 5px, var(--color-bg) 5px, transparent 5.5px);
-  background-repeat: repeat-x;
-  background-size: 16px 10px;
-}
-
-.page-header::after {
-  border-bottom-left-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
-}
-
-.back-link {
-  color: rgb(255 255 255 / 75%);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  flex-shrink: 0;
-}
-
-.back-link:hover {
-  color: var(--color-surface);
 }
 
 h1,
@@ -280,6 +287,12 @@ textarea {
   resize: vertical;
 }
 
+/* 2026-08-21(docs/ROADMAP.md「82」): 外部レビューで、フォーカスリングの色が
+   styles/tokens.css経由ではなく直接カラーコード(rgb(59 130 246 / 15%)、
+   --color-primaryと同じ値の決め打ち)で書かれている、tokens.css冒頭のルール
+   (「すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを
+   書かないこと」)違反だと指摘された。色を複製せず、既存の--color-primaryから
+   color-mix()で導出する形に修正した。 */
 input[type="text"]:focus,
 input[type="url"]:focus,
 input[type="date"]:focus,
@@ -288,7 +301,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(59 130 246 / 15%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .time-select-row {
@@ -310,7 +323,20 @@ select:focus {
 /* 2026-08-20(docs/ROADMAP.md「71」): 外部レビューで「フェード+scale(0.97)は
    モーションデザインの教科書通りで没個性」と指摘され、押下解除時にわずかに
    行き過ぎてから戻る(オーバーシュート)バウンド系のイージングに変更した。
-   付箋を指で押して離した時のような、物理的な弾力を感じさせる狙い。 */
+   付箋を指で押して離した時のような、物理的な弾力を感じさせる狙い。
+   2026-08-21(docs/ROADMAP.md「77」): 人間から「ボタンだけ異様にダサい」との
+   指摘。第5期の配色調査時(`23`)から「ピル型ボタン(design-library.jp参考)」
+   が良いパターンとして挙がっていたが、`.rank-badge`等のバッジ類にしか
+   適用されておらず、ボタン自体は`--radius-button`(12px、cardのradius-mdより
+   控えめ)という中途半端な角丸のままだった。バッジ・日付ピッカー・チップなど
+   他の丸み要素が軒並みピル型(`--radius-pill`)なのに対しボタンだけ違う
+   丸みだったことが、統一感の無さ=「安っぽさ」の一因と判断し、ボタンも
+   `--radius-pill`に統一した。あわせて、`--font-weight-heading`(900、
+   本来はh1見出し用の太さ)をボタンのラベルにまで流用していたのを、
+   ボタンには重すぎる(「圧が強い」)と判断し`--font-weight-subheading`
+   (700)に下げた。横paddingも、ピル形状が窮屈に見えないよう`--space-md`から
+   `--space-lg`へ広げた。彩度・グラデーション等の色味自体(`81`で暖色化した
+   影を含む)は変更していない。 */
 button {
   display: inline-flex;
   align-items: center;
@@ -318,10 +344,10 @@ button {
   gap: var(--space-xs);
   width: 100%;
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-heading);
-  padding: var(--space-sm) var(--space-md);
+  font-weight: var(--font-weight-subheading);
+  padding: var(--space-sm) var(--space-lg);
   border: none;
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: var(--color-surface);
   box-shadow: var(--shadow-button);
@@ -490,11 +516,12 @@ button:disabled {
    画面下部に固定し、長文をスクロールしている間も常にアクセスできるようにする。
    モバイル(768px未満)限定(広い画面はテキストエリアが画面に収まりやすく恩恵が
    薄いため対象外とし、通常の.card-dark内フロー表示のまま変更しない)。
-   スマホの入力キーボードとバーが重なる問題への対応として、src/views/scratch.js の
-   visualViewport監視で.keyboard-openを付け外しし、キーボード表示中は
-   画面外へスライドして隠す。実機の仮想キーボード挙動はPlaywright(ヘッドレス
-   Chromium)では再現できないため、evolveサイクルではvisualViewportの値を
-   JSで模擬した動作確認のみ行い、人間の実機確認を別途要する。 */
+   2026-08-21(docs/ROADMAP.md「76」): 当初はスマホの入力キーボード表示中に
+   バーを画面外へ隠す実装だったが、テキスト選択直後(キーボードを閉じる前)に
+   振り分けボタンを押すという主要な操作フローを塞いでしまうバグだったため、
+   隠す代わりにsrc/views/scratch.jsがvisualViewportとの差分ぶんtranslateYで
+   常にキーボードの直上へ追従させる方式に変更した(transitionはそのJSでの
+   位置追従を滑らかにするため引き続き使う)。 */
 @media (width < 768px) {
   .scratch-actions {
     position: fixed;
@@ -508,14 +535,13 @@ button:disabled {
     padding: var(--space-sm) var(--space-md) calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
 
     /* .card-dark内の.btn-secondary(白文字・半透明の白ボーダー)をそのまま流用するため、
-       固定バーの背景も.card-darkと同じ濃色グラデーションにして白文字が視認できるようにする */
-    background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+       固定バーの背景も.card-darkと同じ濃色グラデーションにして白文字が視認できるようにする。
+       2026-08-21(docs/ROADMAP.md「83」): .page-header(135deg)・.card-dark(160deg)との
+       見分けをつけるため、画面下部に水平に張り付く「ドック」らしさに合わせて
+       ほぼ水平の100degにした(色は変更していない)。 */
+    background-image: linear-gradient(100deg, var(--color-primary-deep), var(--color-primary-dark));
     box-shadow: 0 -4px 16px rgb(0 0 0 / 25%);
-    transition: transform 0.2s ease;
-  }
-
-  .scratch-actions.keyboard-open {
-    transform: translateY(100%);
+    transition: transform 0.15s ease;
   }
 }
 
@@ -589,20 +615,22 @@ button:disabled {
   color: var(--color-surface);
 }
 
-.timeline-marker::after {
-  content: "";
+/* 2026-08-21(docs/ROADMAP.md「80」): 単なる直線の連結線から、ランダムに
+   曲がりくねった小道+足あとの軌跡へ変更した。乱数を使うため静的なCSSだけでは
+   表現できず、src/views/itinerary.jsがsrc/footprintTrail.jsの軌跡生成ロジックで
+   組み立てたSVGを`.timeline-marker`へ直接挿入する(日をまたぐ場合はJS側で
+   挿入自体をスキップし、従来のCSSでの非表示と同じ挙動にしている)。
+   viewBoxは固定(0 0 22 100)だがpreserveAspectRatio="none"で実際の高さに
+   伸縮させる。色は「小道」らしさを出すため緑系の--color-successを使う
+   (2026-08-21の人間からのスクリーンショット付きフィードバックで
+   共有された配色イメージ)。 */
+.timeline-trail {
   flex: 1;
-  width: 2px;
-
-  /* --color-borderは暖色背景との明度差が小さく線がほぼ見えなくなるため、
-     視認性の高い--color-text-mutedを使う。 */
-  background: var(--color-text-muted);
-  opacity: 0.4;
+  width: 22px;
+  min-height: 24px;
   margin-top: var(--space-xs);
-}
-
-.timeline-item:last-child .timeline-marker::after {
-  display: none;
+  color: var(--color-success);
+  opacity: 0.7;
 }
 
 .timeline-content {
@@ -830,7 +858,7 @@ button:disabled {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-md);
   width: 220px;
   flex-shrink: 0;
   padding: var(--space-lg) var(--space-md);
@@ -848,6 +876,43 @@ button:disabled {
 
 .sidebar[hidden] {
   display: none;
+}
+
+/* 2026-08-21(docs/ROADMAP.md「79」): モバイルヘッダーでハンバーガーボタンと
+   「← 旅行一覧」リンクが窮屈に並んでいたのを解消するため、アプリ名・
+   「← 旅行一覧」リンクを.page-headerからサイドバー上部へ移動した(空いた
+   .page-headerの<h1>は、旅行に紐づく画面では代わりに旅行名を表示する。
+   src/app.jsの`subscribeTripName`参照)。タブリンク一覧(#sidebar-links)とは
+   下線で区切り、ブランド表示であることを視覚的に示す。 */
+.sidebar-brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar-brand-name {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text);
+}
+
+.sidebar-back-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+}
+
+.sidebar-back-link:hover {
+  text-decoration: underline;
+}
+
+#sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 /* モバイルでの開閉状態(.sidebar-open): src/app.jsのopenMenu/closeMenuが
@@ -945,13 +1010,17 @@ button:disabled {
    指摘を受け、`.card-dark`に改称して企画メモ(src/views/notes.js)にも同様に適用する
    形で両者の見た目を揃えた。
    2026-08-20(docs/ROADMAP.md「70」): ドット柄を廃止し、ヘッダーと同じパー
-   フォレーション演出(下端の`::after`、104行目付近のコメント参照)に統一した。
-   `.card-dark-accent`はこのクラスと併用されるため`::after`は共有で効く。 */
+   フォレーション演出(下端の`::after`)に統一した。
+   2026-08-21(docs/ROADMAP.md「74」): 人間のフィードバックにより、`.page`左端の
+   綴じ穴(`72`)だけを残しパーフォレーションは廃止したため、下端の`::after`・
+   それ用に空けていた余分なpadding-bottom・クリッピング用のoverflow: hiddenを
+   いずれも削除した(`.card`から継承する通常のpaddingに戻る)。
+   2026-08-21(docs/ROADMAP.md「83」): 外部レビュー2巡目で、.page-header・
+   .scratch-actions(`44`)と完全に同一の見た目で使い回されていると指摘され、
+   角度を160deg(ヘッダーの135degより少し縦寄り)に変えて微差をつけた
+   (色は変更していない)。 */
 .card-dark {
-  position: relative;
-  overflow: hidden;
-  padding-bottom: calc(var(--space-md) + 6px);
-  background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-image: linear-gradient(160deg, var(--color-primary-deep), var(--color-primary-dark));
   color: var(--color-surface);
 }
 
@@ -962,9 +1031,11 @@ button:disabled {
    --color-accent-greenが近い色相で役割が被る」と指摘され、装飾専用だった
    --color-accent-greenを廃止(色数整理)。ここでの差別化は、既存の
    --color-accent(オレンジ)と--color-primary-deepの組み合わせに変更した
-   (新規の色は追加せず、既存トークンの組み合わせのみ変更)。 */
+   (新規の色は追加せず、既存トークンの組み合わせのみ変更)。
+   2026-08-21(docs/ROADMAP.md「83」): `.card-dark`と同じ「特別なメモ欄」の
+   仲間として角度も160degに揃えた。 */
 .card-dark-accent {
-  background-image: linear-gradient(135deg, var(--color-accent), var(--color-primary-deep));
+  background-image: linear-gradient(160deg, var(--color-accent), var(--color-primary-deep));
 }
 
 .card-dark .icon-heading {
