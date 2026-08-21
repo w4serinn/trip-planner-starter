@@ -300,7 +300,20 @@ select:focus {
 /* 2026-08-20(docs/ROADMAP.md「71」): 外部レビューで「フェード+scale(0.97)は
    モーションデザインの教科書通りで没個性」と指摘され、押下解除時にわずかに
    行き過ぎてから戻る(オーバーシュート)バウンド系のイージングに変更した。
-   付箋を指で押して離した時のような、物理的な弾力を感じさせる狙い。 */
+   付箋を指で押して離した時のような、物理的な弾力を感じさせる狙い。
+   2026-08-21(docs/ROADMAP.md「77」): 人間から「ボタンだけ異様にダサい」との
+   指摘。第5期の配色調査時(`23`)から「ピル型ボタン(design-library.jp参考)」
+   が良いパターンとして挙がっていたが、`.rank-badge`等のバッジ類にしか
+   適用されておらず、ボタン自体は`--radius-button`(12px、cardのradius-mdより
+   控えめ)という中途半端な角丸のままだった。バッジ・日付ピッカー・チップなど
+   他の丸み要素が軒並みピル型(`--radius-pill`)なのに対しボタンだけ違う
+   丸みだったことが、統一感の無さ=「安っぽさ」の一因と判断し、ボタンも
+   `--radius-pill`に統一した。あわせて、`--font-weight-heading`(900、
+   本来はh1見出し用の太さ)をボタンのラベルにまで流用していたのを、
+   ボタンには重すぎる(「圧が強い」)と判断し`--font-weight-subheading`
+   (700)に下げた。横paddingも、ピル形状が窮屈に見えないよう`--space-md`から
+   `--space-lg`へ広げた。彩度・グラデーション等の色味自体(`81`で暖色化した
+   影を含む)は変更していない。 */
 button {
   display: inline-flex;
   align-items: center;
@@ -308,10 +321,10 @@ button {
   gap: var(--space-xs);
   width: 100%;
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-heading);
-  padding: var(--space-sm) var(--space-md);
+  font-weight: var(--font-weight-subheading);
+  padding: var(--space-sm) var(--space-lg);
   border: none;
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: var(--color-surface);
   box-shadow: var(--shadow-button);
