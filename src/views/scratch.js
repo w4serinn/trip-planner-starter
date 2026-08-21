@@ -397,12 +397,8 @@ export function mount(outlet, params) {
   // 振り分けボタンを画面下部に固定表示にする対応(docs/ROADMAP.md「44」)。
   // モバイル(768px未満)でのみ.scratch-actionsがposition: fixedになる(pages/shared.css
   // 参照)ため、その分の高さを最後尾のスペーサーで確保し、末尾のコンテンツが
-  // バーに隠れないようにする。加えて、スマホの入力キーボード表示中はバーと
-  // キーボードが重なってしまうため、visualViewportの高さがウィンドウ高さに対して
-  // 大きく縮んだ場合(=キーボードが出ている)は.keyboard-openを付けてバーを
-  // 画面外へスライドさせる。
+  // バーに隠れないようにする。
   const isMobileWidth = () => window.matchMedia('(width < 768px)').matches;
-  const KEYBOARD_HEIGHT_RATIO_THRESHOLD = 0.75;
 
   const updateActionsSpacerHeight = () => {
     scratchActionsSpacer.style.height = isMobileWidth() ? `${scratchActions.offsetHeight}px` : '0px';
@@ -410,19 +406,31 @@ export function mount(outlet, params) {
   updateActionsSpacerHeight();
   window.addEventListener('resize', updateActionsSpacerHeight);
 
-  const updateKeyboardOpenState = () => {
+  // 2026-08-21(docs/ROADMAP.md「76」): 当初はキーボード表示中にバーを画面外へ
+  // 隠す実装だったが、テキスト選択直後(キーボードを閉じる前)に振り分けボタンを
+  // 押すという主要な操作フローそのものを塞いでしまうバグだった(人間の実機確認で
+  // 発覚)。隠すのではなく、position: fixedの`bottom: 0`はキーボード表示中も
+  // レイアウトビューポート(見えなくなった部分含む)基準のままなことを利用し、
+  // visualViewportとの差分(=キーボードに隠れている高さ)だけ`translateY`で
+  // 上へずらし、常にキーボードのすぐ上に見える位置へ追従させる。
+  const KEYBOARD_OVERLAP_MIN_PX = 40; // アドレスバーの出入り等の誤検知を無視する閾値
+
+  const updateKeyboardOffset = () => {
     if (!window.visualViewport || !isMobileWidth()) {
-      scratchActions.classList.remove('keyboard-open');
+      scratchActions.style.transform = '';
       return;
     }
-    const ratio = window.visualViewport.height / window.innerHeight;
-    scratchActions.classList.toggle('keyboard-open', ratio < KEYBOARD_HEIGHT_RATIO_THRESHOLD);
+    const viewport = window.visualViewport;
+    const overlap = window.innerHeight - viewport.height - viewport.offsetTop;
+    scratchActions.style.transform = overlap > KEYBOARD_OVERLAP_MIN_PX ? `translateY(-${overlap}px)` : '';
   };
-  window.visualViewport?.addEventListener('resize', updateKeyboardOpenState);
+  window.visualViewport?.addEventListener('resize', updateKeyboardOffset);
+  window.visualViewport?.addEventListener('scroll', updateKeyboardOffset);
 
   return () => {
     window.removeEventListener('resize', updateActionsSpacerHeight);
-    window.visualViewport?.removeEventListener('resize', updateKeyboardOpenState);
+    window.visualViewport?.removeEventListener('resize', updateKeyboardOffset);
+    window.visualViewport?.removeEventListener('scroll', updateKeyboardOffset);
     scratchTextarea.removeEventListener('input', onScratchInput);
     toNotesButton.removeEventListener('click', onToNotesClick);
     toDestinationsButton.removeEventListener('click', onToDestinationsClick);

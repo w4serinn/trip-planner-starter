@@ -1934,3 +1934,60 @@
       73検証で作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
 
       これで第12期(外部レビューを踏まえたデザイン改善)は全タスク完了となった。
+
+## バグ修正: 76. 雑多メモ固定バーがキーボード表示中に選択後のボタンを塞ぐ不具合
+- [x] (S) `44`の画面下部固定バー(`#scratch-actions`)は、当初「仮想キーボード
+      表示中は画面外へ隠す」実装だったが、テキスト選択直後(キーボードを
+      閉じる前)に振り分けボタンを押すという`44`が想定していた核心的な操作
+      フローそのものを塞いでしまっていた(2026-08-21、人間の実機確認で発覚:
+      「選択した後、キーボードを閉じないと、ボタンが出てこない」)。
+      隠す代わりに、`position: fixed; bottom: 0`のバーがキーボード表示中も
+      レイアウトビューポート(見えなくなった部分含む)基準のままなことを
+      利用し、`window.visualViewport`との差分(`window.innerHeight -
+      visualViewport.height - visualViewport.offsetTop`、キーボードに
+      隠れている高さに相当)だけ`translateY`で上へずらし、常にキーボードの
+      すぐ上に見える位置へ追従させる方式に変更した(`src/views/scratch.js`の
+      `updateKeyboardOffset`)。誤検知防止のため40px未満の差分は無視する。
+      `.keyboard-open`クラス・対応する`pages/shared.css`のCSSルールは削除した。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、`visualViewport.height`を700→380(キーボード表示相当)に
+      変化させた際、バーが画面外へ隠れず`y座標`がキーボード直上
+      (`380-バーの高さ`)へ追従して常に表示され続けること(`isVisible()`が
+      `true`のまま)、キーボードが閉じる(`height`が700に戻る)と元の画面下部
+      位置(`y: 594`)に戻ることを確認した(2026-08-21)。375px幅で全7タブとも
+      横スクロールが発生しないこと(回帰なし)も確認した。console/pageerrorは
+      0件。`npm run check`(lint・test、vitest 35件)成功。検証で作成した
+      Firestore上のトリップ1件はサブコレクションを作成していないため追加
+      クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle5 76検証で
+      作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
+
+## バグ修正: 81. --shadow-buttonの青み残りを暖色化
+- [x] (S) `styles/tokens.css`の`--shadow-button`が、`69`(カードシャドウの
+      暖色化)後も`rgb(59 130 246 / 15%)`(`--color-primary`由来の青)のまま
+      放置されていた。2026-08-21、外部レビュアーの2巡目レビューで「カードは
+      紙、ボタンはSaaSで世界観が割れている」と指摘され、`--shadow-card`と
+      同系統の暖色`rgb(42 30 20 / 15%)`に変更した(不透明度15%は維持、色相
+      のみ揃えた)。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+      プライマリボタン(`.btn-secondary`ではない通常ボタン)の`computed
+      box-shadow`が`rgba(42, 30, 20, 0.15) 0px 4px 16px 0px`になっている
+      ことを確認した(2026-08-21)。`npm run check`(lint・test、vitest 35件)
+      成功。
+
+## バグ修正: 82. フォーカスリングのハードコード解消
+- [x] (S) `pages/shared.css`の`input[type="text"]:focus`等のフォーカスリング
+      (`box-shadow: 0 0 0 3px rgb(59 130 246 / 15%);`)が、`styles/tokens.css`
+      冒頭のコメント「すべての画面はこのファイルの変数経由で色を指定し、
+      直接カラーコードを書かないこと」に反し、`--color-primary`と同じ値を
+      直接カラーコードとして複製していた(2026-08-21、外部レビュアー指摘)。
+      新規トークンを追加する代わりに、`color-mix(in srgb, var(--color-primary)
+      15%, transparent)`で`--color-primary`から直接導出する形に変更した。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+      フォーム入力欄にフォーカスした際の`computed box-shadow`が
+      `color(srgb 0.231373 0.509804 0.964706 / 0.15) 0px 0px 0px 3px`
+      (`--color-primary`=`#3b82f6`と同じRGB値・15%不透明度)になっている
+      ことを確認した(2026-08-21)。`npm run check`(lint・test、vitest 35件)
+      成功。

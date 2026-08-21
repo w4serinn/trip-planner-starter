@@ -280,6 +280,12 @@ textarea {
   resize: vertical;
 }
 
+/* 2026-08-21(docs/ROADMAP.md「82」): 外部レビューで、フォーカスリングの色が
+   styles/tokens.css経由ではなく直接カラーコード(rgb(59 130 246 / 15%)、
+   --color-primaryと同じ値の決め打ち)で書かれている、tokens.css冒頭のルール
+   (「すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを
+   書かないこと」)違反だと指摘された。色を複製せず、既存の--color-primaryから
+   color-mix()で導出する形に修正した。 */
 input[type="text"]:focus,
 input[type="url"]:focus,
 input[type="date"]:focus,
@@ -288,7 +294,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(59 130 246 / 15%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .time-select-row {
@@ -490,11 +496,12 @@ button:disabled {
    画面下部に固定し、長文をスクロールしている間も常にアクセスできるようにする。
    モバイル(768px未満)限定(広い画面はテキストエリアが画面に収まりやすく恩恵が
    薄いため対象外とし、通常の.card-dark内フロー表示のまま変更しない)。
-   スマホの入力キーボードとバーが重なる問題への対応として、src/views/scratch.js の
-   visualViewport監視で.keyboard-openを付け外しし、キーボード表示中は
-   画面外へスライドして隠す。実機の仮想キーボード挙動はPlaywright(ヘッドレス
-   Chromium)では再現できないため、evolveサイクルではvisualViewportの値を
-   JSで模擬した動作確認のみ行い、人間の実機確認を別途要する。 */
+   2026-08-21(docs/ROADMAP.md「76」): 当初はスマホの入力キーボード表示中に
+   バーを画面外へ隠す実装だったが、テキスト選択直後(キーボードを閉じる前)に
+   振り分けボタンを押すという主要な操作フローを塞いでしまうバグだったため、
+   隠す代わりにsrc/views/scratch.jsがvisualViewportとの差分ぶんtranslateYで
+   常にキーボードの直上へ追従させる方式に変更した(transitionはそのJSでの
+   位置追従を滑らかにするため引き続き使う)。 */
 @media (width < 768px) {
   .scratch-actions {
     position: fixed;
@@ -511,11 +518,7 @@ button:disabled {
        固定バーの背景も.card-darkと同じ濃色グラデーションにして白文字が視認できるようにする */
     background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
     box-shadow: 0 -4px 16px rgb(0 0 0 / 25%);
-    transition: transform 0.2s ease;
-  }
-
-  .scratch-actions.keyboard-open {
-    transform: translateY(100%);
+    transition: transform 0.15s ease;
   }
 }
 
