@@ -33,29 +33,62 @@ body {
   }
 }
 
+/* 2026-08-21(docs/ROADMAP.md「72」): 「タブバー・ルーティング・各タブの情報設計は
+   変えず、装飾・演出のみで『しおりらしい構造』を感じさせる」方針に基づき、
+   .pageに(b)左端の綴じ穴パターン(常設の::before装飾)・(c)左右非対称パディング
+   (綴じ目=左端側を広めに)を追加する。左パディングを右より20px広げ、その帯の中に
+   リング/スパイラルノート風の穴を並べる。position: relativeは::beforeの配置基準
+   にするために追加(position: fixedの子要素(#scratch-actions等)には影響しない。
+   transform/filter/perspectiveと違いrelativeはfixedの包含ブロックを作らないため)。 */
 .page {
+  position: relative;
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-lg) var(--space-md) var(--space-lg) calc(var(--space-md) + 20px);
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 8px;
+  width: 12px;
+  background-image: radial-gradient(circle 4px at 6px 14px, var(--color-border) 4px, transparent 4.5px);
+  background-repeat: repeat-y;
+  background-size: 100% 28px;
 }
 
 /* 2026-08-20(docs/ROADMAP.md「37. タブ(画面)遷移にもアニメーションを追加」):
    src/router.jsのrender()が、ハッシュ切り替えのたびに#viewへこのクラスを
-   付け直す(全ビュー共通・ビュー側の実装変更は不要)。 */
+   付け直す(全ビュー共通・ビュー側の実装変更は不要)。
+   2026-08-21(docs/ROADMAP.md「72」(a)): フェード+上下スライドから、しおり(ノート)の
+   ページがめくれて落ち着くような3D風トランジションに変更した。perspective()は
+   #view自身のtransform内で局所的に適用する(親の.pageにperspectiveプロパティを
+   持たせる方式にすると、.pageがposition: fixedの子要素(#scratch-actions等)の
+   包含ブロックになってしまい、画面下部への固定配置が壊れるため避けた)。
+   transform-origin: leftで(b)の綴じ穴側を軸に回転させ、綴じ目のある実物のノートを
+   意識させている。 */
 @keyframes view-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: perspective(1000px) rotateY(-6deg) translateY(6px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: perspective(1000px) rotateY(0deg) translateY(0);
   }
 }
 
+/* transformを持つ間、#viewはposition: fixedな子要素(#scratch-actions等、
+   docs/ROADMAP.md「44」)の包含ブロックになり、アニメーション中の一瞬だけ
+   画面下部固定が効かなくなる(CSS仕様上の制約。transformプロパティを使う限り
+   perspective()に限らず既存のtranslateY版でも本質的に同じ)。角度を控えめにし、
+   時間も0.25sと短く保つことで実害を最小化した。詳細はdocs/cycle-log.md参照。 */
 .view-enter {
-  animation: view-enter 0.2s ease;
+  transform-origin: left center;
+  animation: view-enter 0.25s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -69,7 +102,7 @@ body {
 @media (width >= 768px) {
   .page {
     max-width: 700px;
-    padding: var(--space-xl) var(--space-lg);
+    padding: var(--space-xl) var(--space-lg) var(--space-xl) calc(var(--space-lg) + 20px);
     flex: 1;
     min-width: 0;
   }
