@@ -2414,3 +2414,46 @@
       Firestore上のトリップ1件はサブコレクションを作成していないため追加
       クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle6 85検証で
       作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
+
+## 86. しおり並び替え後のハイライト点滅が見えない不具合の調査・修正
+- [x] (S) 2026-08-21、人間から「移動ボタン押してもアニメーションしないです」
+      とのフィードバック。着手時にまずreduced-motion環境かどうかの切り分けを
+      行う指示だったため、Playwrightで`prefers-reduced-motion: reduce`を
+      指定しない(デフォルト)状態で並び替えを再現したところ、それでも
+      ハイライト(`item-moved-flash`、`78`)が全く見えないことを確認し、
+      OS設定に起因しない実際のコード不具合と判明した。
+
+      原因: `moveUntimedItem`(`src/views/itinerary.js`)が`Promise.all`で
+      対象項目ごとに個別の`updateDocument`を呼んでいたため、Firestoreの
+      ローカル楽観的書き込みがドキュメント単位で発生し、`subscribeToCollection`
+      の購読コールバックがクリックのたびに複数回(実測3項目で3回)呼ばれて
+      いた。`renderItems`は`itemList.innerHTML = ''`から全項目のDOMを
+      作り直す実装のため、1回目の再描画で`item-moved-flash`クラスが付いた
+      要素も、直後の2回目・3回目の再描画で(`justMovedItemId`は1回目で
+      既に消費されnullになっているため)ハイライト無しの新しい要素に
+      即座に置き換わってしまい、ブラウザが描画する間もなくアニメーションが
+      消えていた。MutationObserverで`#item-list`の再描画回数を計測し、
+      1回のクリックで3回の再描画が起きていたこと、`.item-moved-flash`が
+      16ms間隔のポーリングで1度も検出されなかったことを実測で確認した。
+
+      修正: `src/firestore.js`に`updateDocumentsBatch(updates)`を追加した。
+      `writeBatch`(Firebase v11)で複数ドキュメントへの更新を1回のコミットに
+      まとめる関数で、コレクション名・フィールド名(`docs/firestore-design.md`)
+      は変更せず、書き込み方法のみを変更している。`moveUntimedItem`側を
+      この関数を使うよう変更し、`Promise.all`+個別`updateDocument`の呼び出し
+      をやめた。セキュリティルール上、`writeBatch`内の各`update`もドキュメント
+      単位で通常のupdateと同じルール評価を受けるため、`firestore.rules`側の
+      変更は不要・無し。
+
+      修正後、同じ手順で再計測し、再描画回数が3回→1回に減ったこと、
+      `.item-moved-flash`がクリック後31ms時点で既に検出され、以降ポーリング
+      期間中(1秒間)ずっと`true`のままだったこと(=実際に0.8秒のアニメーションが
+      最後まで再生される時間的余地ができたこと)を確認した。スクリーンショットで、
+      移動した項目のカードが緑色にハイライトされている様子を目視確認した
+      (2026-08-22)。375px幅で全7タブとも横スクロールが発生しないこと
+      (回帰なし)、console/pageerrorが0件であることも確認した。
+      `npm run check`(lint・test、vitest 47件)成功。検証で作成した
+      Firestore上のトリップ2件はいずれもサブコレクションを作成していないため
+      追加クリーンアップ不要、名前をそれぞれ「[検証用/削除不可] evolve
+      cycle6 86検証で作成」「...86検証で作成2」に更新済みの状態で共有
+      テストグループ`FMXRZYW7`内に残置。

@@ -18,7 +18,7 @@
 // 保存する(docs/firestore-design.md「itineraryItems」参照)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
-import { addDocument, updateDocument, deleteDocument, subscribeToCollection } from '../firestore.js';
+import { addDocument, updateDocument, updateDocumentsBatch, deleteDocument, subscribeToCollection } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
@@ -262,7 +262,12 @@ export function mount(outlet, params) {
     errorText.textContent = '';
     justMovedItemId = item.id;
     try {
-      await Promise.all(untimed.map((i, newOrder) => updateDocument(`${itemsPath}/${i.id}`, { order: newOrder })));
+      // 複数件のorderを1回のコミットにまとめる(docs/ROADMAP.md「86」)。個別にupdateDocumentを
+      // 呼ぶと購読(onSnapshot)側の再描画が複数回走り、ハイライト演出(item-moved-flash)が
+      // 次の再描画で即座に塗り替えられて見えなくなる不具合があったため。
+      await updateDocumentsBatch(
+        untimed.map((i, newOrder) => ({ path: `${itemsPath}/${i.id}`, data: { order: newOrder } })),
+      );
       // リアルタイム購読(docs/ROADMAP.md「32」)が新しい値を届けて再描画するため、
       // ここでのローカル更新は行わない。
     } catch (error) {

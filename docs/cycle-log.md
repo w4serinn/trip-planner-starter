@@ -2555,3 +2555,30 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   `83`・`84`・`88`はいずれも人間の実機/実画面での最終確認待ち。
 - blocked / partial: なし。
 
+
+## 2026-08-21 17:41
+- 実装: 86(しおり並び替え後のハイライト点滅`item-moved-flash`が見えない不具合の
+  調査・修正)。原因は`moveUntimedItem`が`Promise.all`+個別`updateDocument`で
+  複数ドキュメントを更新していたため、購読(onSnapshot)側の再描画が1回の
+  クリックで複数回(実測3回)走り、`renderItems`が全DOMを作り直す実装のため
+  1回目で付いたハイライトclassが直後の再描画で即座に消えていたこと。
+  `src/firestore.js`に`writeBatch`ベースの`updateDocumentsBatch`を追加し、
+  `moveUntimedItem`をこちらへ変更、複数件のorder更新を1コミットにまとめ
+  再描画を1回に削減した。
+- 動作確認: OK。着手時にreduced-motion設定の切り分けをまず実施し、デフォルト
+  (reduce指定なし)環境でも再現することを確認したうえでコード不具合と判断した。
+  MutationObserverで`#item-list`の再描画回数を計測し、修正前3回→修正後1回に
+  減ったこと、`.item-moved-flash`が修正前は16ms間隔ポーリングで1度も検出
+  されなかったのに対し修正後はクリック後31ms時点から1秒間ずっと検出される
+  ようになったことを実測確認した。スクリーンショットでハイライト表示を目視
+  確認。375px幅で全7タブとも横スクロールなし(回帰なし)。console/pageerror
+  0件。`npm run check`(lint・test、vitest47件)成功。
+- レビュー: OK。firestore-design.mdのコレクション構造・フィールド名の変更なし
+  (書き込み方法をwriteBatchに変えただけ)。firestore.rulesはbatch内の各updateも
+  通常のupdateと同じルール評価を受けるため変更不要・無し。screens.mdの画面
+  構成・遷移にも影響なし。新規色トークン追加なし。モバイル幅崩れなし。
+- 次回予定: 第14期の残り`87`(しおり並び替えを全項目対象・自由並び替え+
+  時間矛盾時警告方式へ再設計、Mサイズ)に着手予定。着手前に
+  `docs/firestore-design.md`の`order`フィールド説明を先に更新する必要がある
+  (ROADMAP.md「87」の実装メモ参照)。見積もりがLに達する場合はさらに分割する。
+- blocked / partial: なし。
