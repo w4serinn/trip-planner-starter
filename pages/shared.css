@@ -300,8 +300,8 @@ input[type="time"]:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-color: var(--color-primary-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-strong) 15%, transparent);
 }
 
 .time-select-row {
@@ -336,20 +336,34 @@ select:focus {
    ボタンには重すぎる(「圧が強い」)と判断し`--font-weight-subheading`
    (700)に下げた。横paddingも、ピル形状が窮屈に見えないよう`--space-md`から
    `--space-lg`へ広げた。彩度・グラデーション等の色味自体(`81`で暖色化した
-   影を含む)は変更していない。 */
+   影を含む)は変更していない。
+   2026-08-22(docs/ROADMAP.md「84」): --color-primaryを暖色系パステルへ
+   変更(詳細はstyles/tokens.cssのコメント参照)したのに合わせ、白文字
+   (--color-surface)ではコントラストが不足するため文字色を暗色
+   (--color-text)へ変更した。また外部レビューで「単色フラット塗りで
+   ヘッダー・.card-darkのgradientと比べ奥行きが無い」「押下時にbox-shadowが
+   noneになり影が完全に消えてペタッと平面に落ちる」と指摘され、(a) ごく
+   軽いハイライトのlinear-gradientを追加、(b) button:activeの影を完全に
+   消すのではなく小さく・薄く残す形に変更した。
+   2026-08-22(docs/ROADMAP.md「88」): 垂直paddingが--space-sm(8px)のみで
+   高さ・line-heightの明示指定も無く、実測の高さがタッチターゲットの目安
+   (44px前後)に届いていないと外部レビューで指摘され、min-heightを追加した。
+   アイコン専用の円形ボタン(.menu-toggle等)はこの影響を受けないよう個別に
+   min-height: 0で打ち消している。 */
 button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
   width: 100%;
+  min-height: 44px;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-subheading);
   padding: var(--space-sm) var(--space-lg);
   border: none;
   border-radius: var(--radius-pill);
-  background: var(--color-primary);
-  color: var(--color-surface);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 85%, white), var(--color-primary));
+  color: var(--color-text);
   box-shadow: var(--shadow-button);
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
@@ -360,12 +374,12 @@ button svg {
 }
 
 button:hover {
-  background: var(--color-primary-dark);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--color-primary-hover) 85%, white), var(--color-primary-hover));
 }
 
 button:active {
   transform: scale(0.97);
-  box-shadow: none;
+  box-shadow: 0 1px 4px rgb(42 30 20 / 10%);
 }
 
 button:disabled {
@@ -430,10 +444,21 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+/* 2026-08-22(docs/ROADMAP.md「88」): 主役ボタン(無印button、画面を前に
+   進める送信ボタン等)と、カード内の軽い操作(編集・削除・▲▼・キャンセル等)
+   の見た目をはっきり分けるため、幅・太さをここで独自に指定する。従来は
+   background/color/border/box-shadowしか上書きしておらず、幅(width: 100%)・
+   太さ(font-weight: 700)は無印buttonから継承したままだったため、「短い
+   ラベルなのにボタンだけ画面幅いっぱいに間延びして見える」という指摘の
+   一因になっていた。width: autoにすることで、これまで個別に必要だった
+   .card-section-header button / .trip-name-row buttonでのwidth: auto上書き
+   (実質どちらも.btn-secondaryが対象)が不要になったため削除した。 */
 .btn-secondary {
+  width: auto;
+  font-weight: var(--font-weight-base);
   background: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  color: var(--color-primary-strong);
+  border: 1px solid var(--color-primary-strong);
   box-shadow: none;
 }
 
@@ -459,7 +484,6 @@ button:disabled {
 }
 
 .card-section-header button {
-  width: auto;
   flex-shrink: 0;
 }
 
@@ -498,7 +522,6 @@ button:disabled {
 }
 
 .trip-name-row button {
-  width: auto;
   flex-shrink: 0;
 }
 
@@ -577,6 +600,7 @@ button:disabled {
 
 .star-button {
   width: auto;
+  min-height: 0;
   background: none;
   box-shadow: none;
   color: var(--color-accent);
@@ -612,7 +636,7 @@ button:disabled {
   justify-content: center;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-text);
 }
 
 /* 2026-08-21(docs/ROADMAP.md「80」): 単なる直線の連結線から、ランダムに
@@ -738,7 +762,7 @@ button:disabled {
 
 .candidate-link {
   display: block;
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   word-break: break-all;
 }
 
@@ -746,7 +770,7 @@ button:disabled {
    リンク化する際に使う。.candidate-linkはdisplay:blockで独立した行になるため、
    文章の途中に混ざるインラインリンクには使えず、この専用クラスを用意した。 */
 .inline-link {
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   word-break: break-all;
 }
 
@@ -789,7 +813,7 @@ button:disabled {
   top: 0;
   height: 100%;
   border-radius: var(--radius-sm);
-  background: var(--color-primary);
+  background: var(--color-primary-strong);
 }
 
 .star-button:hover {
@@ -828,7 +852,7 @@ button:disabled {
   font-weight: bold;
   letter-spacing: 0.1em;
   text-align: center;
-  color: var(--color-primary-dark);
+  color: var(--color-primary-strong);
   margin: var(--space-sm) 0;
   transform: rotate(0.8deg);
 }
@@ -900,7 +924,7 @@ button:disabled {
 }
 
 .sidebar-back-link {
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   text-decoration: none;
   font-size: var(--font-size-sm);
 }
@@ -962,6 +986,7 @@ button:disabled {
 
 .menu-toggle {
   width: 40px;
+  min-height: 0;
   aspect-ratio: 1;
   padding: 0;
   border-radius: var(--radius-pill);
@@ -997,7 +1022,7 @@ button:disabled {
 
 .sidebar-link-active {
   background: var(--color-bg);
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   font-weight: var(--font-weight-subheading);
 }
 
@@ -1113,11 +1138,12 @@ button:disabled {
 
 .date-picker-nav {
   width: 24px;
+  min-height: 0;
   padding: 0;
   aspect-ratio: 1;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary-strong);
   border: 1px solid var(--color-border);
   box-shadow: none;
   font-size: var(--font-size-sm);
@@ -1158,13 +1184,13 @@ button:disabled {
 }
 
 .date-picker-today {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-strong);
 }
 
 .date-picker-selected,
 .date-picker-selected:hover {
   background: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-text);
   border-color: var(--color-primary);
 }
 
@@ -1189,7 +1215,7 @@ button:disabled {
 }
 
 .schedule-overview-day-today {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-strong);
 }
 
 .schedule-overview-day-ok {
@@ -1255,6 +1281,6 @@ button:disabled {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-text);
   font-size: var(--font-size-sm);
 }

@@ -2285,3 +2285,105 @@
 
       これで第13期(実機/実画面フィードバック対応(その4))は全サブセクション
       完了となった。
+
+## 第14期: 実機/実画面フィードバック対応(その5)
+
+## 84. ボタンの色相を暖色系パステルへ変更
+- [x] (M) `88`(ボタンの2階層化)とまとめて対応した(同じCSSルールを触る
+      ため)。外部レビューで「背景クリーム・アクセントのコーラルオレンジ・
+      ダーク装飾の藍系濃紺が暖色で統一されているのに、`--color-primary`
+      (`#3b82f6`、ボタン等の主色)だけがBootstrap既定値に近い彩度の高い
+      寒色の青で唯一の『よそ者』になっている」と指摘され、人間との会話
+      (2回のAskUserQuestionで方向性を確認)で「暖色系のパステル(コーラル
+      オレンジの仲間になるような柔らかいピーチ/サーモンピンク)」への変更が
+      確定した。
+      **トークン設計**: パステル(明度が高く彩度が低い色)は白文字との
+      コントラストが不足する(実測でwhiteとのcontrast比2前後、WCAG AA基準の
+      4.5に届かない)ため、単純な色置き換えでは済まず、役割ごとに3つの
+      トークンへ整理した: `--color-primary`(`#f0a98c`、背景として使う
+      場所用。ペアの文字色は`--color-text`(暗色)に変更)・
+      `--color-primary-hover`(`#e08f6c`、新規追加。ボタンhover時の背景。
+      `--color-text`とのcontrast比5.68でAA基準を満たす)・
+      `--color-primary-strong`(`#ad5a38`、新規追加。文字色・枠線・リンクと
+      して明るい背景の上で使う場所用。white/クリーム背景とのcontrast比4.9前後
+      でAA基準を満たす)。`--color-primary-dark`(`#1d4ed8`、青のまま)は
+      値を変更せず維持した。実際にはヘッダー・`.card-dark`・
+      `.scratch-actions`の濃色グラデーションの終点として`--color-primary-
+      deep`(藍系濃紺)とペアで使われているだけで、外部レビュアーが「良い」
+      と評価した既存のダーク装飾の一部だったため(「primaryの濃い版」では
+      なく「ダークグラデーション用の色」という独立した役割として今後扱う)。
+      **`pages/shared.css`側の変更点**: `--color-primary`を背景として使う
+      箇所(`button`本体・`.timeline-marker-badge`・`.date-picker-selected`・
+      `.chip`)は文字色を`--color-surface`(白)から`--color-text`(暗色)へ
+      変更。従来`--color-primary`を文字色・枠線・リンクとして使っていた
+      箇所(フォーカスリング・`.btn-secondary`・`.candidate-link`・
+      `.inline-link`・`.stay-timeline-bar`・`.passphrase`(従来
+      `--color-primary-dark`)・`.sidebar-back-link`・`.sidebar-link-active`・
+      `.date-picker-today`・`.date-picker-nav`・
+      `.schedule-overview-day-today`)は全て`--color-primary-strong`へ
+      切り替えた。外部レビューで指摘された質感面の対応も実施:
+      (a) `button`の`background`を単色フラットから軽いハイライトの
+      `linear-gradient(180deg, color-mix(...) 85%, white), ...)`に変更し
+      奥行きを出した(`button:hover`も同様に`--color-primary-hover`ベースの
+      グラデーションへ)。(b) `button:active`の`box-shadow: none`(影が
+      完全に消える)を`0 1px 4px rgb(42 30 20 / 10%)`(小さく・薄い影を
+      残す)に変更した。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、主役ボタン(`#create-trip`)の`computed color`が
+      `rgb(42, 42, 42)`(暗色)・`backgroundImage`にグラデーションが
+      適用されていることを確認した。スクリーンショットで、参加画面の
+      「参加する」ボタンが暖色パステルの地に暗色文字で表示され、背景クリーム・
+      アクセントオレンジと調和していることを目視確認した。console/pageerror
+      は0件。`npm run check`(lint・test、vitest 47件)成功。
+      検証で作成したFirestore上のトリップの動作確認・クリーンアップ状況は
+      `88`のエントリにまとめて記載。
+
+## 88. ボタンの2階層化(主役/軽い操作)
+- [x] (M) `84`(色相変更)とまとめて対応した(同じCSSルールを触るため)。
+      外部レビュー・人間との会話で、ボタンを「主役(無印`button`)」と
+      「軽い操作(`.btn-secondary`)」の2階層にはっきり分ける方針が確定した。
+      着手前にコードを洗い出したところ、「画面を前に進める送信ボタン
+      (参加する/追加する/作成する/保存等)」と「カード内の軽い操作(編集/
+      削除/▲上へ/▼下へ/キャンセル/雑多メモの振り分けボタン)」という2階層
+      は既に構造として存在していたが、`.btn-secondary`は`background`・
+      `color`・`border`・`box-shadow`しか上書きしておらず、太さ
+      (`font-weight: 700`を無印`button`から継承)と幅(`width: 100%`も継承)
+      は主役ボタンと全く同じのままだった。これが「軽い操作なのに主役と
+      同じ幅いっぱいに引き伸ばされる」(人間から「ボタンの記載内容に対して
+      ボタンサイズがあってない」との指摘)の主因と特定し、3階層目は作らず
+      既存の2階層を強化する方向で対応した。
+      **対応内容**: (1) `.btn-secondary`に`width: auto`(内容に応じた
+      サイズ)・`font-weight: var(--font-weight-base)`(新規追加した
+      `400`、`77`で決めた主役ボタンの`700`とはっきり差をつける)を追加した。
+      これにより`.card-section-header button`・`.trip-name-row button`で
+      個別に行っていた`width: auto`上書き(実質どちらも`.btn-secondary`が
+      対象)が不要になり削除した(`flex-shrink: 0`は維持)。
+      `.button-row button { width: auto; flex: 1; }`は複数ボタンを横並びで
+      均等幅にする行レイアウトの指定であり今回の階層とは別の関心事のため
+      維持した。(2) 主役ボタン(無印`button`)の高さがタッチターゲットの目安
+      (44px前後)に届いていない(実測32〜36px程度)と外部レビュアーから
+      指摘され、`min-height: 44px`を追加した。アイコン専用の円形ボタン
+      (`.menu-toggle`・`.star-button`・`.date-picker-nav`)はこの影響を
+      受けて円形が崩れないよう、個別に`min-height: 0`で打ち消した。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、主役ボタンの`height`が`44px`ちょうどになっていること、
+      `.card-dark`内でない`.btn-secondary`(`#edit-meeting-button`)の
+      `computed color`が`rgb(173, 90, 56)`(`--color-primary-strong`と
+      一致)・`fontWeight`が`400`・幅が内容サイズ(82px、100%ではない)に
+      なっていることを確認した。`.card-dark`内の`.btn-secondary`
+      (`#edit-name-button`)は既存の`.card-dark .btn-secondary`ルール
+      (白文字、`44`で導入済み)が優先されたままであることも確認した
+      (意図通りの挙動で不具合ではない)。`.menu-toggle`が`min-height: 0`の
+      打ち消しにより引き続き40×40pxの正方形(円形)を維持していることも
+      確認した。スクリーンショットで、しおりタブの「編集」「削除」
+      「▲上へ」「▼下へ」ボタンが軽い操作らしい細め・内容幅寄りの見た目に、
+      「+しおり項目を追加」ボタンが引き続き全幅・太字・強い存在感のまま
+      表示され、両者の階層が視覚的に区別できることを目視確認した。375px幅で
+      全7タブとも横スクロールが発生しないこと(回帰なし)も確認した。
+      console/pageerrorは0件。`npm run check`(lint・test、vitest 47件)
+      成功。検証で作成したFirestore上のトリップ1件はサブコレクションを
+      作成していないため追加クリーンアップ不要、名前を「[検証用/削除不可]
+      evolve cycle6 84-88検証で作成」に更新済みの状態で共有テストグループ
+      `FMXRZYW7`内に残置。
