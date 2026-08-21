@@ -19,4 +19,10 @@ export const icons = {
   empty: icon('<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h5l1.5 2h5L16 12h5"/>', 40),
   menu: icon('<path d="M4 6h16M4 12h16M4 18h16"/>', 22),
   close: icon('<path d="M6 6l12 12M18 6L6 18"/>', 22),
+
+  // 2026-08-20(docs/ROADMAP.md「68」): しおりタブのタイムラインマーカー用。
+  // 足あと(道のりの1歩)・旗(次の予定の目印)。塗りつぶし表現のためfill/strokeを
+  // 個別指定する(icon()デフォルトのstroke-onlyを上書き)。
+  footprint: icon('<ellipse cx="12" cy="14" rx="4.2" ry="6.2" fill="currentColor" stroke="none"/><circle cx="8.4" cy="5.6" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="4.4" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.6" cy="5.6" r="1.3" fill="currentColor" stroke="none"/>', 14),
+  flag: icon('<path d="M5 21V4"/><path d="M5 5h12l-3 3.5L17 12H5"/>', 14),
 };

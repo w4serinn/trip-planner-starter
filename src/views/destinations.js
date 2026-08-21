@@ -1,6 +1,7 @@
 // E. 行き先決めタブビュー(SPA)
 // 候補地の追加、★1〜5投票(自分の投票状態の表示)、平均スコアによる自動ランキング、
 // 投票者一覧の表示を行う。データモデルはdocs/firestore-design.md「destinations」参照。
+// メモ欄はプレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import {
@@ -11,6 +12,7 @@ import {
   sanitizeMapKey,
 } from '../firestore.js';
 import { icons } from '../icons.js';
+import { appendLinkifiedText } from '../linkify.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -123,7 +125,7 @@ export function mount(outlet, params) {
       if (destination.note) {
         const note = document.createElement('p');
         note.className = 'subtitle';
-        note.textContent = destination.note;
+        appendLinkifiedText(note, destination.note);
         card.appendChild(note);
       }
 

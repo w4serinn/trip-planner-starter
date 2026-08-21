@@ -4,11 +4,14 @@
 // テキストエリアで選択した範囲を、「→企画メモへ」「→行き先決めへ」「→しおりへ」
 // 「→宿泊へ」ボタンで振り分けられる(日程調整は自由記述の入れ場所が無いため対象外)。
 // 詳細はdocs/firestore-design.md「雑多メモの振り分け方式の再設計」参照。
+// 企画メモ(src/views/notes.js)と見た目がほぼ同じで役割の違いが伝わりにくいとの
+// 指摘を受け、アイコン見出しで視覚的に差別化している(docs/ROADMAP.md「48」)。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { getDocument, subscribeToDocument, updateDocument, addDocument, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 import { createDatePicker } from '../datePicker.js';
+import { HOUR_OPTIONS, MINUTE_OPTIONS, buildTimeString } from '../timeSelect.js';
 
 const SAVE_DEBOUNCE_MS = 1200;
 
@@ -29,14 +32,17 @@ export function mount(outlet, params) {
     <p class="subtitle">まず自由に書きなぐって、後から他のタブに振り分けましょう。入力は自動的に保存されます。</p>
 
     <div class="card card-dark">
+      <h3 class="icon-heading">${icons.scratch}<span>雑多メモ</span></h3>
       <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
-      <div class="button-row">
-        <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>
-        <button type="button" id="to-destinations-button" class="btn-secondary">${icons.destinations}<span>→行き先決めへ</span></button>
-      </div>
-      <div class="button-row">
-        <button type="button" id="to-itinerary-button" class="btn-secondary">${icons.itinerary}<span>→しおりへ</span></button>
-        <button type="button" id="to-lodging-button" class="btn-secondary">${icons.lodging}<span>→宿泊へ</span></button>
+      <div class="scratch-actions" id="scratch-actions">
+        <div class="button-row">
+          <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>
+          <button type="button" id="to-destinations-button" class="btn-secondary">${icons.destinations}<span>→行き先決めへ</span></button>
+        </div>
+        <div class="button-row">
+          <button type="button" id="to-itinerary-button" class="btn-secondary">${icons.itinerary}<span>→しおりへ</span></button>
+          <button type="button" id="to-lodging-button" class="btn-secondary">${icons.lodging}<span>→宿泊へ</span></button>
+        </div>
       </div>
       <p class="error-text" id="scratch-error-text"></p>
       <p class="copy-feedback" id="scratch-saved-text"></p>
@@ -47,6 +53,32 @@ export function mount(outlet, params) {
       <div class="field">
         <label>日付</label>
         <div id="to-itinerary-date-picker"></div>
+      </div>
+      <div class="field">
+        <label for="to-itinerary-time-ampm">時間目安(任意)</label>
+        <div class="time-select-row">
+          <select id="to-itinerary-time-ampm" name="timeAmPm">
+            <option value="">--</option>
+            <option value="AM">午前</option>
+            <option value="PM">午後</option>
+          </select>
+          <select id="to-itinerary-time-hour" name="timeHour">
+            <option value="">時</option>
+            ${HOUR_OPTIONS.map((h) => `<option value="${h}">${h}</option>`).join('')}
+          </select>
+          <select id="to-itinerary-time-minute" name="timeMinute">
+            <option value="">分</option>
+            ${MINUTE_OPTIONS.map((m) => `<option value="${m}">${m}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="to-itinerary-location">場所リンク(任意)</label>
+        <input type="url" id="to-itinerary-location" name="locationUrl" placeholder="https://maps.app.goo.gl/..." />
+      </div>
+      <div class="field">
+        <label for="to-itinerary-note">メモ(任意)</label>
+        <input type="text" id="to-itinerary-note" name="note" />
       </div>
       <p class="error-text" id="to-itinerary-error-text"></p>
       <div class="button-row">
@@ -67,9 +99,19 @@ export function mount(outlet, params) {
         <button type="button" id="to-lodging-cancel" class="btn-secondary">キャンセル</button>
       </div>
     </form>
+
+    <div id="scratch-actions-spacer"></div>
   `;
 
+  // タブ遷移アニメーション(docs/ROADMAP.md「72」)はtransformを使うため、有効な間
+  // #viewがposition: fixedな#scratch-actions(直上の「44」)の包含ブロックになって
+  // しまい、画面下部固定が一瞬崩れる(docs/ROADMAP.md「73」参照)。src/router.jsに
+  // transformを使わないフォールバック用の遷移を使わせる。
+  outlet.dataset.flatTransition = 'true';
+
   const scratchTextarea = outlet.querySelector('#scratch-text');
+  const scratchActions = outlet.querySelector('#scratch-actions');
+  const scratchActionsSpacer = outlet.querySelector('#scratch-actions-spacer');
   const errorText = outlet.querySelector('#scratch-error-text');
   const savedText = outlet.querySelector('#scratch-saved-text');
   const toNotesButton = outlet.querySelector('#to-notes-button');
@@ -77,6 +119,11 @@ export function mount(outlet, params) {
   const toItineraryButton = outlet.querySelector('#to-itinerary-button');
   const toItineraryForm = outlet.querySelector('#to-itinerary-form');
   const toItineraryDatePickerContainer = outlet.querySelector('#to-itinerary-date-picker');
+  const toItineraryTimeAmPmSelect = outlet.querySelector('#to-itinerary-time-ampm');
+  const toItineraryTimeHourSelect = outlet.querySelector('#to-itinerary-time-hour');
+  const toItineraryTimeMinuteSelect = outlet.querySelector('#to-itinerary-time-minute');
+  const toItineraryLocationInput = outlet.querySelector('#to-itinerary-location');
+  const toItineraryNoteInput = outlet.querySelector('#to-itinerary-note');
   const toItineraryErrorText = outlet.querySelector('#to-itinerary-error-text');
   const toItineraryCancelButton = outlet.querySelector('#to-itinerary-cancel');
   const toLodgingButton = outlet.querySelector('#to-lodging-button');
@@ -224,6 +271,11 @@ export function mount(outlet, params) {
     pendingItineraryRange = selection;
     toItineraryErrorText.textContent = '';
     toItineraryDatePicker.setValue(null);
+    toItineraryTimeAmPmSelect.value = '';
+    toItineraryTimeHourSelect.value = '';
+    toItineraryTimeMinuteSelect.value = '';
+    toItineraryLocationInput.value = '';
+    toItineraryNoteInput.value = '';
     toItineraryForm.hidden = false;
   };
   toItineraryButton.addEventListener('click', onToItineraryClick);
@@ -249,15 +301,27 @@ export function mount(outlet, params) {
       return;
     }
 
+    const amPm = toItineraryTimeAmPmSelect.value;
+    const hour = toItineraryTimeHourSelect.value;
+    const minute = toItineraryTimeMinuteSelect.value;
+    const timeFieldsFilled = [amPm, hour, minute].filter((v) => v !== '').length;
+    if (timeFieldsFilled > 0 && timeFieldsFilled < 3) {
+      toItineraryErrorText.textContent = '時間を指定する場合は、午前/午後・時・分をすべて選択してください。';
+      return;
+    }
+    const time = timeFieldsFilled === 3 ? buildTimeString(amPm, hour, minute) : '';
+    const locationUrl = toItineraryLocationInput.value.trim();
+    const note = toItineraryNoteInput.value.trim();
+
     const submitButton = toItineraryForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;
     try {
       await addDocument(itemsPath, {
         title: pendingItineraryRange.text,
         date,
-        time: '',
-        locationUrl: '',
-        note: '',
+        time,
+        locationUrl,
+        note,
         addedBy: session.name,
       });
 
@@ -330,7 +394,35 @@ export function mount(outlet, params) {
   };
   toLodgingForm.addEventListener('submit', onToLodgingSubmit);
 
+  // 振り分けボタンを画面下部に固定表示にする対応(docs/ROADMAP.md「44」)。
+  // モバイル(768px未満)でのみ.scratch-actionsがposition: fixedになる(pages/shared.css
+  // 参照)ため、その分の高さを最後尾のスペーサーで確保し、末尾のコンテンツが
+  // バーに隠れないようにする。加えて、スマホの入力キーボード表示中はバーと
+  // キーボードが重なってしまうため、visualViewportの高さがウィンドウ高さに対して
+  // 大きく縮んだ場合(=キーボードが出ている)は.keyboard-openを付けてバーを
+  // 画面外へスライドさせる。
+  const isMobileWidth = () => window.matchMedia('(width < 768px)').matches;
+  const KEYBOARD_HEIGHT_RATIO_THRESHOLD = 0.75;
+
+  const updateActionsSpacerHeight = () => {
+    scratchActionsSpacer.style.height = isMobileWidth() ? `${scratchActions.offsetHeight}px` : '0px';
+  };
+  updateActionsSpacerHeight();
+  window.addEventListener('resize', updateActionsSpacerHeight);
+
+  const updateKeyboardOpenState = () => {
+    if (!window.visualViewport || !isMobileWidth()) {
+      scratchActions.classList.remove('keyboard-open');
+      return;
+    }
+    const ratio = window.visualViewport.height / window.innerHeight;
+    scratchActions.classList.toggle('keyboard-open', ratio < KEYBOARD_HEIGHT_RATIO_THRESHOLD);
+  };
+  window.visualViewport?.addEventListener('resize', updateKeyboardOpenState);
+
   return () => {
+    window.removeEventListener('resize', updateActionsSpacerHeight);
+    window.visualViewport?.removeEventListener('resize', updateKeyboardOpenState);
     scratchTextarea.removeEventListener('input', onScratchInput);
     toNotesButton.removeEventListener('click', onToNotesClick);
     toDestinationsButton.removeEventListener('click', onToDestinationsClick);

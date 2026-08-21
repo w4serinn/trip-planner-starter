@@ -1,6 +1,6 @@
 /* デザイントークン(仮決定)。配色・タイポグラフィ・余白などをCSS変数として定義する。
    すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。 */
-@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@700;900&display=swap");
 
 :root {
   /* カラー(2026-08-19再改訂: docs/ROADMAP.md「第3期: レイアウト刷新」参照。
@@ -24,15 +24,18 @@
   --color-success: #219653;
 
   /* 2026-08-19追加(第5期・docs/ROADMAP.md「23. デザイントークンの拡充」): primaryを
-     さらに沈めた藍系の濃紺。ヘッダーやダーク全面塗りセクションの背景に使う。
-     --color-success(意味的な「成功」表現)とは独立した、青と調和する装飾用の緑。
-     全面採用ではなく差し色として、既存の彩度高めなオレンジaccentとは別枠で使う。 */
+     さらに沈めた藍系の濃紺。ヘッダーやダーク全面塗りセクションの背景に使う。 */
   --color-primary-deep: #16234a;
-  --color-accent-green: #4d9a7a;
 
   /* タイポグラフィ(2026-08-19: Zen Kaku Gothic Newを本文フォントに採用。
      未読込時・フォールバック用に既存フォントは維持する) */
   --font-family-base: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+
+  /* 2026-08-20(docs/ROADMAP.md「67」): 外部レビューで「本文も見出しもZen Kaku
+     Gothic New一本でウェイトだけの差別化」と指摘され、見出し(h1〜h3)だけ丸みの
+     ある手書き風フォントを足すことで「しおり」らしいあたたかみを補強した。
+     本文用のZen Kaku Gothic Newは維持し、見出しにのみ適用する。 */
+  --font-family-heading: "Zen Maru Gothic", "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --font-size-sm: 14px;
   --font-size-base: 16px;
   --font-size-lg: 20px;
@@ -60,10 +63,14 @@
   /* 完全な丸み(ピル型)。バッジ等、円形に近い強い丸みを持たせたい要素に使う。 */
   --radius-pill: 999px;
 
-  /* 2026-08-19: 中立グレー系から、primary-darkを薄くにじませた青みの影に変更し、
-     青ベース配色との統一感を強めた(design-library.jpの実例を参考)。 */
-  --shadow-card: 0 4px 14px rgb(29 78 216 / 10%);
+  /* 2026-08-20(docs/ROADMAP.md「69」): 外部レビューで「カードの影が青みを帯びて
+     おりSaaSダッシュボードの文法に見える」と指摘され、2026-08-19時点の
+     primary-darkを薄くにじませた青みの影から、紙が浮いているような暖色寄りの
+     柔らかい黒に変更した。 */
+  --shadow-card: 0 4px 16px rgb(42 30 20 / 8%);
 
-  /* primaryカラー(青)を薄くにじませた影で、ボタンに軽い浮遊感を持たせる。 */
-  --shadow-button: 0 4px 10px rgb(59 130 246 / 25%);
+  /* 2026-08-20(docs/ROADMAP.md「69」): 外部レビューで「不透明度25%は主張が強い」と
+     指摘され、15%前後まで下げつつぼかし(blur)を広げ(10px→16px)、上品な浮遊感に
+     調整した。色相(primaryの青)自体は変更していない。 */
+  --shadow-button: 0 4px 16px rgb(59 130 246 / 15%);
 }

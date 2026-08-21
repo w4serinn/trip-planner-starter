@@ -6,6 +6,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   collection,
   getDocs,
   addDoc,
@@ -52,6 +53,13 @@ export async function addDocument(collectionPath, data) {
   return ref.id;
 }
 
+// サブコレクション文書の削除(docs/firestore-design.md「削除権限の方針」参照。
+// groups/trips自体はfirestore.rulesでdelete禁止のため、このモジュールにも
+// 対応する削除関数を用意していない)。
+export async function deleteDocument(path) {
+  await deleteDoc(doc(db, path));
+}
+
 export async function listCollection(collectionPath) {
   const snapshot = await getDocs(collection(db, collectionPath));
   return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
@@ -85,7 +93,8 @@ export function subscribeToCollection(collectionPath, onData, onError) {
 
 // 投票・回答のマップキーに「名前」をそのまま使うと、updateDocumentのドット記法が
 // パスの区切りとして解釈されたり、Firestoreで使えない文字が含まれたりする恐れがある
-// (docs/firestore-design.md「未確定・要注意点」参照)ため、キーとして使う前に軽く置換する。
+// (docs/firestore-design.md「投票・回答のマップキーに使う「名前」のサニタイズ」参照)
+// ため、キーとして使う前に軽く置換する。
 export function sanitizeMapKey(key) {
   return key.replace(/[.$/[\]#]/g, '_');
 }

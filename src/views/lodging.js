@@ -2,13 +2,24 @@
 // 宿泊候補の追加(URL・メモ)・一覧表示(投票機能は持たない。docs/requirements.md 7-3参照。
 // 決定は口頭・Discord等で行う想定)と、確定宿泊の追加(URL・メモ・チェックイン/アウト日、
 // 複数件・飛び飛びの日程に対応)・一覧表示(期間順)を行う。
-// データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」参照。
+// 宿泊候補カードの「確定にする」ボタンから、URL・メモを引き継いだ確定宿泊フォームを
+// 開ける(docs/ROADMAP.md「56」)。確定時、元候補のIDを`sourceCandidateId`として
+// confirmedStaysに記録し、候補側には「確定済み」バッジを表示して追跡できるようにする
+// (docs/ROADMAP.md「64」)。
+// メモ欄はプレーンテキストだが、含まれるURLはリンク化する(docs/ROADMAP.md「65」)。
+// 確定宿泊が2件以上のときは、期間を横棒で示すガントチャート風タイムラインを一覧の
+// 上に表示し、宿泊の流れを一目で把握できるようにする(docs/ROADMAP.md「57」。
+// 位置・幅の計算はDOM非依存の`src/stayTimeline.js`に切り出し済み)。
+// データモデルはdocs/firestore-design.md「lodgingCandidates」「confirmedStays」
+// 「宿泊候補→確定宿泊のワンタップ変換」参照。
 import { navigate } from '../router.js';
 import { loadSession } from '../session.js';
 import { addDocument, subscribeToCollection, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
+import { appendLinkifiedText } from '../linkify.js';
+import { buildStayTimelineBars } from '../stayTimeline.js';
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -76,6 +87,7 @@ export function mount(outlet, params) {
       </div>
     </form>
 
+    <div id="stay-timeline"></div>
     <div id="stay-list" class="card-grid"></div>
   `;
 
@@ -121,6 +133,9 @@ export function mount(outlet, params) {
       return;
     }
 
+    // どの候補がすでに確定宿泊になったか(docs/ROADMAP.md「64」)。
+    const confirmedCandidateIds = new Set(currentStays.map((stay) => stay.sourceCandidateId).filter(Boolean));
+
     const sorted = [...candidates].sort((a, b) => (b.addedAt?.seconds ?? 0) - (a.addedAt?.seconds ?? 0));
 
     for (const candidate of sorted) {
@@ -144,7 +159,7 @@ export function mount(outlet, params) {
 
       if (candidate.note) {
         const note = document.createElement('p');
-        note.textContent = candidate.note;
+        appendLinkifiedText(note, candidate.note);
         card.appendChild(note);
       }
 
@@ -152,6 +167,20 @@ export function mount(outlet, params) {
       meta.className = 'subtitle';
       meta.textContent = `追加: ${candidate.addedBy}`;
       card.appendChild(meta);
+
+      if (confirmedCandidateIds.has(candidate.id)) {
+        const confirmedText = document.createElement('p');
+        confirmedText.className = 'complete-badge';
+        confirmedText.textContent = '確定済み';
+        card.appendChild(confirmedText);
+      }
+
+      const confirmButton = document.createElement('button');
+      confirmButton.type = 'button';
+      confirmButton.className = 'btn-secondary';
+      confirmButton.textContent = '確定にする';
+      confirmButton.addEventListener('click', () => onConfirmCandidateClick(candidate));
+      card.appendChild(confirmButton);
 
       candidateList.appendChild(card);
     }
@@ -216,6 +245,7 @@ export function mount(outlet, params) {
   const stayCheckInContainer = outlet.querySelector('#stay-checkin-picker');
   const stayCheckOutContainer = outlet.querySelector('#stay-checkout-picker');
   const stayErrorText = outlet.querySelector('#stay-error-text');
+  const stayTimeline = outlet.querySelector('#stay-timeline');
   const stayList = outlet.querySelector('#stay-list');
   const staySubmitButton = stayForm.querySelector('button[type="submit"]');
 
@@ -225,6 +255,10 @@ export function mount(outlet, params) {
   // 置き換え。チェックイン/チェックアウトそれぞれ独立したpickerインスタンスを持つ。
   const stayCheckInPicker = createDatePicker(stayCheckInContainer, { mode: 'single' });
   const stayCheckOutPicker = createDatePicker(stayCheckOutContainer, { mode: 'single' });
+
+  // 宿泊候補の「確定にする」ボタン経由で開いた場合、由来の候補ID(docs/ROADMAP.md
+  // 「64」)を保持しておく。通常の「確定宿泊を追加」ボタン経由ではnullのまま。
+  let pendingSourceCandidateId = null;
 
   function openStayForm() {
     toggleStayFormButton.hidden = true;
@@ -240,13 +274,29 @@ export function mount(outlet, params) {
     stayNoteInput.value = '';
     stayCheckInPicker.setValue(null);
     stayCheckOutPicker.setValue(null);
+    pendingSourceCandidateId = null;
   }
 
-  const onToggleStayFormClick = () => openStayForm();
+  const onToggleStayFormClick = () => {
+    pendingSourceCandidateId = null;
+    openStayForm();
+  };
   toggleStayFormButton.addEventListener('click', onToggleStayFormClick);
 
   const onCancelStayFormClick = () => closeStayForm();
   cancelStayFormButton.addEventListener('click', onCancelStayFormClick);
+
+  // 宿泊候補カードの「確定にする」ボタン(docs/ROADMAP.md「56」)。既存の
+  // 「確定宿泊を追加」フォームを再利用し、URL・メモを候補から引き継いで開く。
+  const onConfirmCandidateClick = (candidate) => {
+    pendingSourceCandidateId = candidate.id;
+    stayErrorText.textContent = '';
+    stayUrlInput.value = candidate.url;
+    stayNoteInput.value = candidate.note || '';
+    stayCheckInPicker.setValue(null);
+    stayCheckOutPicker.setValue(null);
+    openStayForm();
+  };
 
   let currentStays = [];
 
@@ -256,16 +306,58 @@ export function mount(outlet, params) {
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  function formatShortDateLabel(dateString) {
+    const date = new Date(`${dateString}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
+  }
+
+  // 確定宿泊が2件以上のときのみ、期間を横棒で示すガントチャート風タイムラインを
+  // 表示する(docs/ROADMAP.md「57」)。1件だけの場合は一覧のカードで十分なため出さない。
+  function renderStayTimeline(sortedStays) {
+    stayTimeline.innerHTML = '';
+    if (sortedStays.length < 2) return;
+
+    const bars = buildStayTimelineBars(sortedStays);
+    const container = document.createElement('div');
+    container.className = 'card stay-timeline';
+
+    for (const bar of bars) {
+      const row = document.createElement('div');
+      row.className = 'stay-timeline-row';
+
+      const label = document.createElement('span');
+      label.className = 'stay-timeline-label';
+      label.textContent = `${formatShortDateLabel(bar.checkIn)}〜${formatShortDateLabel(bar.checkOut)}`;
+      row.appendChild(label);
+
+      const track = document.createElement('div');
+      track.className = 'stay-timeline-track';
+      const trackBar = document.createElement('div');
+      trackBar.className = 'stay-timeline-bar';
+      trackBar.style.left = `${bar.leftPercent}%`;
+      trackBar.style.width = `${bar.widthPercent}%`;
+      track.appendChild(trackBar);
+      row.appendChild(track);
+
+      container.appendChild(row);
+    }
+
+    stayTimeline.appendChild(container);
+  }
+
   function renderStays(stays) {
     stayList.innerHTML = '';
 
     if (stays.length === 0) {
+      stayTimeline.innerHTML = '';
       stayList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ確定宿泊がありません。</p></div>`;
       return;
     }
 
     // 期間順(チェックインの早い順)に表示する。
     const sorted = [...stays].sort((a, b) => a.checkIn.localeCompare(b.checkIn));
+    renderStayTimeline(sorted);
 
     for (const stay of sorted) {
       const card = document.createElement('div');
@@ -292,7 +384,7 @@ export function mount(outlet, params) {
 
       if (stay.note) {
         const note = document.createElement('p');
-        note.textContent = stay.note;
+        appendLinkifiedText(note, stay.note);
         card.appendChild(note);
       }
 
@@ -311,6 +403,9 @@ export function mount(outlet, params) {
     (stays) => {
       currentStays = stays;
       renderStays(currentStays);
+      // 確定宿泊が変わると、候補側の「確定済み」バッジ(docs/ROADMAP.md「64」)も
+      // 追随させる必要があるため、候補一覧も再描画する。
+      renderCandidates(currentCandidates);
       if (isFirstStaysSnapshot) {
         isFirstStaysSnapshot = false;
         staySubmitButton.disabled = false;
@@ -342,13 +437,11 @@ export function mount(outlet, params) {
 
     staySubmitButton.disabled = true;
     try {
-      await addDocument(confirmedStaysPath, {
-        url,
-        note,
-        checkIn,
-        checkOut,
-        addedBy: session.name,
-      });
+      const payload = { url, note, checkIn, checkOut, addedBy: session.name };
+      // 「確定にする」ボタン経由(docs/ROADMAP.md「56」)の場合のみ、由来の候補IDを
+      // 記録する(docs/ROADMAP.md「64」)。通常の直接追加ではフィールド自体を持たせない。
+      if (pendingSourceCandidateId) payload.sourceCandidateId = pendingSourceCandidateId;
+      await addDocument(confirmedStaysPath, payload);
       closeStayForm();
     } catch (error) {
       console.error(error);

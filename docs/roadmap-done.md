@@ -1246,3 +1246,691 @@
       `view-enter`になっていることを確認した(2026-08-20)。console/pageerrorは
       0件。`npm run check`(lint・test)成功。これで第9期(運用フィードバック
       その2)は全タスク完了。
+
+## 38. 雑多メモ「→しおりへ」の簡易フォームで日付以外も入力できるようにする
+- [x] (S) `src/views/scratch.js`の`#to-itinerary-form`に、`src/views/itinerary.js`と
+      同様の時間目安(午前/午後・時・分の3セレクトボックス)・場所リンク(任意)・
+      メモ(任意)の入力欄を追加した。時間セレクトの選択肢配列(`HOUR_OPTIONS`・
+      `MINUTE_OPTIONS`)と`buildTimeString()`(3セレクト→"HH:MM"文字列への変換)は
+      `src/views/itinerary.js`に重複定義されていたため、新規`src/timeSelect.js`に
+      切り出し、両ビューから共用する形にした(あわせて編集フォームのプリフィル用に
+      `parseTimeString()`("HH:MM"→3セレクトの値への逆変換)も追加。`39`で使用)。
+      タイトルは引き続き雑多メモの選択範囲をそのまま使う(編集不可のまま)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、「→しおりへ」
+      フォームに時間目安3セレクト・場所リンク・メモの入力欄が存在すること、それぞれに
+      値(19:30・URL・メモ文)を入力して送信すると、しおりタブの該当項目に正しく
+      反映されることを確認した(2026-08-20)。console/pageerrorは0件。`npm run check`
+      (lint・test)成功。
+
+## 39. しおり項目の編集・削除機能を追加
+- [x] (M) `src/views/itinerary.js`にしおり項目のカードごとの「編集」「削除」ボタンを
+      追加した。編集は既存の追加フォーム(`#item-form`)を再利用し、`editingItemId`
+      (null=新規追加モード)の有無で送信ボタンの文言(「追加する」⇔「保存する」)・
+      `addDocument`/`updateDocument`の呼び分けを行う。`openFormForEdit(item)`が
+      タイトル・日付(`datePicker.setValue`)・時間目安(`parseTimeString`で逆変換)・
+      場所リンク・メモをフォームへ流し込む。編集時は`addedBy`(追加者)を更新ペイロード
+      に含めず、元の追加者名を保持する。削除は`window.confirm()`による確認後、
+      `src/firestore.js`に新規追加した`deleteDocument(path)`(`deleteDoc`のラッパー)を
+      呼ぶ。`firestore.rules`は`{subcollection}/{docId}`の`update`/`delete`をすでに
+      `if true`で許可済みのため、ルール変更は無し
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、しおり項目の
+      「編集」ボタンを押すとフォームにタイトル・日付・時間・場所リンク・メモが
+      正しくプリフィルされ送信ボタンが「保存する」になること、メモを書き換えて
+      保存すると一覧に反映されaddedByは元のまま保たれること、通常の「追加」ボタンから
+      開くと送信ボタンが「追加する」に戻ること、「削除」ボタン→確認ダイアログでOKする
+      と項目が削除され空状態表示になることを確認した(2026-08-20)。console/pageerrorは
+      0件。`npm run check`(lint・test)成功。これで第10期は全タスク完了。
+
+## 40. D〜H各機能の件数サマリーカード
+- [x] (S) `src/views/tripOverview.js`に、集合情報・割り勘リンクカードの上に
+      D〜H各機能(行き先決め・日程調整・宿泊・しおり)の件数サマリーカードを追加した。
+      `SUMMARY_TABS`定義に沿って`listCollection`で各サブコレクション
+      (`destinations`・`scheduleEntries`・`lodgingCandidates`・`confirmedStays`・
+      `itineraryItems`)を一度きり取得し(概要タブ自体は第8期でリアルタイム購読を
+      見送り済みのため、他のB画面等と同じ一度きり取得の方針を踏襲)、「候補地○件」
+      「候補日○件」「候補 ○件・確定 ○件」「○件」を表示する。各カードは既存の
+      `.card`・`.card-link`・`.trip-card`・`.trip-card-chevron`クラスを再利用した
+      タップ可能なリンク(該当タブへ遷移)。新規フィールド追加は無し
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、初期状態で
+      4枚とも「0件」表示になること、サマリーカードのクリックで該当タブ(行き先決め)へ
+      遷移すること、行き先決めタブで候補地を1件追加した後に概要タブへ戻ると
+      サマリーが「候補地 1件」に更新されることを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 41. 集合情報・割り勘リンクの2カラム化
+- [x] (S) `src/views/tripOverview.js`の集合情報・割り勘リンクの2つの`<section
+      class="card">`を、既存の`.card-grid`共通クラスを持つ`<div>`で囲んだ。
+      768px以上では2カラム、1024px以上では既存の`.card-grid`の仕様通り(このページは
+      要素が2つしか無いため実質2カラムのまま)、375px未満(モバイル)では従来通り縦積み。
+      新規CSSは追加していない(既存の`.card-grid`ルールをそのまま利用)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、1024px幅では
+      集合情報・割り勘リンクの2カードの上端が揃い割り勘リンクが右側に配置される
+      (横並び)こと、375px幅では従来通り縦積みのままであることを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 42. 旅行名エリアの装飾強化
+- [x] (S) `src/views/tripOverview.js`の`.trip-name-row`に、既存の`.card`・
+      `.card-dark`クラスを追加しただけで、`.page-header`と同系統の
+      `--color-primary-deep`グラデーション+ドット柄・白文字・`.btn-secondary`の
+      コントラスト調整(いずれも`.card-dark`に既存)を適用できた。新規CSSの追加は
+      不要だった
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+      `.trip-name-row`に`card`/`card-dark`クラスが付与されグラデーション背景
+      (`background-image`に`gradient`を含む)が適用されていること、旅行名の文字色が
+      白(`rgb(255, 255, 255)`)になっていることを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。これで第11期
+      「C. 概要タブ」の3タスクは全て完了。
+
+## 45. (取り下げ)`.card-dark`内テキストエリアのフォーカス時強調
+2026-08-20、実装検討で`pages/shared.css`の`.card-dark textarea:focus`
+(`border-color: var(--color-surface); box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);`)
+としてすでに実装済みであることが判明したため、追加対応不要と判断し取り下げた。
+
+## 46. (保留)簡易Markdown風装飾
+2026-08-20、実装検討で「雑多メモ・企画メモはどちらも常時編集可能な`<textarea>`で
+表示しており、特定の行だけをCSSで強調することは技術的に不可能」と判明したため保留
+とした。詳細はdocs/ROADMAP.md末尾の検討事項リスト(`65`と統合)参照。
+
+## 48. 雑多メモ・企画メモの視覚的差別化
+- [x] (S) `pages/shared.css`に`.card-dark-accent`(既存の`--color-accent-green`と
+      `--color-primary-deep`を使ったグラデーション)・`.card-dark .icon-heading`
+      (見出しの下マージン)を追加。`src/views/notes.js`の企画メモカードに
+      `card-dark-accent`クラスと`${icons.notes}企画メモ`の見出しを、
+      `src/views/scratch.js`の雑多メモカードに`${icons.scratch}雑多メモ`の見出しを
+      追加した(雑多メモ側は配色そのまま、企画メモ側だけ緑寄りにグラデーションを
+      差し替えて視覚的に差別化)。新規の色トークンは追加していない
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、雑多メモ
+      タブに「雑多メモ」見出しが表示されデフォルトの`.card-dark`のままであること、
+      企画メモタブに「企画メモ」見出しが表示され`.card-dark-accent`クラスが付与
+      されグラデーション背景が適用されていることを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 53. 自分が未回答の候補日をハイライト
+- [x] (S) `src/views/schedule.js`の`renderEntries()`で、自分(`myKey`)がまだ
+      回答していない候補日のカードに`.schedule-unanswered`クラス(`--color-accent`
+      の左ボーダー)と「あなたは未回答です」バッジ(`.unanswered-badge`)を追加した。
+      `pages/shared.css`に既存の`.schedule-complete`/`.complete-badge`と対になる
+      `.schedule-unanswered`/`.unanswered-badge`を追加(既存トークンのみ使用)。
+      全員回答済み(`isComplete`)なら自分の回答も含まれているはずのため、通常この
+      2つの状態は同時には起きない
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、候補日を
+      追加した直後は2件とも「あなたは未回答です」バッジと`.schedule-unanswered`が
+      付いていることを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test)成功。
+
+## 54. 候補日全体への一括回答ショートカット
+- [x] (S) `src/views/schedule.js`に「全部○にする」「全部△にする」「全部×にする」の
+      3ボタン(`#bulk-response-row`)を追加した。既存の`setResponse(date, value)`を
+      そのまま流用し、`Promise.all(currentEntries.map(...))`で全候補日に対して
+      並列に更新する。候補日が0件のときはボタン行自体を非表示にする
+      (`renderEntries()`内で`bulkResponseRow.hidden`をトグル)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、候補日が
+      0件のときはボタンが非表示であること、候補日追加後に表示されること、
+      「全部○にする」を押すと全候補日の自分の回答が○になり(`53`の)未回答
+      ハイライトが消えることを確認した(2026-08-20)。375px幅でもボタン3つが
+      横並びのまま収まり横スクロールが発生しないことをスクリーンショットで確認済み
+      (ボタン文言が2行に折り返されるがレイアウト崩れ・はみ出しは無し。軽微のため
+      対応不要と判断)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+      これで第11期「雑多メモタブ」「雑多メモ・企画メモタブ共通」「日程調整タブ」の
+      対応可能な項目は全て完了(`44`は実機確認が必要なため保留、`52`は未着手のまま)。
+
+## 56. 宿泊候補→確定宿泊のワンタップ変換 / 64. 宿泊候補と確定宿泊のつながりの追跡
+2つのタスクは1つの機能として一緒に実装した(`64`のROADMAP記載通り)。
+- [x] (M) `src/views/lodging.js`の宿泊候補カードに「確定にする」ボタンを追加した。
+      押すと既存の「確定宿泊を追加」フォーム(`#stay-form`)を再利用して開き、
+      候補の`url`・`note`をあらかじめ入力した状態にする(チェックイン/チェックアウト
+      日のみ追加入力すればよい)。フォーム送信時、`pendingSourceCandidateId`
+      (「確定にする」ボタン経由の場合のみ設定される)があれば`confirmedStays`
+      ドキュメントに`sourceCandidateId`として記録する。通常の「確定宿泊を追加」
+      ボタン(候補を経由しない直接追加)ではこのフィールド自体を持たせない
+- [x] (M) `confirmedStays`のいずれかから`sourceCandidateId`で参照されている候補には
+      「確定済み」バッジ(既存の`.complete-badge`を再利用)を表示する。元の
+      `lodgingCandidates`ドキュメントは削除・変更しない(第9期「34」のカット→コピー
+      変更と同じ方針で、データを失わない方向を優先)。confirmedStaysの購読
+      コールバック内で`renderCandidates(currentCandidates)`も呼び、確定宿泊の変更が
+      候補側のバッジにリアルタイムで反映されるようにした。`docs/firestore-design.md`
+      に`confirmedStays.sourceCandidateId(optional)`と設計判断のセクションを追記した
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、宿泊候補
+      カードに「確定にする」ボタンが表示されること、押すと確定宿泊フォームに
+      URL・メモが引き継がれた状態で開くこと、送信すると確定宿泊一覧に反映され
+      候補カードに「確定済み」バッジがリアルタイムで表示されること、通常の
+      「確定宿泊を追加」ボタンでは空の状態で開き候補一覧に影響しないことを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 59. 日付見出しのアコーディオン化
+- [x] (S) `src/views/itinerary.js`の日付見出しを、`<h2>`のみから
+      `.itinerary-day-heading`(`role="button"` `tabindex="0"`、内部に`<h2>`と
+      シェブロンアイコン`icons.chevron`)を持つクリック可能な行に変更した。
+      クリック(またはキーボードのEnter/Space)で、その日の`.timeline`要素の
+      `hidden`を切り替える。開閉状態は`renderItems()`のスコープ外(`mount()`内)の
+      `collapsedDates`(`Set`)で保持するため、リアルタイム更新による再描画をまたいでも
+      折りたたみ状態が維持される。`pages/shared.css`に`.itinerary-day-heading`
+      (globalな青いピル型`button`スタイルを打ち消して見出しらしい見た目に戻す)・
+      `.itinerary-day-chevron`(開閉で90度回転)を追加した
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、初期状態は
+      全日程が展開済み(`aria-expanded="true"`)であること、見出しクリックで該当日の
+      `.timeline`が非表示になり`aria-expanded`・シェブロンのクラスが切り替わること、
+      再クリックで展開に戻ること、キーボード(Enter)でも開閉できること、別の項目を
+      追加(リアルタイム再描画)しても既存の折りたたみ状態が維持されることを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 60. 「次の予定」の強調表示
+- [x] (S) `src/views/itinerary.js`に`findNextItem(items)`を追加し、現在時刻
+      (`Date.now()`)以降で最も近い`${item.date}T${item.time || '23:59'}:00`を持つ
+      項目を探す(時間目安が未入力の項目は、一覧のソート方式(`NO_TIME_SENTINEL`)と
+      同じ考え方で「その日の最後(23:59)」扱いにする)。該当する項目のカードに
+      `.timeline-content-next`(`--color-accent`の枠線)クラスと「次の予定」バッジ
+      (`.next-badge`)を付与する。データの変更が無くても時間経過だけで「次の予定」が
+      変わりうるため、1分ごとに`renderItems(currentItems)`を再実行するタイマーを
+      追加した(`setInterval`はeslint設定のグローバル一覧に無いため、既に許可されている
+      `setTimeout`の自己再スケジュールで代用し、アンマウント時に`clearTimeout`する)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、過去の日付・
+      明日・明後日の3件を登録し、一番近い未来の予定(明日)にのみ「次の予定」
+      ハイライトが付き、過去の予定には付かないことを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test)成功。これで第11期
+      「しおりタブ」の対応可能な項目は全て完了(`58`は承認済みだが未着手のまま)。
+
+## 61. しおり項目への移動手段メモ欄の追加
+- [x] (S) `itineraryItems/{id}`に`transportation`(任意の自由記述文字列)を追加した。
+      `src/views/itinerary.js`の追加・編集フォームに「移動手段(任意)」の入力欄
+      (`#item-transportation`、プレースホルダー「電車で移動、レンタカー等」)を追加し、
+      一覧表示では場所リンクとメモの間に「移動手段: ○○」として表示する。編集時は
+      `openFormForEdit()`で既存の`transportation`をプリフィルする。
+      `docs/firestore-design.md`にスキーマ追加と設計判断の節を、`docs/requirements.md`
+      5.1に「交通手段の予約調整機能」のWon't判断とは別物という経緯の追記、9.1の
+      ItineraryItemエンティティ説明の更新を行った(いずれも人間の事前承認に基づく)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、追加フォームに
+      移動手段の入力欄が存在すること、入力した移動手段が一覧カードに表示されること、
+      編集フォームに正しくプリフィルされ更新も反映されること、移動手段を空のまま
+      保存した項目には「移動手段:」の表示自体が出ないこと(任意項目として機能する)を
+      確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 62. 概要タブの集合情報への地図リンク追加
+- [x] (S) `trips/{tripId}`に`meetingLocationUrl`(任意のURL文字列)を追加した。
+      `src/views/tripOverview.js`の集合情報編集フォームに「地図リンク(任意)」の
+      入力欄(`#meeting-location-url`)を追加し、`meeting-summary`の表示に「地図」行
+      (`#meeting-location-display`)を追加した。表示は他のURLフィールド
+      (`itineraryItems.locationUrl`等)と同じく`src/url.js`の`isSafeUrl()`で検証し、
+      安全なURLのみクリック可能なリンク(`target="_blank"` `rel="noopener
+      noreferrer"`)にする(危険なスキームはプレーンテキスト表示のまま)。集合情報の
+      「まだ設定されていません」判定(`hasMeeting`)にも`meetingLocationUrl`を含めた。
+      `docs/firestore-design.md`にスキーマと設計判断の節を追記した(人間の事前承認に
+      基づく)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、編集フォームに
+      地図リンクの入力欄が存在すること、保存後にクリック可能なリンク(正しい`href`・
+      `target="_blank"`)として表示されること、編集フォームに正しくプリフィルされる
+      こと、危険なURLスキーム(`javascript:`)を入力した場合はリンク化されずプレーン
+      テキストのまま表示されることを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test)成功。これで第11期「実利用シーンからの気づき」の
+      承認済みスキーマ変更タスクは`58`を残すのみ。
+
+## 63. 日程調整の○×△内訳サマリー
+- [x] (S) `src/views/schedule.js`の`renderEntries()`で、各候補日の`responses`
+      マップを`RESPONSE_SYMBOLS`(○/△/×)ごとに集計し、「○3 △1 ×0」のようなサマリー
+      (`.subtitle`)を見出しの直後に表示する。1件も回答が無い候補日ではサマリー自体を
+      表示しない。既存の回答者名一覧(「たく: ○」等)はそのまま維持し、サマリーは
+      その手前に追加する形。新規フィールドは不要(既存の`responses`マップを
+      集計するだけ)
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、未回答の
+      候補日にはサマリーが表示されないこと、1人が○で回答すると「○1 △0 ×0」に
+      なること、回答を△に変更すると「○0 △1 ×0」に正しく更新されることを確認した
+      (2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)成功。
+
+## 65. メモ欄のURLリンク化
+- [x] (S) 新規`src/linkify.js`を作成した。テキストをURLセグメントとそれ以外の
+      セグメントに分割する`tokenizeLinks(text)`をDOM非依存の純粋関数として切り出し
+      (`src/datePicker.js`と同じ設計方針)、`src/linkify.test.js`で検証する。
+      `isSafeUrl()`で安全と判定されたURLのみ`<a class="inline-link" target="_blank"
+      rel="noopener noreferrer">`に変換する`linkifyToNodes()`・要素に追加する
+      `appendLinkifiedText()`を提供する。URL直後の句読点・閉じ括弧
+      (`.,;:!?)]}、。」』`)はリンクに含めない。`pages/shared.css`に
+      `.inline-link`(既存の`.candidate-link`と異なり`display: block`を持たない
+      インライン用)を追加した。`src/views/destinations.js`(候補の`note`)・
+      `src/views/lodging.js`(宿泊候補・確定宿泊の`note`)・`src/views/itinerary.js`
+      (しおり項目の`note`)・`src/views/tripOverview.js`(`meetingNote`)の
+      `note.textContent = ...`をそれぞれ`appendLinkifiedText(note, ...)`に置き換えた
+
+      `src/linkify.test.js`で、URLを含まないテキスト・文中/文頭/文末のURL・複数の
+      URL・URL直後の句読点の除外・`new URL()`が失敗する不正なURL文字列
+      (`safe: false`になること)・http/https以外のスキーム(そもそも正規表現に
+      マッチしないこと)を検証した。Playwrightでは、実Firestore(共有テストグループ
+      `FMXRZYW7`)に対し、行き先決め・宿泊候補・しおり項目・概要タブの集合メモの
+      4箇所いずれも、メモ内のURLがクリック可能なリンクになること(hrefが末尾の
+      空白を含まず正しいこと)、URLを含まないメモにはリンクが生成されないことを
+      確認した(2026-08-20)。console/pageerrorは0件。`npm run check`(lint・test)
+      成功(vitest 19件全て成功)。雑多メモ・企画メモは`<textarea>`表示のため対象外
+      (docs/ROADMAP.md末尾の検討事項参照)。
+
+## 58. しおり項目(時間未設定同士)の並び替え
+- [x] (M) `itineraryItems/{id}`に`order`(number、optional)フィールドを追加し
+      (2026-08-20、人間の承認済み)、同じ日の中で時間未設定の項目同士を並び替え
+      られるようにした。**ROADMAPの原文は「ドラッグ&ドロップ」だったが、
+      `docs/requirements.md`の非機能要件「モバイルブラウザ中心」を踏まえ、
+      HTML5標準のDrag-and-Drop APIはタッチ操作との相性が悪い(モバイルSafari等で
+      追加のpolyfillやタッチイベントの自前実装が必要)ため、実装は▲/▼ボタンに
+      変更した。この判断は`src/views/itinerary.js`冒頭のコメント・
+      `docs/firestore-design.md`の設計決定セクションにも明記した。**
+      `compareItems(a, b)`(時刻→`order`の順で比較する純粋関数)と
+      `moveUntimedItem(dayItems, item, direction)`(移動対象の日の時間未設定項目
+      だけを取り出し、配列内で1つ入れ替えた上で該当日の全時間未設定項目に
+      0,1,2...と`order`を振り直して`updateDocument`で一括保存する非同期関数)を
+      追加した。`renderItems()`内で、時間未設定かつ同じ日に2件以上ある場合のみ
+      「▲ 上へ」(先頭では無効)・「▼ 下へ」(末尾では無効)ボタンを表示する。
+      既存の`.button-row`/`.btn-secondary`を再利用したため新規CSSは不要。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、時間ありの
+      項目が常に先頭に来ること、時間未設定の項目が1件しかない日には並び替え
+      ボタンが表示されないこと、時間未設定が複数ある日では先頭要素の「▲上へ」・
+      末尾要素の「▼下へ」がそれぞれ無効になっていること、「▼下へ」→「▲上へ」の
+      連続操作で相対的な入れ替えが正しく行われること、2日目の項目が1日目の並び
+      替えの影響を受けないことを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test、vitest 19件)成功。
+      (Firestoreの`onSnapshot`は明示的な`orderBy`が無いと挿入順を保証しないため、
+      時間未設定項目同士の初期表示順は不定になりうる。これは本タスクの変更が
+      原因ではなくFirestore全体の既存の性質であり、テストでは絶対順ではなく
+      「朝食が常に先頭」「並び替え操作の前後での相対的な入れ替え」のみを検証した)
+
+## 57. 確定宿泊のガントチャート風タイムライン表示
+- [x] (M) 確定宿泊が2件以上のとき、`src/views/lodging.js`の確定宿泊一覧の上に、
+      各宿泊の期間を横棒(バー)で示すガントチャート風のタイムラインを表示する
+      ようにした。全確定宿泊のうち最も早いチェックインと最も遅いチェックアウトを
+      全体の期間とし、各宿泊のチェックイン〜チェックアウトをその期間に対する
+      「左端位置%」「幅%」に変換するDOM非依存の純粋関数
+      `buildStayTimelineBars(stays)`を新規`src/stayTimeline.js`に切り出し
+      (`src/datePicker.js`・`src/linkify.js`と同じ設計方針)、`src/stayTimeline.test.js`
+      (vitest、7ケース)で検証した。同日の宿泊(幅0)には最小幅4%を保証し、
+      末尾の宿泊でも`左端%+幅% ≤ 100`になるようクランプする。`src/views/lodging.js`の
+      `renderStayTimeline()`が、この計算結果を`.stay-timeline-bar`要素の
+      `style.left`/`style.width`に反映する(`src/views/destinations.js`の
+      `.score-bar-fill`と同じ「動的な値のみJSでインラインstyle設定する」方針を踏襲)。
+      1件のみの場合はタイムラインを表示せず既存のカード一覧のみとし、確定宿泊が
+      0件になった場合もタイムラインを消す。新規フィールドの追加は無く
+      (`confirmedStays`の既存の`checkIn`/`checkOut`のみを使用)、
+      `docs/firestore-design.md`のスキーマ変更は不要だった。
+
+      `src/stayTimeline.test.js`で、空配列・連続する2件(期間比に応じた50%/50%の
+      按分)・1件のみ(全体を覆う1本のバー)・チェックイン=チェックアウト(同日)の
+      宿泊が最小幅4%になること・末尾の宿泊が右端をはみ出さないようクランプされる
+      こと・日程が飛び飛び(間に空白期間)の宿泊の位置づけ・入力順序を並び替えずに
+      維持することを検証した。Playwrightでは、実Firestore(共有テストグループ
+      `FMXRZYW7`)に対し、確定宿泊が1件のときはタイムラインが表示されないこと、
+      2件になるとタイムラインの行が2行表示されること、1件目のバーが左端(0%)から
+      始まること、2件目のバーが1件目より右にずれ右端をはみ出さないこと、日付
+      ラベルが表示されること、既存のカード一覧(URL・メモ・追加者)も引き続き
+      表示されることを確認した(2026-08-20)。console/pageerrorは0件。
+      `npm run check`(lint・test、vitest 26件、うち`stayTimeline.test.js`7件が新規)
+      成功。
+
+## 66. 色数整理(accent-green廃止)
+- [x] (S) 2026-08-20、人間が二人のレビュアーに現在のビジュアルデザインを見てもらった
+      結果、「`--color-success`と`--color-accent-green`が近い色相で役割が被って
+      見える」と指摘された。人間との会話で「A案(重複解消のみ)」を採用することが
+      確定し、状態を表す意味的な色である`--color-success`はそのまま残し、装飾専用の
+      `--color-accent-green`(#4d9a7a)を`styles/tokens.css`から廃止した。
+      唯一の使用箇所だった`pages/shared.css`の`.card-dark-accent`(企画メモを
+      雑多メモと視覚的に区別するためのグラデーション、`48`参照)は、
+      `--color-accent-green`と`--color-primary-deep`の組み合わせから、
+      `--color-accent`(オレンジ)と`--color-primary-deep`の組み合わせに置き換えた。
+      新規の色トークンは追加していない(既存の`--color-accent`を転用)。
+      `--color-primary-deep`自体の廃止(レビューのB案=徹底整理)は今回見送った。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、雑多メモの
+      `.card-dark`(青→濃紺のグラデーション)・企画メモの`.card-dark-accent`
+      (オレンジ→濃紺のグラデーション)がそれぞれ引き続き適用され、両者の
+      グラデーションが異なる(視覚的差別化が維持されている)ことを確認した
+      (2026-08-20)。スクリーンショットで、タブ遷移フェードインの完了後は
+      オレンジ→濃紺の対角グラデーションが正しく表示されることを目視確認した
+      (フェードイン完了前に撮影すると一時的に薄く見えるだけで、実装上の不具合では
+      ないことを確認済み)。console/pageerrorは0件。`npm run check`(lint・test、
+      vitest 26件)成功。検証で作成したFirestore上のトリップ1件は、サブコレクション
+      文書を作成していないため追加のクリーンアップ不要で、名前を
+      「[検証用/削除不可] evolve cycle5 66検証で作成」に更新済みの状態で共有
+      テストグループ`FMXRZYW7`内に残置。
+
+## 67. 見出し用ディスプレイフォントの追加
+- [x] (S) 外部レビューで「本文も見出しもZen Kaku Gothic New一本でウェイトだけの
+      差別化」と指摘され、見出し(h1〜h3)だけ丸みのある手書き風フォントを足すと
+      「しおり」らしいあたたかみが出るとの提案を受けた。人間との会話でレビューの
+      候補(Zen Maru Gothic・Kaisei Decol)のうち「Zen Maru Gothic」を採用。
+      `styles/tokens.css`のGoogle Fonts importに`family=Zen+Maru+Gothic:wght@700;900`を
+      追加し(既存の`Zen+Kaku+Gothic+New`のimportと1つの`@import url()`にまとめた)、
+      新規`--font-family-heading: "Zen Maru Gothic", "Zen Kaku Gothic New", ...`
+      (フォールバックは既存の`--font-family-base`と同じ並び)を追加。
+      `pages/shared.css`の`h1, h2, h3 { font-family: var(--font-family-heading); }`で
+      見出し要素にのみ適用した。本文の`--font-family-base`(Zen Kaku Gothic New)は
+      変更していない。`.icon-heading`(雑多メモ・企画メモ等の見出し)はh2/h3要素に
+      付与されているため、追加の変更なしに自動的に新フォントが適用される。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、h1の
+      `font-family`に`Zen Maru Gothic`が含まれること、`body`(本文)は引き続き
+      `Zen Kaku Gothic New`のままで`Zen Maru Gothic`を含まないこと、雑多メモの
+      `h3.icon-heading`にも`Zen Maru Gothic`が適用されていることを確認した
+      (2026-08-20)。スクリーンショットで、概要タブ・雑多メモタブの見出しが
+      丸みのある書体で表示され、本文・ボタン等は従来通りであることを目視確認した。
+      375px相当(390px)幅でもレイアウト崩れ・折り返し崩れは無し。
+      console/pageerrorは0件。`npm run check`(lint・test、vitest 26件)成功。
+      検証で作成したFirestore上のトリップ1件はサブコレクションを作成していない
+      ため追加クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle5 67検証で
+      作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
+
+## 68. しおりモチーフの追加
+- [x] (M) 外部レビューの「完璧に整列させない揺らぎがしおりらしさを演出する」との
+      提案を受け、3点セットで対応した(人間との会話で「マーカーアイコン変更も
+      含めて全部」と確定済み)。
+      (a) `.divider`(`pages/shared.css`)の左右の線を、`height: 1px`の直線から
+      `border-top: 2px dotted var(--color-border)`のミシン目・切り取り線風の
+      点線に変更した。
+      (b) カードの傾き演出を、テキスト編集を伴わない静的表示のみの2箇所に限定して
+      追加した(textareaを含むカードを傾けると読み書きしにくくなるため対象外と
+      判断)。概要タブの旅行名カード(`.trip-name-row`)に`rotate(-0.6deg)`、
+      参加画面で発行される合言葉表示(`.passphrase`)に`rotate(0.8deg)`を適用し、
+      写真を少し傾けて貼ったような遊びを持たせた。
+      (c) しおりタブの`.timeline-marker-badge`(連番の数字バッジ)を、
+      `src/icons.js`に新規追加した`footprint`(足あと、塗りつぶし表現の楕円+
+      3つの丸)・`flag`(旗、ポール+ノッチ付き三角)のインラインSVGアイコンに
+      差し替えた。「次の予定」(`60`)に該当する項目だけ`flag`にし、それ以外は
+      `footprint`にすることで、道のりの1歩(足あと)とこれから向かう目印(旗)を
+      使い分けた。`src/views/itinerary.js`の`dayItems.forEach`から、連番表示のみに
+      使っていた未使用の`index`引数を削除した。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+      `.passphrase`・`.trip-name-row`にそれぞれ`rotate`のtransformが適用されている
+      こと(`getComputedStyle().transform`が`none`でないこと)、`.divider`の
+      `::before`が`border-top-style: dotted`になっていること、しおりタブの
+      `.timeline-marker-badge`内に数字テキストではなくSVGアイコンが描画されて
+      いることを確認した(2026-08-20)。アイコン単体をHTMLプレビューで拡大表示し、
+      足あと・旗として視覚的に認識できる見た目であることも確認した。
+      スクリーンショットで概要・宿泊・しおりタブの見た目を目視確認し、390px幅でも
+      崩れは無かった。console/pageerrorは0件。`npm run check`(lint・test、
+      vitest 26件)成功。検証で作成したFirestore上のトリップ1件は、
+      `itineraryItems`を削除の上、名前を「[検証用/削除不可] evolve cycle5 68検証で
+      作成」に更新して共有テストグループ`FMXRZYW7`内に残置。
+
+      **注記**: 本タスクはROADMAP上で「やりすぎるとチープに見えるリスクがあるため
+      実装後は特に人間の目で確認すること」と注記されていた。evolveサイクルでの
+      Playwright確認・スクリーンショット目視までは実施したが、**人間による実機/
+      実画面での最終確認はまだ済んでいない**。違和感があれば次サイクル以降で
+      調整・取り消しの対応を行う。
+
+## 69. カードシャドウの調整
+- [x] (S) 外部レビューで2件指摘された。(1)「`--shadow-button`の不透明度25%は
+      主張が強い」→ 15%前後まで下げ、ぼかし(blur)を10px→16pxに広げて上品な
+      浮遊感にする。(2)「`--shadow-card`(`rgb(29 78 216 / 10%)`)が青みを帯びて
+      おりSaaSダッシュボードの文法に見える」→ しおりを謳うなら紙が浮いている
+      ような暖色寄りの柔らかい黒にすべき。`styles/tokens.css`で両方に対応した。
+      `--shadow-card`を`0 4px 14px rgb(29 78 216 / 10%)`から
+      `0 4px 16px rgb(42 30 20 / 8%)`(暖色寄りの黒、不透明度も8%まで軽量化)に、
+      `--shadow-button`を`0 4px 10px rgb(59 130 246 / 25%)`から
+      `0 4px 16px rgb(59 130 246 / 15%)`(色相=primaryの青は維持、不透明度のみ
+      軽量化・ぼかしを拡大)に変更した。新規の色トークンは追加していない。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、`.card`の
+      `box-shadow`が`rgba(42, 30, 20, 0.08) 0px 4px 16px 0px`になっていること
+      (旧来の`rgb(29 78 216)`が含まれないこと)、送信ボタンの`box-shadow`の
+      不透明度が15%になっていることを確認した(2026-08-20)。スクリーンショットで
+      概要タブの見た目を目視確認し、より柔らかく暖色寄りの浮遊感になっている
+      ことを確認した。390px幅でも崩れ無し。console/pageerrorは0件。
+      `npm run check`(lint・test、vitest 26件)成功。検証で作成したFirestore上の
+      トリップ1件はサブコレクションを作成していないため追加クリーンアップ不要、
+      名前を「[検証用/削除不可] evolve cycle5 69検証で作成」に更新済みの状態で
+      共有テストグループ`FMXRZYW7`内に残置。
+
+## 70. ヘッダー・暗色カードのドット柄廃止(切手風パーフォレーション採用)
+- [x] (M) 外部レビューで「`radial-gradient`の繰り返しによるドット柄は2023〜2024年頃の
+      SaaS系LPで擦り倒された表現」と指摘され、`.page-header`・`.card-dark`・
+      `.card-dark-accent`のドット柄を廃止した。人間との会話で「紙のグレインノイズ
+      (SVG feTurbulence)」「切手の縁のようなパーフォレーション風の縁取り」の
+      両方を実装して見た目が良い方を採用することが確定していたため、両方
+      実装して比較した。
+      **A案(グレインノイズ)**: `feTurbulence`(fractalNoise)+`feColorMatrix`で
+      白色・低アルファのノイズテクスチャを生成するSVG data URIを2枚目の
+      背景レイヤーとして重ねた。アルファ値は0.06では視認できず、0.14で
+      ようやく紙のような質感が見える程度になった。
+      **B案(パーフォレーション、採用)**: 各要素の下端に`::after`疑似要素を追加し、
+      ページ背景色(`--color-bg`)の小さな半円を`radial-gradient`の繰り返しで
+      並べることで「切り取られた」ような見た目を錯視で作った(実際に切り抜いて
+      いるわけではない)。`.page-header`・`.card-dark`(`.card-dark-accent`は
+      `.card-dark`と併用されるクラスのため`::after`は共有)で共通のスタイルを
+      使い、角丸に合わせて`.page-header::after`のみ下端の角丸を追加。
+      両案をPlaywrightでスクリーンショット比較した結果、B案は`68`で追加した
+      点線`.divider`(ミシン目・切り取り線)と視覚的な一貫性があり、「独自性が
+      薄い」というレビューの指摘への対応としてもA案より効果が明確だったため、
+      B案を採用した。A案(グレインノイズ)のコードは削除し、コミットには残して
+      いない。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、
+      `.page-header`・`.card-dark`・`.card-dark-accent`の`background-image`から
+      `radial-gradient`(ドット柄)が消え`linear-gradient`のみになっていること、
+      `.page-header::after`・`.card-dark::after`にパーフォレーション用の
+      `radial-gradient`が適用されていること、375px幅で概要・雑多メモ・企画メモの
+      いずれも横スクロールが発生しないことを確認した(2026-08-20)。
+      console/pageerrorは0件。`npm run check`(lint・test、vitest 26件)成功。
+      検証で作成したFirestore上のトリップ4件(A案・B案比較の試行錯誤分含む)は、
+      いずれもサブコレクションを作成していないため追加クリーンアップ不要、
+      名前を「[検証用/削除不可] evolve cycle5 70検証で作成」に更新済みの状態で
+      共有テストグループ`FMXRZYW7`内に残置。
+
+## 71. ボタン・カードの押下アニメーションに物理的な質感
+- [x] (S) 外部レビューで「フェード+`translateY(8px)`、ボタンの`scale(0.97)`は
+      モーションデザインの教科書通りで没個性」と指摘され、押下解除時に付箋を
+      指で押して離した時のような、わずかに行き過ぎてから戻る(オーバーシュート)
+      バウンド系の質感を加えた(タブ切り替え時のページめくり演出は`72`で別途
+      対応するため、本タスクではボタン・カードの押下フィードバックのみを対象に
+      した)。`pages/shared.css`の`button`・`.card-link`の`transition`について、
+      `transform`のタイミング関数を`ease`から`cubic-bezier(0.34, 1.56, 0.64, 1)`
+      (いわゆる`back-out`系のイージング。y値が1を超えるため、目標値を一瞬
+      超えてから収束するオーバーシュートになる)に変更し、あわせて時間も
+      0.1s/0.15s→0.25sへ延ばしてオーバーシュートが視認できる余裕を持たせた。
+      `background-color`・`box-shadow`側のタイミング関数は変更していない。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、ボタン・
+      `.card-link`の`transitionTimingFunction`(computed style)に
+      `cubic-bezier(0.34, 1.56, 0.64, 1)`が含まれていること、CSS変更後も参加・
+      旅行作成の各ボタンクリックが引き続き正しく機能すること、375px幅で
+      横スクロールが発生しないことを確認した(2026-08-20)。console/pageerrorは
+      0件。`npm run check`(lint・test、vitest 26件)成功。検証で作成した
+      Firestore上のトリップ1件はサブコレクションを作成していないため追加
+      クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle5 71検証で
+      作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
+
+## 44. 振り分けボタンの画面下部固定表示
+- [x] (S) 雑多メモの4つの振り分けボタン(`.button-row`×2)を、モバイル(768px未満)では
+      画面下部に`position: fixed`で固定し、長文をスクロールしている間も常に
+      アクセスできるようにした。当初案の`position: sticky`ではなく`fixed`を
+      採用したのは、このアプリの画面はスクロールコンテナを持たず`body`自体が
+      スクロールするため、`sticky`では固定先の基準がなく機能しないため。
+      広い画面(768px以上)は元々テキストエリアが画面に収まりやすく恩恵が薄いため
+      対象外とし、`.card-dark`内の通常フロー表示のまま変更していない。
+      `src/views/scratch.js`でボタン2行を`.scratch-actions`でラップし、末尾に
+      高さ調整用の`#scratch-actions-spacer`を追加(固定バー分の高さをJSで
+      `offsetHeight`から算出して確保し、末尾のコンテンツがバーに隠れないように
+      する)。`.scratch-actions`は`.card-dark`の子要素のまま(DOM構造は変えていない)
+      なので、`.card-dark .btn-secondary`の白文字ボタンスタイルがそのまま適用される。
+      これを踏まえ、固定時の背景も`.card-dark`と同じ`--color-primary-deep`系
+      グラデーションにし、白文字が視認できるようにした(初回実装時に背景を
+      `--color-surface`(白)にしてしまい、白文字ボタンが完全に見えなくなる
+      不具合を自己レビューで発見・修正した)。
+      スマホの入力キーボード表示中はバーとキーボードが重なる問題への対応として、
+      `window.visualViewport`の`resize`イベントを監視し、ビューポート高さが
+      `window.innerHeight`の75%未満に縮んだ場合(=キーボード表示中とみなす)に
+      `.keyboard-open`を付与してバーを画面外へ`translateY(100%)`でスライドさせる。
+      `visualViewport`非対応環境ではこの機能を単に使わない(常時バーが
+      表示されたままになる)フォールバックとした。
+
+      実機の仮想キーボード表示・iOS Safariのビューポート挙動はPlaywright
+      (ヘッドレスChromium)では再現できないため、代わりに(1)`pages/shared.css`を
+      読み込んだ静的フィクスチャpage上で、モバイル幅(390px)での固定表示・
+      スクロール後も位置が変わらないこと・`.keyboard-open`付与でバーが画面外へ
+      隠れること・デスクトップ幅(1024px)では通常フローに戻りスペーサーの高さが
+      0になることをbounding boxで確認、(2)実Firestore(共有テストグループ
+      `FMXRZYW7`)に対し実際に旅行を1件作成してscratchタブを開き、テキスト入力→
+      選択→「→企画メモへ」ボタンのクリックが引き続き正しく動作すること
+      (「企画メモへコピーしました。」表示を確認)、モバイル幅でのスクロール前後で
+      バーの位置(bounding box)が同一であること、`visualViewport.height`を
+      縮小させるとバーが画面外へスライドすることを確認した(2026-08-21)。
+      console/pageerrorは0件。`npm run check`(lint・test、vitest 26件)成功。
+      検証で作成したFirestore上のトリップ1件はサブコレクションを作成していない
+      ため追加クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle5
+      44検証で作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
+
+      **人間による実機での最終確認がまだ済んでいない**(スマホの入力キーボード
+      表示中の挙動・押しやすさは、上記の通りPlaywrightでは検証できないため。
+      違和感があれば調整のフィードバックを歓迎する)。
+
+      これで第12期(66〜71)は`72`(しおりらしい構造演出)を残すのみとなった。
+
+## 52. 候補日カレンダー俯瞰ビュー
+- [x] (M) F(日程調整)タブに、候補日を月めくりカレンダー上に○×△で色分け表示する
+      俯瞰ビューを追加した(現状のカードの縦一覧だけでは候補日が多いと見通しが
+      悪いという課題への対応)。`src/datePicker.js`の月グリッド生成ロジック
+      (`buildMonthGrid`・`addMonths`・`toDateString`・`parseDateString`、いずれも
+      既存のDOM非依存な純粋関数)をそのまま再利用し、新規に`src/scheduleOverview.js`
+      (DOM非依存な純粋関数`computeDayStatus`・`buildOverviewCells`、
+      `src/stayTimeline.js`と同じ「ロジックを別ファイルに切り出してvitestで検証する」
+      方針を踏襲)を追加した。判定ルールは「調整さん」等の既存日程調整サービスの
+      表記に準拠: 回答に×が1件でもあれば×(誰か参加不可)、全メンバー回答済みで
+      すべて○なら○(全員参加可能)、それ以外で1件以上回答があれば△(検討中・
+      一部未回答)、候補日だが誰も回答していない日は無色のまま。`src/views/schedule.js`
+      に読み取り専用の月カレンダー(`#schedule-overview`、前月/次月ボタン付き)と
+      凡例を追加し、候補日一覧の`subscribeToCollection`購読(第8期)の再描画時に
+      あわせて再描画する。初回データ取得時のみ、候補日があればその最も早い候補日の
+      月へ自動的に表示を合わせ、以降はユーザーの月送り操作を尊重して勝手に戻さない
+      ようにした。Firestoreのスキーマ・書き込み方式は変更していない(`scheduleEntries`
+      の既存フィールドを読むだけ)。
+      日付セルの表示は、既存の`.date-picker-day`(クリック可能なボタン、hover時に
+      背景色が薄く付く)をそのまま流用すると、俯瞰ビューのステータス色がhover時に
+      一瞬上書きされてちらつく問題があったため、非インタラクティブな表示専用の
+      `.schedule-overview-day`クラスを別途新設した(サイズ・角丸は`.date-picker-day`
+      に合わせている)。色は既存トークンのみを使用(○=`--color-success`、
+      ×=`--color-danger`、△=`--color-accent`。新規の色トークンは追加していない)。
+
+      `src/scheduleOverview.test.js`を新規作成し、`computeDayStatus`(×優先・
+      全員○判定・未回答時の扱い・memberCount取得失敗時のフォールバック)・
+      `buildOverviewCells`(月初オフセットのnull埋め・候補日の有無によるstatus)を
+      vitestで検証した(9件、全て成功)。`npm run check`(lint・test、vitest
+      合計35件)も成功。開発サーバーを起動しPlaywrightで実Firestore(共有テスト
+      グループ`FMXRZYW7`)に対し、旅行を1件作成し日程調整タブで候補日を2件追加、
+      1件目に○・2件目に×を回答した上で、俯瞰ビューの該当セルにそれぞれ
+      `schedule-overview-day-pending`(このグループはテストで蓄積した既存メンバーが
+      多く、自分1人の○だけでは全員回答済みにならないため△表示になる、想定通りの
+      挙動)・`schedule-overview-day-ng`のクラスが付くこと、前月/次月ボタンで
+      月ラベルが正しく切り替わり往復できること、375px幅で横スクロールが発生
+      しないことを確認した。console/pageerrorは0件。検証で作成したFirestore上の
+      トリップ1件はサブコレクションを作成していないため追加クリーンアップ不要、
+      名前を「[検証用/削除不可] evolve cycle5 52検証で作成」に更新済みの状態で
+      共有テストグループ`FMXRZYW7`内に残置。
+
+      これで第11期(各タブへの改善アイデア)は、要件との衝突・トレードオフのため
+      検討事項として保留した項目を除き、全タスク完了となった。
+
+## 72. しおりらしい構造演出3点セット
+- [x] (M) 「タブバー・ルーティング・各タブの情報設計(`docs/screens.md`)は変えず、
+      装飾・演出のみで『しおりらしい構造』を感じさせる」という2026-08-20の方針
+      決定に基づき、以下3点を`pages/shared.css`のみで実装した(JS・ルーティング側の
+      変更は無し)。
+      **(a) ページめくり風タブ遷移**: `src/router.jsのrender()`が`#view`へ付け直す
+      `.view-enter`クラスの`@keyframes view-enter`を、フェード+`translateY(8px)`
+      から`perspective(1000px) rotateY(-6deg) translateY(6px)` → `rotateY(0deg)`へ
+      変更した(時間は0.2s→0.25s)。`transform-origin: left center`にすることで、
+      (b)の綴じ穴側を軸に回転させ、「ノートのページがめくれて落ち着く」印象にした。
+      **(b) 左端の綴じ穴パターン**: `.page::before`に、`--color-border`の小さな円を
+      `radial-gradient`で縦方向に繰り返し配置し(直径4px・28px間隔)、リング/
+      スパイラルノート風の穴を`.page`の左端に常設した。`70`で確立した「背景色の
+      円を重ねて錯視させる」パーフォレーション手法(`.page-header::after`)とは
+      逆に、こちらは`--color-border`色の円をそのまま置いて「穴」に見せる方式にした
+      (パーフォレーション用の背景色erase方式は塗りつぶされた背景の上でしか
+      成立せず、`.page`の素の背景色の上では使えないため)。
+      **(c) 左右非対称パディング**: `.page`の左パディングを右より20px広げ
+      (`calc(var(--space-md) + 20px)`、768px以上は`calc(var(--space-lg) + 20px)`)、
+      その帯の中に(b)の綴じ穴を配置した。「本を開いている」ような綴じ目側の
+      余白を表現している。
+      実装にあたり、`.page`に`perspective`プロパティを持たせる素朴な実装
+      (親要素に`perspective`を置く一般的なCSS 3D手法)は採用しなかった。
+      `transform`・`filter`・`perspective`をプロパティとして持つ要素は
+      `position: fixed`な子孫要素の包含ブロックになるというCSS仕様上の制約があり、
+      `.page`に`perspective`を持たせると`44`で追加した`#scratch-actions`
+      (雑多メモの画面下部固定バー)の固定配置が常時壊れてしまうため、代わりに
+      `perspective()`を`#view`自身の`transform`内でローカルに使う方式にした
+      (影響が`#view`のtransformが有効な間=アニメーション中の一瞬のみに限定される。
+      詳細と残課題は`73`参照)。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し、旅行を
+      1件作成し、(1) `.page`の`padding`が非対称(モバイル: 左36px/右16px、
+      768px以上: 左44px/右24px、`position: relative`)になっていること、
+      `.page::before`に想定した`radial-gradient`が設定されていること、(2) タブ
+      切り替え時に`#view`の`computed style transform`が`perspective`込みの
+      `matrix3d(...)`になり、アニメーション終了後(0.25秒後)に`none`へ戻る
+      こと、(3) `prefers-reduced-motion: reduce`環境では`transform`が終始`none`の
+      ままアニメーションが無効化されること(既存の`@media (prefers-reduced-motion:
+      reduce)`ルールがそのまま効く)、(4) 375px幅で全7タブ(概要・雑多メモ・
+      企画メモ・行き先決め・日程調整・宿泊・しおり)いずれも横スクロールが
+      発生しないこと、(5) 1024px幅でも横スクロールが発生せず`.page`の非対称
+      パディングが正しく適用されていること、(6) 雑多メモタブへの切り替え時、
+      アニメーション終了(0.25秒)後は`#scratch-actions`が正しく画面下部に固定
+      表示されること、をそれぞれ確認した。console/pageerrorは0件。
+      `npm run check`(lint・test、vitest 35件)成功。検証で作成したFirestore上の
+      トリップ1件はサブコレクションを作成していないため追加クリーンアップ不要、
+      名前を「[検証用/削除不可] evolve cycle5 72検証で作成」に更新済みの状態で
+      共有テストグループ`FMXRZYW7`内に残置。
+
+      **人間による実機/実画面での最終確認がまだ済んでいない**(`68`・`71`と同様、
+      やりすぎるとチープに見えるリスクがある演出のため。違和感があれば調整・
+      取り消しのフィードバックを歓迎する)。
+
+      これで第12期(外部レビューを踏まえたデザイン改善)は、`73`(軽微な既知の
+      制約、対応は任意)を除き全タスク完了となった。
+
+## 73. ページめくりトランジション中の固定バー消失を修正
+- [x] (S) `72`のページめくりトランジション(`#view`への`transform`付与)が有効な
+      約0.25秒間だけ、`#scratch-actions`(`44`の雑多メモ画面下部固定バー)の
+      `position: fixed`の基準がCSS仕様上`#view`に切り替わり、画面外(下方)へ
+      外れて一瞬非表示になる問題を修正した。原因はCSS仕様上の制約(`transform`
+      ・`filter`・`perspective`プロパティを持つ要素はposition: fixedな子孫要素の
+      包含ブロックになる)そのものであり、`72`実装時に検討した「`.scratch-actions`
+      を`document.body`直下へポータルする」対応は、モバイル(768px未満)限定の
+      固定表示という`44`の要件と両立させるにはウィンドウ幅の変化に応じて
+      DOM上の位置を出し入れする複雑な処理が必要になり、Sサイズの見積もりに
+      対して過大なリスクと判断し採用しなかった。
+      代わりに、`transform`を使わないビュー専用のフォールバック用トランジション
+      `.view-enter-flat`(opacityのみ)を`pages/shared.css`に追加し、
+      `src/router.js`の`render()`が、ビューの`mount()`が`outlet.dataset.
+      flatTransition = 'true'`を立てた場合にのみ`.view-enter`(3D風、`72`)の
+      代わりにこちらを使うようにした(`render()`は毎回ハッシュ切り替えの先頭で
+      このdata属性を消してから`mount()`を呼ぶため、各ビューが自分の必要に応じて
+      都度立て直す設計)。`src/views/scratch.js`の`mount()`冒頭でこのフラグを
+      立てることで、雑多メモタブへの遷移時だけtransformを使わない(=`#view`が
+      fixedの包含ブロックにならない)フェードに切り替え、他の6タブは引き続き
+      `72`の3D風トランジションを使う。タブ切り替えの仕組み・ルーティング・
+      各タブの情報設計には触れていない。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、概要タブから雑多メモタブへ切り替える際、アニメーション開始から
+      終了後(0〜350ms、40msごとに8回)まで一貫して`#scratch-actions`が
+      正しい固定位置(画面右下、`x:0, y:594, width:390, height:106`@390×700
+      ビューポート)を維持すること(修正前は0〜250msの間ずっと画面外の
+      `y:723〜729`にずれていたことを前回サイクルで確認済み)、雑多メモタブでは
+      `#view`のクラスが`view-enter-flat`になること、他タブ(企画メモ)では
+      引き続き`view-enter`(`transform: matrix3d(...)`)になることを確認した。
+      `prefers-reduced-motion: reduce`環境では、雑多メモタブ・他タブいずれも
+      `transform: none`・`opacity: 1`になりアニメーションが無効化されること、
+      375px幅で全7タブいずれも横スクロールが発生しないこと(回帰なし)も確認した。
+      console/pageerrorは0件。`npm run check`(lint・test、vitest 35件)成功。
+      検証で作成したFirestore上のトリップ1件はサブコレクションを作成していない
+      ため追加クリーンアップ不要、名前を「[検証用/削除不可] evolve cycle5
+      73検証で作成」に更新済みの状態で共有テストグループ`FMXRZYW7`内に残置。
+
+      これで第12期(外部レビューを踏まえたデザイン改善)は全タスク完了となった。
