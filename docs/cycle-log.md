@@ -2247,3 +2247,36 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   人間の実機/実画面での最終確認待ち。
 - blocked / partial: なし。
 
+## 2026-08-21 12:15
+- 実装: `80`(しおりタイムライン連結線をランダムな足あとの小道に変更、Mサイズ)。
+  従来の直線(`.timeline-marker::after`)を、軌跡上に足あとを点々と配置した
+  ランダムな小道風の線に変更した(人間から画像付きで緑色の曲線イメージの
+  共有・「軌跡は同じ形にならないようランダム化してほしい」との要望)。
+  軌跡生成ロジックはDOM非依存な純粋関数として`src/footprintTrail.js`に新規
+  切り出し(`createSeededRandom`・`buildTrailPoints`・`pointsToPathD`・
+  `buildFootprintsAlongPath`・`createFootprintTrail`)、`src/views/itinerary.js`が
+  項目描画時に`Math.random`で毎回軌跡を生成し直し、インラインSVG
+  (経路の`<path>`+足あとの`<g>`複数)を`.timeline-marker`へ挿入する。
+  その日最後の項目の後ろには従来通り連結線を表示しない。`pages/shared.css`の
+  直線用ルールは削除し、`.timeline-trail`(flex:1、`--color-success`で着色、
+  `preserveAspectRatio="none"`で高さに追従)に置き換えた。
+- 動作確認: OK。`src/footprintTrail.test.js`を新規作成しvitestで12件検証
+  (`npm run check`合計47件)成功。開発サーバーを起動しPlaywrightで実Firestore
+  (共有テストグループ`FMXRZYW7`)に旅行を1件作成し、同じ日に3件のしおり項目を
+  追加した際、連結線が2本生成されそれぞれ異なる軌跡(pathD)になること、
+  各連結線に足あとが3件ずつ含まれること、最後の項目の後ろには連結線が
+  無いこと、375px幅で全7タブとも横スクロールが発生しないこと(回帰なし)を
+  確認した。スクリーンショットで緑色の曲がりくねった小道と足あとが視覚的に
+  表示されていることも確認した。console/pageerrorは0件。検証で作成した
+  Firestore上のトリップ1件・しおり項目3件は名前を「[検証用/削除不可]
+  evolve cycle5 80検証で作成」に更新済みの状態で共有テストグループ
+  `FMXRZYW7`内に残置。
+- レビュー: OK。`docs/firestore-design.md`のスキーマ・セキュリティ方針の変更は
+  無し(純粋にクライアント側の装飾で新規フィールドは追加していない)。
+  `docs/screens.md`の画面構成・遷移にも影響なし。色は既存の`--color-success`
+  のみ使用、新規トークンは追加していない。モバイル幅で崩れ無し。
+- 次回予定: 第13期の残り(`77`・`83`・`78`・`79`)から、ドキュメント順で
+  次の`77`(ボタン全体の見た目がチープという指摘への対応、Mサイズ)に着手予定。
+  `68`・`44`・`72`・`74`・`75`・`80`はいずれも人間の実機/実画面での最終確認待ち。
+- blocked / partial: なし。
+

@@ -576,20 +576,22 @@ button:disabled {
   color: var(--color-surface);
 }
 
-.timeline-marker::after {
-  content: "";
+/* 2026-08-21(docs/ROADMAP.md「80」): 単なる直線の連結線から、ランダムに
+   曲がりくねった小道+足あとの軌跡へ変更した。乱数を使うため静的なCSSだけでは
+   表現できず、src/views/itinerary.jsがsrc/footprintTrail.jsの軌跡生成ロジックで
+   組み立てたSVGを`.timeline-marker`へ直接挿入する(日をまたぐ場合はJS側で
+   挿入自体をスキップし、従来のCSSでの非表示と同じ挙動にしている)。
+   viewBoxは固定(0 0 22 100)だがpreserveAspectRatio="none"で実際の高さに
+   伸縮させる。色は「小道」らしさを出すため緑系の--color-successを使う
+   (2026-08-21の人間からのスクリーンショット付きフィードバックで
+   共有された配色イメージ)。 */
+.timeline-trail {
   flex: 1;
-  width: 2px;
-
-  /* --color-borderは暖色背景との明度差が小さく線がほぼ見えなくなるため、
-     視認性の高い--color-text-mutedを使う。 */
-  background: var(--color-text-muted);
-  opacity: 0.4;
+  width: 22px;
+  min-height: 24px;
   margin-top: var(--space-xs);
-}
-
-.timeline-item:last-child .timeline-marker::after {
-  display: none;
+  color: var(--color-success);
+  opacity: 0.7;
 }
 
 .timeline-content {

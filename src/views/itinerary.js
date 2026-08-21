@@ -24,6 +24,7 @@ import { isSafeUrl } from '../url.js';
 import { createDatePicker } from '../datePicker.js';
 import { HOUR_OPTIONS, MINUTE_OPTIONS, buildTimeString, parseTimeString } from '../timeSelect.js';
 import { appendLinkifiedText } from '../linkify.js';
+import { createFootprintTrail } from '../footprintTrail.js';
 
 // 時間未入力の項目をその日の最後に並べるための番兵値(実際の"HH:MM"より必ず後ろに来る)。
 const NO_TIME_SENTINEL = '99:99';
@@ -203,6 +204,31 @@ export function mount(outlet, params) {
     return next;
   }
 
+  // 項目間をつなぐ足あと付きの小道(docs/ROADMAP.md「80」)。src/footprintTrail.jsの
+  // DOM非依存な軌跡生成ロジックを使い、SVGのマークアップ文字列を組み立てる。
+  // 経路(緑の線、--color-successを想定してcurrentColorで継承)・足あと(小道の
+  // 進行方向に合わせて回転)ともstroke/fillはcurrentColor経由にし、色そのものは
+  // CSS側(.timeline-trail)のcolorプロパティで指定する(トークン経由のルールを守る)。
+  // 呼び出しのたびにMath.randomで軌跡を生成し直すため、再描画のたびに形が変わる
+  // (「同じ軌跡にならないように」との要望)。
+  function buildTrailSvg() {
+    const { pathD, footprints } = createFootprintTrail(Math.random, { footprintCount: 3 });
+    const footprintMarks = footprints
+      .map(({ x, y, rotation }) => `
+        <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation.toFixed(1)}) scale(0.15) translate(-12 -14)">
+          <ellipse cx="12" cy="14" rx="4.2" ry="6.2" fill="currentColor" stroke="none" />
+          <circle cx="8.4" cy="5.6" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="4.4" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="15.6" cy="5.6" r="1.3" fill="currentColor" stroke="none" />
+        </g>`)
+      .join('');
+    return `
+      <svg class="timeline-trail" viewBox="0 0 22 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${pathD}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        ${footprintMarks}
+      </svg>`;
+  }
+
   // 同じ日の中での並び替え(docs/ROADMAP.md「58」)。時間未設定の項目同士でのみ
   // 意味を持つため、時間が設定されている項目には比較に使わない。並び順は
   // 時刻文字列(未設定はNO_TIME_SENTINEL)を第一キー、`order`を第二キーにする。
@@ -301,7 +327,7 @@ export function mount(outlet, params) {
       timeline.className = 'timeline';
       timeline.hidden = isCollapsed;
 
-      dayItems.forEach((item) => {
+      dayItems.forEach((item, index) => {
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
 
@@ -322,6 +348,10 @@ export function mount(outlet, params) {
         badge.className = 'timeline-marker-badge';
         badge.innerHTML = isNext ? icons.flag : isPast ? icons.checkmark : icons.waypoint;
         marker.appendChild(badge);
+        // 日をまたぐ場合(その日最後の項目)は連結線を表示しない(従来のCSS版と同じ挙動)。
+        if (index < dayItems.length - 1) {
+          marker.insertAdjacentHTML('beforeend', buildTrailSvg());
+        }
         timelineItem.appendChild(marker);
 
         const content = document.createElement('div');

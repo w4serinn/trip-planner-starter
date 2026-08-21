@@ -2045,3 +2045,59 @@
       vitest 35件)成功。検証で作成したFirestore上のトリップ1件・しおり項目3件は
       名前を「[検証用/削除不可] evolve cycle5 74-75検証で作成」に更新済みの
       状態で共有テストグループ`FMXRZYW7`内に残置。
+
+## 80. しおりタイムライン連結線をランダムな足あとの小道に変更
+- [x] (M) しおりタブのタイムライン連結線(従来は`.timeline-marker::after`の
+      `width: 2px`の直線)を、軌跡上に足あとを点々と配置した、ランダムに
+      曲がりくねった小道風の線に変更した。2026-08-21、人間からスクリーンショット
+      付きで緑色の曲線イメージの共有を受け、追加で「軌跡はある程度ランダム化させて
+      同じ軌跡にならないようにすること」との要望も確定した。
+      軌跡生成ロジックは`src/stayTimeline.js`・`src/scheduleOverview.js`と同じ
+      方針でDOM非依存な純粋関数として`src/footprintTrail.js`に新規切り出しした:
+      `createSeededRandom(seed)`(再現可能な擬似乱数生成器、mulberry32。vitestでの
+      テスト用)・`buildTrailPoints(random, options)`(始点・終点のxを固定し、
+      中間の折れ点をランダムな左右オフセットで生成)・`pointsToPathD(points)`
+      (SVG `<path d>`文字列への変換)・`buildFootprintsAlongPath(points, count)`
+      (経路の総延長をcount等分した位置に、足あとの座標・回転角(経路の進行方向に
+      合わせる)を算出。1つ飛ばしで左右にずらし片足ずつの見た目にする)・
+      `createFootprintTrail(random, options)`(上記をまとめて呼ぶ)。
+      `src/views/itinerary.js`は各項目の描画時(`dayItems.forEach((item, index))`)、
+      その日の最後の項目でなければ(`index < dayItems.length - 1`、日をまたぐ場合は
+      従来通り連結線を表示しない)、`createFootprintTrail(Math.random, {
+      footprintCount: 3 })`で軌跡を生成し、インラインSVG文字列
+      (`<svg class="timeline-trail" viewBox="0 0 22 100"
+      preserveAspectRatio="none">` + 経路の`<path>` + 各足あとを`<g
+      transform="translate(...) rotate(...) scale(0.15) translate(-12 -14)">`で
+      配置した`icons.footprint`と同形のellipse/circle)を`.timeline-marker`へ
+      挿入する`buildTrailSvg()`を追加した。呼び出しのたびに`Math.random`で
+      軌跡を生成し直すため、再描画のたびに形が変わる。色は緑系の
+      `--color-success`(新規トークンは追加していない)。
+      `pages/shared.css`の`.timeline-marker::after`(直線)・
+      `.timeline-item:last-child .timeline-marker::after`(非表示ルール)は削除し、
+      代わりに`.timeline-trail`(`flex: 1; width: 22px; color:
+      var(--color-success);`、`preserveAspectRatio="none"`で実際の高さへ伸縮)を
+      追加した。
+
+      `src/footprintTrail.test.js`を新規作成し、`createSeededRandom`(同一seedでの
+      再現性・異なるseedでの非再現性・0〜1未満の値域)・`buildTrailPoints`
+      (始点・終点のx固定とy等分割・wobbleRatioの範囲内に収まること・異なるseedで
+      異なる軌跡になること)・`pointsToPathD`(SVGパス文字列の形式)・
+      `buildFootprintsAlongPath`(等間隔配置・左右交互のオフセット・ゼロ距離
+      セグメントでも例外にならないこと)・`createFootprintTrail`(まとめての
+      出力・footprintCountの既定値)を12件のテストで検証した(全て成功)。
+      `npm run check`(lint・test、vitest合計47件)も成功。
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、しおりタブの同じ日に3件の項目を追加した際、`.timeline-trail`が
+      2本(3件→連結線2本)生成されること、2本の`pathD`が互いに異なること
+      (=ランダム化されていること)、各`.timeline-trail`に3件ずつ足あとの`<g>`が
+      含まれること、最後の項目の後ろには連結線が挿入されないことを確認した
+      (2026-08-21)。スクリーンショットで、緑色の曲がりくねった小道と足あとが
+      バッジ間に視覚的に表示されていることを目視確認した。375px幅で全7タブとも
+      横スクロールが発生しないこと(回帰なし)も確認した。console/pageerrorは
+      0件。検証で作成したFirestore上のトリップ1件・しおり項目3件は名前を
+      「[検証用/削除不可] evolve cycle5 80検証で作成」に更新済みの状態で共有
+      テストグループ`FMXRZYW7`内に残置。
+
+      これで第13期の「装飾・見た目」サブセクションのうち`74`・`75`・`80`が
+      完了し、`77`(ボタンの見た目)・`83`(グラデーション使い回し)を残すのみと
+      なった。
