@@ -1047,6 +1047,80 @@ button:disabled {
   border-color: var(--color-primary);
 }
 
+/* 2026-08-21(docs/ROADMAP.md「52」): F(日程調整)の俯瞰ビュー(月めくりカレンダー上に
+   候補日を○×△で色分け表示、src/views/schedule.js)専用の日付セル。`.date-picker-day`
+   (クリック可能なボタン、hover時に背景が薄く付く)とは別クラスにしている。俯瞰ビューの
+   セルは非インタラクティブな表示専用で、`:hover`時にステータス色が薄い背景色で
+   一瞬上書きされるちらつきを避けるため。レイアウト(サイズ・角丸)は`.date-picker-day`
+   に揃えている。 */
+.schedule-overview-day {
+  aspect-ratio: 1;
+  max-width: 32px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: var(--font-weight-subheading);
+  color: var(--color-text);
+}
+
+.schedule-overview-day-today {
+  border-color: var(--color-primary);
+}
+
+.schedule-overview-day-ok {
+  background: var(--color-success);
+  color: var(--color-surface);
+}
+
+.schedule-overview-day-ng {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+.schedule-overview-day-pending {
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.schedule-overview-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.schedule-overview-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.schedule-overview-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.schedule-overview-dot-ok {
+  background: var(--color-success);
+}
+
+.schedule-overview-dot-ng {
+  background: var(--color-danger);
+}
+
+.schedule-overview-dot-pending {
+  background: var(--color-accent);
+}
+
 /* 2026-08-19(docs/ROADMAP.md「27」の2つ目のサブタスク): datePickerの複数選択モードで
    選択した日付を一覧表示するチップ。F(日程調整)画面の「候補日を追加」フォームで使用。 */
 .chip-row {

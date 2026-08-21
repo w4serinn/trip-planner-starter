@@ -13,9 +13,17 @@ import {
   sanitizeMapKey,
 } from '../firestore.js';
 import { icons } from '../icons.js';
-import { createDatePicker } from '../datePicker.js';
+import { createDatePicker, addMonths, toDateString, parseDateString } from '../datePicker.js';
+import { buildOverviewCells } from '../scheduleOverview.js';
 
 const RESPONSE_SYMBOLS = ['○', '△', '×'];
+const OVERVIEW_STATUS_LABELS = { ok: '○', ng: '×', pending: '△' };
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+
+function todayDateString() {
+  const today = new Date();
+  return toDateString(today.getFullYear(), today.getMonth(), today.getDate());
+}
 
 export function mount(outlet, params) {
   const session = loadSession();
@@ -30,6 +38,17 @@ export function mount(outlet, params) {
 
   outlet.innerHTML = `
     <p class="subtitle">候補日を追加し、○(参加できる)・△(未定)・×(参加できない)で回答しましょう。</p>
+
+    <div class="card" id="schedule-overview-card">
+      <h3 class="icon-heading">${icons.schedule}<span>候補日カレンダー</span></h3>
+      <p class="subtitle">候補日が多いときに、月ごとの状況をひと目で確認できます。</p>
+      <div class="schedule-overview-legend">
+        <span><span class="schedule-overview-dot schedule-overview-dot-ok"></span>○ 全員参加可能</span>
+        <span><span class="schedule-overview-dot schedule-overview-dot-ng"></span>× 誰か参加不可</span>
+        <span><span class="schedule-overview-dot schedule-overview-dot-pending"></span>△ 検討中・未回答あり</span>
+      </div>
+      <div id="schedule-overview" class="date-picker"></div>
+    </div>
 
     <button type="button" id="toggle-date-form" class="btn-secondary">${icons.plus}<span>候補日を追加</span></button>
 
@@ -63,6 +82,7 @@ export function mount(outlet, params) {
   const submitButton = dateForm.querySelector('button[type="submit"]');
   const bulkResponseRow = outlet.querySelector('#bulk-response-row');
   const bulkButtons = [...bulkResponseRow.querySelectorAll('button')];
+  const overviewContainer = outlet.querySelector('#schedule-overview');
 
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
@@ -104,6 +124,84 @@ export function mount(outlet, params) {
 
   let currentEntries = [];
   let memberCount = 0;
+
+  // 俯瞰ビュー(docs/ROADMAP.md「52」)の表示中の年月。初回データ取得時、候補日が
+  // あればその最も早い候補日の月へ自動的に合わせる(それ以降はユーザーの月送り操作を
+  // 尊重し、再描画のたびに戻したりしない)。
+  const todayStr = todayDateString();
+  let overviewYear = parseDateString(todayStr).year;
+  let overviewMonth = parseDateString(todayStr).month;
+  let overviewInitialized = false;
+
+  function renderOverview() {
+    overviewContainer.innerHTML = '';
+    overviewContainer.classList.add('date-picker');
+
+    const header = document.createElement('div');
+    header.className = 'date-picker-header';
+
+    const prevButton = document.createElement('button');
+    prevButton.type = 'button';
+    prevButton.className = 'date-picker-nav';
+    prevButton.textContent = '‹';
+    prevButton.setAttribute('aria-label', '前の月');
+    prevButton.addEventListener('click', () => {
+      ({ year: overviewYear, month: overviewMonth } = addMonths(overviewYear, overviewMonth, -1));
+      renderOverview();
+    });
+
+    const label = document.createElement('span');
+    label.className = 'date-picker-label';
+    label.textContent = `${overviewYear}年${overviewMonth + 1}月`;
+
+    const nextButton = document.createElement('button');
+    nextButton.type = 'button';
+    nextButton.className = 'date-picker-nav';
+    nextButton.textContent = '›';
+    nextButton.setAttribute('aria-label', '次の月');
+    nextButton.addEventListener('click', () => {
+      ({ year: overviewYear, month: overviewMonth } = addMonths(overviewYear, overviewMonth, 1));
+      renderOverview();
+    });
+
+    header.appendChild(prevButton);
+    header.appendChild(label);
+    header.appendChild(nextButton);
+    overviewContainer.appendChild(header);
+
+    const weekdayRow = document.createElement('div');
+    weekdayRow.className = 'date-picker-grid date-picker-weekdays';
+    for (const weekdayLabel of WEEKDAY_LABELS) {
+      const cell = document.createElement('span');
+      cell.textContent = weekdayLabel;
+      weekdayRow.appendChild(cell);
+    }
+    overviewContainer.appendChild(weekdayRow);
+
+    const entriesByDate = new Map(currentEntries.map((entry) => [entry.id, entry]));
+    const cells = buildOverviewCells(overviewYear, overviewMonth, entriesByDate, memberCount);
+
+    const grid = document.createElement('div');
+    grid.className = 'date-picker-grid';
+    for (const cell of cells) {
+      if (cell === null) {
+        grid.appendChild(document.createElement('span'));
+        continue;
+      }
+      const daySpan = document.createElement('span');
+      daySpan.className = 'schedule-overview-day';
+      if (cell.dateStr === todayStr) daySpan.classList.add('schedule-overview-day-today');
+      if (cell.status) daySpan.classList.add(`schedule-overview-day-${cell.status}`);
+      daySpan.textContent = String(cell.day);
+      daySpan.title = cell.status
+        ? `${cell.dateStr}: ${OVERVIEW_STATUS_LABELS[cell.status]}`
+        : cell.dateStr;
+      grid.appendChild(daySpan);
+    }
+    overviewContainer.appendChild(grid);
+  }
+
+  renderOverview();
 
   function formatDateLabel(dateString) {
     const date = new Date(`${dateString}T00:00:00`);
@@ -217,7 +315,15 @@ export function mount(outlet, params) {
         if (isFirstSnapshot) {
           isFirstSnapshot = false;
           submitButton.disabled = false;
+          // 初回取得時のみ、候補日があればその最も早い候補日の月へ俯瞰ビューを合わせる
+          // (それ以降はユーザーが月送りした表示を尊重し、再描画のたびに戻さない)。
+          if (!overviewInitialized && entries.length > 0) {
+            const earliestDate = [...entries].map((entry) => entry.id).sort()[0];
+            ({ year: overviewYear, month: overviewMonth } = parseDateString(earliestDate));
+          }
+          overviewInitialized = true;
         }
+        renderOverview();
       },
       (error) => {
         console.error(error);
