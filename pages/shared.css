@@ -724,6 +724,14 @@ button:disabled {
   margin: 0 0 var(--space-xs);
 }
 
+/* 2026-08-21(docs/ROADMAP.md「87」): しおりの並び替えを全項目対象に拡張したことで
+   起こりうる、手動並び替え後の時刻の前後矛盾を知らせる警告(保存はブロックしない)。 */
+.item-time-warning {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  margin: 0 0 var(--space-xs);
+}
+
 .destination-heading-row {
   display: flex;
   align-items: center;

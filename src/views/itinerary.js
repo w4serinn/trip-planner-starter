@@ -238,26 +238,33 @@ export function mount(outlet, params) {
       </svg>`;
   }
 
-  // 同じ日の中での並び替え(docs/ROADMAP.md「58」)。時間未設定の項目同士でのみ
-  // 意味を持つため、時間が設定されている項目には比較に使わない。並び順は
-  // 時刻文字列(未設定はNO_TIME_SENTINEL)を第一キー、`order`を第二キーにする。
+  // 同じ日の中での並び替え(docs/ROADMAP.md「87」、docs/firestore-design.md
+  // 「しおり項目の並び替え(全項目対象)」参照)。その日の全項目の`order`が
+  // 未設定(＝一度も並び替え/追加操作で触られていない「未着手の日」)なら、
+  // 従来通り時刻順(未設定はNO_TIME_SENTINELで末尾)にフォールバックする。
+  // それ以外(＝並び替えや、並び替え後の追加で1件でも`order`が振られた
+  // 「着手済みの日」)は、時間の有無を問わず`order`昇順で並べる。並び替え・
+  // 追加のたびに対象日の全項目へ`order`を振り直すため、同じ日の中で
+  // 「一部の項目だけorderがある」という中間状態にはならない。
   function compareItems(a, b) {
-    const timeCompare = (a.time || NO_TIME_SENTINEL).localeCompare(b.time || NO_TIME_SENTINEL);
-    if (timeCompare !== 0) return timeCompare;
+    if (a.order == null && b.order == null) {
+      return (a.time || NO_TIME_SENTINEL).localeCompare(b.time || NO_TIME_SENTINEL);
+    }
     return (a.order ?? 0) - (b.order ?? 0);
   }
 
-  // dayItems(その日のitem一覧、表示順)の中で時間未設定の項目のみを対象に、
-  // 指定した項目を1つ上/下(direction: -1 or 1)へ移動する。並び替えのたびに
-  // 対象全員のorderを0,1,2,...に振り直すことで、既存項目のorder未設定
-  // (undefined、0扱い)が混在していても一貫した順序に収束させる。
-  async function moveUntimedItem(dayItems, item, direction) {
-    const untimed = dayItems.filter((i) => !i.time);
-    const index = untimed.findIndex((i) => i.id === item.id);
+  // dayItems(その日のitem一覧、表示順)の中で、指定した項目を1つ上/下
+  // (direction: -1 or 1)へ移動する。時間設定の有無を問わずその日の全項目が対象
+  // (docs/ROADMAP.md「87」。以前は時間未設定の項目同士でのみ移動できた)。
+  // 並び替えのたびに対象全員のorderを0,1,2,...に振り直すことで、既存項目の
+  // order未設定(undefined、0扱い)が混在していても一貫した順序に収束させる。
+  async function moveItem(dayItems, item, direction) {
+    const index = dayItems.findIndex((i) => i.id === item.id);
     const targetIndex = index + direction;
-    if (index === -1 || targetIndex < 0 || targetIndex >= untimed.length) return;
+    if (index === -1 || targetIndex < 0 || targetIndex >= dayItems.length) return;
 
-    [untimed[index], untimed[targetIndex]] = [untimed[targetIndex], untimed[index]];
+    const reordered = [...dayItems];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
 
     errorText.textContent = '';
     justMovedItemId = item.id;
@@ -266,7 +273,7 @@ export function mount(outlet, params) {
       // 呼ぶと購読(onSnapshot)側の再描画が複数回走り、ハイライト演出(item-moved-flash)が
       // 次の再描画で即座に塗り替えられて見えなくなる不具合があったため。
       await updateDocumentsBatch(
-        untimed.map((i, newOrder) => ({ path: `${itemsPath}/${i.id}`, data: { order: newOrder } })),
+        reordered.map((i, newOrder) => ({ path: `${itemsPath}/${i.id}`, data: { order: newOrder } })),
       );
       // リアルタイム購読(docs/ROADMAP.md「32」)が新しい値を届けて再描画するため、
       // ここでのローカル更新は行わない。
@@ -336,8 +343,21 @@ export function mount(outlet, params) {
       itemList.appendChild(heading);
 
       const dayItems = groups.get(date).sort(compareItems);
-      // 時間未設定の項目同士でのみ▲▼並び替えボタンを表示する(docs/ROADMAP.md「58」)。
-      const untimedItems = dayItems.filter((i) => !i.time);
+
+      // 手動並び替えの結果、時刻の前後関係が崩れた項目を検出する(docs/ROADMAP.md「87」)。
+      // 表示順に見ていき、それまでで最も遅い時間より前の時間を持つ項目に警告を出す
+      // (例: 10:00の項目の後に9:00の項目が来ている場合、9:00の項目側に警告)。
+      // 保存はブロックせず、警告表示のみ。
+      const timeWarningIds = new Set();
+      let latestSeenTime = null;
+      for (const i of dayItems) {
+        if (!i.time) continue;
+        if (latestSeenTime !== null && i.time < latestSeenTime) {
+          timeWarningIds.add(i.id);
+        } else {
+          latestSeenTime = i.time;
+        }
+      }
 
       const timeline = document.createElement('div');
       timeline.className = 'timeline';
@@ -391,6 +411,13 @@ export function mount(outlet, params) {
         title.textContent = item.time ? `${item.time} ${item.title}` : item.title;
         content.appendChild(title);
 
+        if (timeWarningIds.has(item.id)) {
+          const warning = document.createElement('p');
+          warning.className = 'item-time-warning';
+          warning.textContent = '⚠ 時間の前後が入れ替わっています';
+          content.appendChild(warning);
+        }
+
         if (item.locationUrl) {
           if (isSafeUrl(item.locationUrl)) {
             const link = document.createElement('a');
@@ -425,8 +452,9 @@ export function mount(outlet, params) {
         meta.textContent = `追加: ${item.addedBy}`;
         content.appendChild(meta);
 
-        if (!item.time && untimedItems.length > 1) {
-          const untimedIndex = untimedItems.findIndex((i) => i.id === item.id);
+        // 時間設定の有無を問わず、その日の全項目が並び替え対象(docs/ROADMAP.md「87」。
+        // 以前は時間未設定の項目同士でのみ▲▼を表示していた)。
+        if (dayItems.length > 1) {
           const moveRow = document.createElement('div');
           moveRow.className = 'button-row';
 
@@ -434,16 +462,16 @@ export function mount(outlet, params) {
           moveUpButton.type = 'button';
           moveUpButton.className = 'btn-secondary';
           moveUpButton.textContent = '▲ 上へ';
-          moveUpButton.disabled = untimedIndex === 0;
-          moveUpButton.addEventListener('click', () => moveUntimedItem(dayItems, item, -1));
+          moveUpButton.disabled = index === 0;
+          moveUpButton.addEventListener('click', () => moveItem(dayItems, item, -1));
           moveRow.appendChild(moveUpButton);
 
           const moveDownButton = document.createElement('button');
           moveDownButton.type = 'button';
           moveDownButton.className = 'btn-secondary';
           moveDownButton.textContent = '▼ 下へ';
-          moveDownButton.disabled = untimedIndex === untimedItems.length - 1;
-          moveDownButton.addEventListener('click', () => moveUntimedItem(dayItems, item, 1));
+          moveDownButton.disabled = index === dayItems.length - 1;
+          moveDownButton.addEventListener('click', () => moveItem(dayItems, item, 1));
           moveRow.appendChild(moveDownButton);
 
           content.appendChild(moveRow);
@@ -540,7 +568,26 @@ export function mount(outlet, params) {
         // 編集時はaddedBy(追加者)を書き換えない。
         await updateDocument(`${itemsPath}/${editingItemId}`, { title, date, time, locationUrl, transportation, note });
       } else {
-        await addDocument(itemsPath, { title, date, time, locationUrl, transportation, note, addedBy: session.name });
+        // 追加先の日が「着手済みの日」(1件でも明示的なorderを持つ)場合、新規項目の
+        // 時間目安から挿入位置を推定し、その日の全項目のorderを振り直す
+        // (docs/ROADMAP.md「87」)。「未着手の日」への追加はorder操作不要
+        // (追加後も全項目order未設定のまま、時刻順で正しく表示されるため)。
+        const dayItems = currentItems.filter((i) => i.date === date).sort(compareItems);
+        if (dayItems.some((i) => i.order != null)) {
+          const insertIndex = dayItems.findIndex(
+            (i) => (time || NO_TIME_SENTINEL).localeCompare(i.time || NO_TIME_SENTINEL) < 0,
+          );
+          const newItemIndex = insertIndex === -1 ? dayItems.length : insertIndex;
+          const shifts = dayItems
+            .slice(newItemIndex)
+            .map((i, offset) => ({ path: `${itemsPath}/${i.id}`, data: { order: newItemIndex + 1 + offset } }));
+          if (shifts.length > 0) await updateDocumentsBatch(shifts);
+          await addDocument(itemsPath, {
+            title, date, time, locationUrl, transportation, note, addedBy: session.name, order: newItemIndex,
+          });
+        } else {
+          await addDocument(itemsPath, { title, date, time, locationUrl, transportation, note, addedBy: session.name });
+        }
       }
       closeForm();
     } catch (error) {
