@@ -107,9 +107,36 @@ body {
   animation: view-enter-flat 0.2s ease;
 }
 
+/* 2026-08-21(docs/ROADMAP.md「78」): しおりの▲/▼並び替え(`58`)は、クリック後
+   Firestoreへの書き込み→リアルタイム購読(`32`)による全項目の再描画という
+   流れで反映されるため、DOM要素が使い回されずアニメーションの起点が無く、
+   移動しても何も起きたように見えないという人間からのフィードバックがあった
+   (「なにもエフェクトが無いので変わったことが分かりづらい」)。全再描画の
+   都度アイテムのDOM要素が作り直される構造上、位置を滑らかにスライドさせる
+   (FLIP)アニメーションは複雑になるため、代わりに「移動した項目そのものが
+   一瞬光る」ハイライト点滅で変化に気付かせる方式にした
+   (src/views/itinerary.jsが移動直後の項目idを覚えておき、次の再描画時に
+   このクラスを付与する)。他のanimationクラスと同様、下のreduced-motion
+   メディアクエリより前に定義する必要がある(CSSは同じ詳細度なら後勝ちのため、
+   後ろに置くとメディアクエリでのanimation: noneが打ち消されてしまう)。 */
+@keyframes item-moved-flash {
+  0% {
+    background-color: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
+  }
+
+  100% {
+    background-color: var(--color-surface);
+  }
+}
+
+.item-moved-flash {
+  animation: item-moved-flash 0.8s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .view-enter,
-  .view-enter-flat {
+  .view-enter-flat,
+  .item-moved-flash {
     animation: none;
   }
 }

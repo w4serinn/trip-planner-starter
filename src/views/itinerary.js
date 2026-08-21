@@ -118,6 +118,11 @@ export function mount(outlet, params) {
   // 編集中の項目ID(docs/ROADMAP.md「39」)。nullなら新規追加モード。
   let editingItemId = null;
 
+  // 直前に▲/▼で並び替えた項目ID(docs/ROADMAP.md「78」)。次のrenderItems呼び出し
+  // (Firestoreの購読が新しいorderを届けたタイミング)で該当カードへハイライト
+  // 点滅クラスを1回だけ付与し、使い終わったらnullに戻す。
+  let justMovedItemId = null;
+
   function openForm() {
     toggleFormButton.hidden = true;
     itemForm.hidden = false;
@@ -251,6 +256,7 @@ export function mount(outlet, params) {
     [untimed[index], untimed[targetIndex]] = [untimed[targetIndex], untimed[index]];
 
     errorText.textContent = '';
+    justMovedItemId = item.id;
     try {
       await Promise.all(untimed.map((i, newOrder) => updateDocument(`${itemsPath}/${i.id}`, { order: newOrder })));
       // リアルタイム購読(docs/ROADMAP.md「32」)が新しい値を届けて再描画するため、
@@ -258,6 +264,7 @@ export function mount(outlet, params) {
     } catch (error) {
       console.error(error);
       errorText.textContent = '並び替えの保存に失敗しました。時間をおいて再度お試しください。';
+      justMovedItemId = null;
     }
   }
 
@@ -356,6 +363,13 @@ export function mount(outlet, params) {
 
         const content = document.createElement('div');
         content.className = isNext ? 'timeline-content card timeline-content-next' : 'timeline-content card';
+        // 直前に並び替えた項目なら、一瞬ハイライトして変化に気付かせる
+        // (docs/ROADMAP.md「78」)。1回使ったらリセットし、以降の無関係な
+        // 再描画では光らないようにする。
+        if (item.id === justMovedItemId) {
+          content.classList.add('item-moved-flash');
+          justMovedItemId = null;
+        }
 
         if (isNext) {
           const nextBadge = document.createElement('span');

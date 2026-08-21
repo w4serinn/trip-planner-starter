@@ -2172,3 +2172,53 @@
 
       これで第13期の「装飾・見た目」サブセクション(`74`・`75`・`77`・`80`・
       `83`)は全て完了した。
+
+## 78. しおり並び替え後のハイライト点滅を追加
+- [x] (S) しおりタブの並び替え(`58`、▲/▼ボタン)をクリックしても、移動が
+      視覚的に分かりにくいという、2026-08-21の人間からのフィードバック
+      (「しおりで移動させたとき、なにもエフェクトが無いので変わったことが
+      分かりづらい」)に対応した。並び替えは、クリック後Firestoreへの書き込み
+      →リアルタイム購読(`32`)による全項目の再描画という流れで反映されるため、
+      DOM要素が使い回されず(`renderItems`が`itemList.innerHTML = ''`から
+      毎回全項目分のDOM要素を作り直す構造)、位置を滑らかにスライドさせる
+      (FLIP)アニメーションの起点が無い。そのため、代わりに「移動した項目
+      そのものが一瞬光る」ハイライト点滅で変化に気付かせる方式にした。
+      `src/views/itinerary.js`に`justMovedItemId`(直前に▲/▼で並び替えた
+      項目ID)を追加し、`moveUntimedItem`が移動操作の開始時にセット、
+      `renderItems`が該当項目のカード(`.timeline-content`)を作る際に
+      `item.id === justMovedItemId`なら`.item-moved-flash`クラスを付与して
+      即座に`justMovedItemId`をnullへ戻す(1回きりの発火。以降の無関係な
+      再描画では光らない)。書き込み失敗時も`justMovedItemId`をnullへ戻し、
+      失敗した並び替えで後から無関係にハイライトが出ないようにした。
+      `pages/shared.css`に`@keyframes item-moved-flash`
+      (`--color-success`を25%混ぜた色→`--color-surface`への背景色フェード、
+      0.8s)を追加した。色は既存の`--color-success`(緑、他の「完了・成功」系
+      表示と同じ意味合い)を再利用し、新規トークンは追加していない。
+      実装中に発見・修正した点: 当初`.item-moved-flash`のルールを
+      `.timeline-content`の近く(ファイル末尾寄り)に置いていたところ、
+      同じ詳細度のCSSは後に書かれた方が勝つという性質により、`@media
+      (prefers-reduced-motion: reduce)`側の`animation: none`上書き
+      (ファイル冒頭寄りにある`.view-enter`等と同じ場所にまとめている)より
+      後ろに来てしまい、reduced-motion環境でもアニメーションが無効化されない
+      不具合をPlaywright検証中に発見した。`.item-moved-flash`の定義を
+      `.view-enter-flat`の直後・reduced-motionメディアクエリの直前へ移動し、
+      他のanimationクラスと同じ並び順にすることで解消した。
+
+      Playwrightで、実Firestore(共有テストグループ`FMXRZYW7`)に対し旅行を
+      1件作成し、しおりタブに時間未設定の項目を同じ日に2件追加、2件目の
+      「▲ 上へ」をクリックした際、MutationObserverで`.item-moved-flash`
+      クラスがDOM上に一度でも出現することを確認した(全再描画のため固定
+      タイミングでの`classList.contains`チェックでは、複数回の再描画の間に
+      入れ替わり見逃すことがあると判明したため、変化を継続監視する方式に
+      した)。並び替え自体(`58`)も、クリック前後の表示順・ページリロード後の
+      Firestore実データで正しく入れ替わることを確認した。通常モードでは
+      `.item-moved-flash`の`computed animationName`が`item-moved-flash`に、
+      `prefers-reduced-motion: reduce`環境では`none`になることを確認した
+      (上記の並び順修正後)。375px幅で全7タブとも横スクロールが発生しない
+      こと(回帰なし)も確認した。console/pageerrorは0件。`npm run check`
+      (lint・test、vitest 47件)成功。検証中の試行錯誤(タイミング調査のため
+      同じPlaywrightスクリプトを複数回実行)でFirestore上に複数件のトリップを
+      作成したが、いずれもスクリプト内で作成直後に名前を「[検証用/削除不可]
+      evolve cycle5 78検証で作成」へ更新するようにしていたため、全て命名規則
+      通りにリネーム済みの状態で共有テストグループ`FMXRZYW7`内に残置(各
+      しおり項目2件程度の空実験データ)。
