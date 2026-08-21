@@ -103,6 +103,12 @@ export function mount(outlet, params) {
     <div id="scratch-actions-spacer"></div>
   `;
 
+  // タブ遷移アニメーション(docs/ROADMAP.md「72」)はtransformを使うため、有効な間
+  // #viewがposition: fixedな#scratch-actions(直上の「44」)の包含ブロックになって
+  // しまい、画面下部固定が一瞬崩れる(docs/ROADMAP.md「73」参照)。src/router.jsに
+  // transformを使わないフォールバック用の遷移を使わせる。
+  outlet.dataset.flatTransition = 'true';
+
   const scratchTextarea = outlet.querySelector('#scratch-text');
   const scratchActions = outlet.querySelector('#scratch-actions');
   const scratchActionsSpacer = outlet.querySelector('#scratch-actions-spacer');

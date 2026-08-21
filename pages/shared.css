@@ -81,18 +81,35 @@ body {
   }
 }
 
-/* transformを持つ間、#viewはposition: fixedな子要素(#scratch-actions等、
-   docs/ROADMAP.md「44」)の包含ブロックになり、アニメーション中の一瞬だけ
-   画面下部固定が効かなくなる(CSS仕様上の制約。transformプロパティを使う限り
-   perspective()に限らず既存のtranslateY版でも本質的に同じ)。角度を控えめにし、
-   時間も0.25sと短く保つことで実害を最小化した。詳細はdocs/cycle-log.md参照。 */
 .view-enter {
   transform-origin: left center;
   animation: view-enter 0.25s ease;
 }
 
+/* 2026-08-21(docs/ROADMAP.md「73」): 「view-enter」はtransformを使うため、
+   有効な間#viewがposition: fixedな子孫要素(雑多メモの画面下部固定バー
+   #scratch-actions、docs/ROADMAP.md「44」)の包含ブロックになってしまい、
+   アニメーション中だけ画面外へ外れて一瞬非表示になる(CSS仕様上の制約)。
+   そのような固定要素を持つビューは、src/router.jsが`outlet.dataset.
+   flatTransition`を見てこちらのtransformを使わないopacityのみの
+   フェードにフォールバックする(src/views/scratch.jsが該当)。 */
+@keyframes view-enter-flat {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.view-enter-flat {
+  animation: view-enter-flat 0.2s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .view-enter {
+  .view-enter,
+  .view-enter-flat {
     animation: none;
   }
 }
