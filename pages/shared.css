@@ -210,17 +210,6 @@ body {
   background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
 }
 
-.back-link {
-  color: rgb(255 255 255 / 75%);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  flex-shrink: 0;
-}
-
-.back-link:hover {
-  color: var(--color-surface);
-}
-
 h1,
 h2,
 h3 {
@@ -869,7 +858,7 @@ button:disabled {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-md);
   width: 220px;
   flex-shrink: 0;
   padding: var(--space-lg) var(--space-md);
@@ -887,6 +876,43 @@ button:disabled {
 
 .sidebar[hidden] {
   display: none;
+}
+
+/* 2026-08-21(docs/ROADMAP.md「79」): モバイルヘッダーでハンバーガーボタンと
+   「← 旅行一覧」リンクが窮屈に並んでいたのを解消するため、アプリ名・
+   「← 旅行一覧」リンクを.page-headerからサイドバー上部へ移動した(空いた
+   .page-headerの<h1>は、旅行に紐づく画面では代わりに旅行名を表示する。
+   src/app.jsの`subscribeTripName`参照)。タブリンク一覧(#sidebar-links)とは
+   下線で区切り、ブランド表示であることを視覚的に示す。 */
+.sidebar-brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar-brand-name {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text);
+}
+
+.sidebar-back-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+}
+
+.sidebar-back-link:hover {
+  text-decoration: underline;
+}
+
+#sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 /* モバイルでの開閉状態(.sidebar-open): src/app.jsのopenMenu/closeMenuが

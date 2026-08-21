@@ -8,12 +8,17 @@
 </head>
 <body>
   <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
-  <nav id="sidebar" class="sidebar" hidden></nav>
+  <nav id="sidebar" class="sidebar" hidden>
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-name">旅行計画アプリ</span>
+      <a id="back-to-trips" class="sidebar-back-link" href="#/trips">← 旅行一覧</a>
+    </div>
+    <div id="sidebar-links"></div>
+  </nav>
   <main class="page">
     <header class="page-header">
       <button type="button" id="menu-toggle" class="menu-toggle" hidden aria-label="メニューを開く" aria-expanded="false"></button>
-      <a id="back-to-trips" class="back-link" href="#/trips" hidden>← 旅行一覧</a>
-      <h1>旅行計画アプリ</h1>
+      <h1 id="page-title">旅行計画アプリ</h1>
     </header>
     <div id="view"></div>
   </main>

@@ -3,6 +3,8 @@
 // 雑多メモは実装済み(docs/ROADMAP.md「11」「12」「14」)。
 import { registerRoute, startRouter } from './router.js';
 import { icons } from './icons.js';
+import { loadSession } from './session.js';
+import { subscribeToDocument } from './firestore.js';
 import { mount as mountJoin } from './views/join.js';
 import { mount as mountTrips } from './views/trips.js';
 import { mount as mountTripOverview } from './views/tripOverview.js';
@@ -14,9 +16,10 @@ import { mount as mountLodging } from './views/lodging.js';
 import { mount as mountItinerary } from './views/itinerary.js';
 
 const sidebar = document.getElementById('sidebar');
+const sidebarLinks = document.getElementById('sidebar-links');
 const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 const menuToggle = document.getElementById('menu-toggle');
-const backToTrips = document.getElementById('back-to-trips');
+const pageTitle = document.getElementById('page-title');
 
 const TABS = [
   { key: 'overview', label: '概要', suffix: '', icon: icons.overview, mount: mountTripOverview },
@@ -77,23 +80,56 @@ document.addEventListener('keydown', (event) => {
 });
 
 function renderNav(tripId, activeKey) {
-  sidebar.innerHTML = '';
+  sidebarLinks.innerHTML = '';
   sidebar.hidden = false;
   menuToggle.hidden = false;
-  backToTrips.hidden = false;
   closeMenu();
   for (const tab of TABS) {
     const sidebarLink = document.createElement('a');
     sidebarLink.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
     sidebarLink.href = `#/trips/${tripId}${tab.suffix}`;
     sidebarLink.className = tab.key === activeKey ? 'sidebar-link sidebar-link-active' : 'sidebar-link';
-    sidebar.appendChild(sidebarLink);
+    sidebarLinks.appendChild(sidebarLink);
   }
+}
+
+// 2026-08-21(docs/ROADMAP.md「79」): 旅行に紐づく画面(C〜H各タブ)にいる間、
+// .page-headerの<h1>にその旅行の名前を表示する(それまでは常に固定の
+// 「旅行計画アプリ」という汎用アプリ名だったが、旅行の文脈が伝わらないとの
+// 指摘を受けた)。各タブビュー(例: src/views/tripOverview.js)がそれぞれ
+// trips/{tripId}を購読しているのとは別に、ヘッダー専用の購読をここで1つだけ
+// 持つ(タブを跨いでも張り直せるよう、直前の購読は都度停止する)。
+const DEFAULT_PAGE_TITLE = '旅行計画アプリ';
+let unsubscribeTripName = null;
+
+function stopTripNameSubscription() {
+  if (unsubscribeTripName) {
+    unsubscribeTripName();
+    unsubscribeTripName = null;
+  }
+}
+
+function subscribeTripName(tripId) {
+  stopTripNameSubscription();
+  const session = loadSession();
+  if (!session) return; // 未参加の場合、リダイレクトは各タブのmount()側の責務
+  pageTitle.textContent = DEFAULT_PAGE_TITLE;
+  unsubscribeTripName = subscribeToDocument(
+    `groups/${session.groupCode}/trips/${tripId}`,
+    (trip) => {
+      pageTitle.textContent = trip?.name || DEFAULT_PAGE_TITLE;
+    },
+    (error) => {
+      console.error(error);
+      pageTitle.textContent = DEFAULT_PAGE_TITLE;
+    },
+  );
 }
 
 function registerTripTab(tab) {
   registerRoute(`#/trips/:tripId${tab.suffix}`, (outlet, params) => {
     renderNav(params.tripId, tab.key);
+    subscribeTripName(params.tripId);
     if (tab.mount) {
       return tab.mount(outlet, params);
     }
@@ -105,8 +141,9 @@ function registerTripTab(tab) {
 function hideNav() {
   sidebar.hidden = true;
   menuToggle.hidden = true;
-  backToTrips.hidden = true;
   closeMenu();
+  stopTripNameSubscription();
+  pageTitle.textContent = DEFAULT_PAGE_TITLE;
 }
 
 registerRoute('#/', (outlet) => {
