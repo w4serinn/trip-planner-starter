@@ -14,6 +14,7 @@ import {
   arrayUnion,
   deleteField,
   onSnapshot,
+  writeBatch,
 } from 'firebase/firestore';
 
 export async function getDocument(path) {
@@ -34,6 +35,21 @@ export async function setDocumentMerged(path, data) {
 
 export async function updateDocument(path, data) {
   await updateDoc(doc(db, path), data);
+}
+
+// 複数ドキュメントへの更新を1回のコミットにまとめる(docs/ROADMAP.md「86」)。
+// 別々にupdateDocumentを呼ぶと、ドキュメントごとにローカルの楽観的書き込みが発生し、
+// それぞれがonSnapshotの購読(subscribeToCollection)を個別に呼び出してしまう。
+// しおりの並び替えのように、1回の操作で複数件のorderを一括更新する場合、
+// これが原因で短時間に何度も再描画が走り、直後に一瞬だけ出すつもりの
+// ハイライト演出(item-moved-flash)が次の再描画で塗り替えられて見えなくなる
+// 不具合があった。writeBatchで1コミットにまとめることで、購読側の通知も1回になる。
+export async function updateDocumentsBatch(updates) {
+  const batch = writeBatch(db);
+  for (const { path, data } of updates) {
+    batch.update(doc(db, path), data);
+  }
+  await batch.commit();
 }
 
 // 配列フィールドへの重複なし追記(例: groups/{code}のmembers)。
