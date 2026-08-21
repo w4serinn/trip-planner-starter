@@ -222,7 +222,9 @@ export function mount(outlet, params) {
     // 描画しないようにした。src/footprintTrail.jsのpathD算出ロジック自体は
     // 変更していない(足あとの位置・向きは経路上の点から算出するため、
     // 内部的には引き続き使われている。呼び出し側でpathDを使わないだけ)。
-    const { footprints } = createFootprintTrail(Math.random, { footprintCount: 3 });
+    // 2026-08-21(docs/ROADMAP.md「90」): 線を消した後、足あと3件だけでは
+    // 「足跡が少なすぎる」との指摘を受け、6件に増やした。
+    const { footprints } = createFootprintTrail(Math.random, { footprintCount: 6 });
     const footprintMarks = footprints
       .map(({ x, y, rotation }) => `
         <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation.toFixed(1)}) scale(0.15) translate(-12 -14)">
@@ -253,6 +255,25 @@ export function mount(outlet, params) {
     return (a.order ?? 0) - (b.order ?? 0);
   }
 
+  // 表示順(orderedItems)の中で、時刻の前後関係が崩れている項目のIDを集める
+  // (docs/ROADMAP.md「87」)。それまでで最も遅い時間より前の時間を持つ項目を
+  // 検出する(例: 10:00の項目の後に9:00の項目が来ている場合、9:00の項目側)。
+  // renderItems(移動後の警告バッジ表示)とmoveItem(移動前の確認、`92`)の
+  // 両方で使う共通ロジック。
+  function findTimeInconsistentIds(orderedItems) {
+    const ids = new Set();
+    let latestSeenTime = null;
+    for (const i of orderedItems) {
+      if (!i.time) continue;
+      if (latestSeenTime !== null && i.time < latestSeenTime) {
+        ids.add(i.id);
+      } else {
+        latestSeenTime = i.time;
+      }
+    }
+    return ids;
+  }
+
   // dayItems(その日のitem一覧、表示順)の中で、指定した項目を1つ上/下
   // (direction: -1 or 1)へ移動する。時間設定の有無を問わずその日の全項目が対象
   // (docs/ROADMAP.md「87」。以前は時間未設定の項目同士でのみ移動できた)。
@@ -265,6 +286,17 @@ export function mount(outlet, params) {
 
     const reordered = [...dayItems];
     [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+
+    // 移動後に時刻の前後矛盾が生じる場合、確定前に警告して続行するか確認する
+    // (docs/ROADMAP.md「92」。以前は移動を確定させた後の表示で気付く方式だった)。
+    // 矛盾があっても移動自体はブロックしない(`87`の要望通り)ため、確認して
+    // 続行できるダイアログにする。
+    if (findTimeInconsistentIds(reordered).size > 0) {
+      const proceed = window.confirm(
+        'この移動を行うと、時間の前後関係が入れ替わってしまう項目が発生します。このまま移動しますか?',
+      );
+      if (!proceed) return;
+    }
 
     errorText.textContent = '';
     justMovedItemId = item.id;
@@ -345,19 +377,8 @@ export function mount(outlet, params) {
       const dayItems = groups.get(date).sort(compareItems);
 
       // 手動並び替えの結果、時刻の前後関係が崩れた項目を検出する(docs/ROADMAP.md「87」)。
-      // 表示順に見ていき、それまでで最も遅い時間より前の時間を持つ項目に警告を出す
-      // (例: 10:00の項目の後に9:00の項目が来ている場合、9:00の項目側に警告)。
-      // 保存はブロックせず、警告表示のみ。
-      const timeWarningIds = new Set();
-      let latestSeenTime = null;
-      for (const i of dayItems) {
-        if (!i.time) continue;
-        if (latestSeenTime !== null && i.time < latestSeenTime) {
-          timeWarningIds.add(i.id);
-        } else {
-          latestSeenTime = i.time;
-        }
-      }
+      // 保存はブロックせず、警告表示のみ(移動前の確認は`92`、moveItem側で行う)。
+      const timeWarningIds = findTimeInconsistentIds(dayItems);
 
       const timeline = document.createElement('div');
       timeline.className = 'timeline';

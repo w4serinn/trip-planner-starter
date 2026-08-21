@@ -179,7 +179,7 @@ body {
 }
 
 /* 2026-08-19(docs/ROADMAP.md「24. ヘッダーのテクスチャ強化」): 「白背景に黒文字」の
-   単調さを解消するため、--color-primary-deep系のグラデーションを持たせる。
+   単調さを解消するため、--color-ember-deep系のグラデーションを持たせる。
    .pageの内側に収まるカード状のセクションとして塗る(ページ端まではみ出す
    フルブリードにはしない)。
    2026-08-20(docs/ROADMAP.md「70」): 外部レビューで「radial-gradientのドット柄は
@@ -198,7 +198,11 @@ body {
    役割の違いが色だけでは区別できないと指摘された。色は変えず角度だけを
    役割ごとに変えることで微差をつけた: ヘッダーはアプリ全体の「顔」として
    最初に確立した135degを基準のまま維持し、他の2箇所をそこから変化させる
-   側にした(詳細は各箇所のコメント参照)。 */
+   側にした(詳細は各箇所のコメント参照)。
+   2026-08-21(docs/ROADMAP.md「91」): 人間から「全体的にパステルオレンジに
+   するなら青色いらなくない？」との指摘を受け、この濃紺グラデーション
+   (--color-primary-deep/-dark)自体を暖色系(--color-ember-deep/-ember)へ
+   置き換えた。角度は変更していない。 */
 .page-header {
   position: relative;
   display: flex;
@@ -207,7 +211,7 @@ body {
   margin-bottom: var(--space-lg);
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
-  background-image: linear-gradient(135deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-image: linear-gradient(135deg, var(--color-ember-deep), var(--color-ember));
 }
 
 h1,
@@ -452,9 +456,17 @@ button:disabled {
    ラベルなのにボタンだけ画面幅いっぱいに間延びして見える」という指摘の
    一因になっていた。width: autoにすることで、これまで個別に必要だった
    .card-section-header button / .trip-name-row buttonでのwidth: auto上書き
-   (実質どちらも.btn-secondaryが対象)が不要になったため削除した。 */
+   (実質どちらも.btn-secondaryが対象)が不要になったため削除した。
+   2026-08-21(docs/ROADMAP.md「89」): widthは短くなったが、高さ・padding・
+   font-sizeは無印buttonのまま(min-height: 44px等)だったため、「▲上へ/
+   ▼下へ/編集/削除」のように軽い操作が複数並ぶ箇所で、テキスト量に対して
+   ボタンが依然大きすぎるという指摘を受けた。主役ボタンとの差を幅だけで
+   なく高さ・太さでも付け、より控えめな見た目にした。 */
 .btn-secondary {
   width: auto;
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-base);
   background: transparent;
   color: var(--color-primary-strong);
@@ -561,8 +573,10 @@ button:disabled {
        固定バーの背景も.card-darkと同じ濃色グラデーションにして白文字が視認できるようにする。
        2026-08-21(docs/ROADMAP.md「83」): .page-header(135deg)・.card-dark(160deg)との
        見分けをつけるため、画面下部に水平に張り付く「ドック」らしさに合わせて
-       ほぼ水平の100degにした(色は変更していない)。 */
-    background-image: linear-gradient(100deg, var(--color-primary-deep), var(--color-primary-dark));
+       ほぼ水平の100degにした(色は変更していない)。
+       2026-08-21(docs/ROADMAP.md「91」): 濃紺(--color-primary-deep/-dark)を
+       暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。 */
+    background-image: linear-gradient(100deg, var(--color-ember-deep), var(--color-ember));
     box-shadow: 0 -4px 16px rgb(0 0 0 / 25%);
     transition: transform 0.15s ease;
   }
@@ -1042,7 +1056,7 @@ button:disabled {
 /* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):
    単一共有テキストのブレインダンプ的な画面(雑多メモ・企画メモ)は、白カード主体の
    他画面群の中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
-   (ヘッダー24と同じ--color-primary-deep系グラデーション)。
+   (ヘッダー24と同じ--color-ember-deep系グラデーション)。
    2026-08-19追記(docs/ROADMAP.md「29」): 当初は雑多メモの.cardにのみ`.scratch-card`
    として適用していたが、「雑多メモだけ背景色があり企画メモは無いのは非対称」との
    指摘を受け、`.card-dark`に改称して企画メモ(src/views/notes.js)にも同様に適用する
@@ -1056,9 +1070,11 @@ button:disabled {
    2026-08-21(docs/ROADMAP.md「83」): 外部レビュー2巡目で、.page-header・
    .scratch-actions(`44`)と完全に同一の見た目で使い回されていると指摘され、
    角度を160deg(ヘッダーの135degより少し縦寄り)に変えて微差をつけた
-   (色は変更していない)。 */
+   (色は変更していない)。
+   2026-08-21(docs/ROADMAP.md「91」): 濃紺(--color-primary-deep/-dark)を
+   暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。 */
 .card-dark {
-  background-image: linear-gradient(160deg, var(--color-primary-deep), var(--color-primary-dark));
+  background-image: linear-gradient(160deg, var(--color-ember-deep), var(--color-ember));
   color: var(--color-surface);
 }
 
@@ -1071,9 +1087,11 @@ button:disabled {
    --color-accent(オレンジ)と--color-primary-deepの組み合わせに変更した
    (新規の色は追加せず、既存トークンの組み合わせのみ変更)。
    2026-08-21(docs/ROADMAP.md「83」): `.card-dark`と同じ「特別なメモ欄」の
-   仲間として角度も160degに揃えた。 */
+   仲間として角度も160degに揃えた。
+   2026-08-21(docs/ROADMAP.md「91」): --color-primary-deepを後継の
+   --color-ember-deepへ置き換えた。 */
 .card-dark-accent {
-  background-image: linear-gradient(160deg, var(--color-accent), var(--color-primary-deep));
+  background-image: linear-gradient(160deg, var(--color-accent), var(--color-ember-deep));
 }
 
 .card-dark .icon-heading {

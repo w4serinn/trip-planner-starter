@@ -23,12 +23,17 @@
      パステルのままだと明るい背景の上で文字として読みにくくなる(この用途は
      背景ではなく前景色としての利用のため、必要なコントラスト方向が逆になる)
      ため、より濃い暖色の派生色である--color-primary-strongへ切り替えた。
-     --color-primary-darkは「primaryの濃い版」という名前だが、実際は
-     --color-primary-deep(藍系濃紺)とペアでヘッダー・.card-dark・
-     .scratch-actionsの濃色グラデーションの終点にのみ使われており、外部
-     レビュアーが「良い」と評価した既存のダーク装飾の一部だったため、
-     こちらは変更せず維持した(=--color-primary-darkは今後「primaryの濃い版」
-     ではなく「ダークグラデーション用の色」という独立した役割として扱う)。 */
+     2026-08-21(docs/ROADMAP.md「91」): 「84」の時点では、ヘッダー・
+     .card-dark・.scratch-actionsの濃色グラデーション(旧--color-primary-dark/
+     --color-primary-deep、藍系濃紺)は外部レビューで「良い」と評価された
+     既存のダーク装飾として変更せず維持していた。しかしパレット全体を
+     暖色パステルへ統一した後、人間から改めて「全体的にパステルオレンジに
+     するなら青色いらなくない？」との指摘を受け、この濃紺ペアも暖色化する
+     方針へ転換した(引き締め役としての「濃色グラデーション」自体は維持し、
+     色相だけを暖色に変更)。--color-primary-dark/--color-primary-deepは
+     廃止し、独立した役割であることが名前からも分かるよう
+     --color-ember-deep/--color-emberという新しいトークンに置き換えた
+     (下記参照)。 */
   --color-primary: #f0a98c;
 
   /* ボタン等、--color-primaryを背景として使う要素のhover状態専用
@@ -43,7 +48,6 @@
      暖色の派生色をここに用意した(白/クリーム背景とのcontrast比は実測4.9前後
      でAA基準を満たす)。 */
   --color-primary-strong: #ad5a38;
-  --color-primary-dark: #1d4ed8;
   --color-accent: #ff8c42;
   --color-bg: #fff8f0;
   --color-surface: #fff;
@@ -54,12 +58,24 @@
   --color-border: #e8dfd3;
   --color-danger: #c0392b;
 
-  /* primaryが青系のため、成功色は独立した緑を保つ(primaryと混同しないように)。 */
+  /* primaryを含め全体が暖色系のため、成功色は独立した緑を保つ(暖色パレットと
+     混同しないように)。 */
   --color-success: #219653;
 
-  /* 2026-08-19追加(第5期・docs/ROADMAP.md「23. デザイントークンの拡充」): primaryを
-     さらに沈めた藍系の濃紺。ヘッダーやダーク全面塗りセクションの背景に使う。 */
-  --color-primary-deep: #16234a;
+  /* 2026-08-21(docs/ROADMAP.md「91」): 旧--color-primary-deep(藍系濃紺
+     #16234a)の後継。ヘッダー・.card-dark・.scratch-actionsの濃色グラデーション
+     の暗い側(開始色)に使う、暖色系の最も濃い色。焦げ茶〜マホガニーに近い色相に
+     することで、寒色の濃紺だった頃と同じ「引き締め役」を暖色のまま担わせる。
+     白文字とのcontrast比は実測14.9でAA基準(4.5)を大きく上回る。 */
+  --color-ember-deep: #3a2116;
+
+  /* 2026-08-21(docs/ROADMAP.md「91」): 旧--color-primary-dark(#1d4ed8、
+     実質ただの青)の後継。上記--color-ember-deepとペアのグラデーション
+     終了色(明るい側)。焦げ茶色から炭化したシナモン/テラコッタ寄りの色へ
+     明るくすることで、--color-primary-strong(#ad5a38)・--color-accent
+     (#ff8c42)と同じ暖色ファミリーに属しつつグラデーションの奥行きを出す。
+     白文字とのcontrast比は実測6.73でAA基準を満たす。 */
+  --color-ember: #8c4a24;
 
   /* タイポグラフィ(2026-08-19: Zen Kaku Gothic Newを本文フォントに採用。
      未読込時・フォールバック用に既存フォントは維持する) */
