@@ -647,14 +647,19 @@ button:disabled {
    viewBoxは固定(0 0 22 100)だがpreserveAspectRatio="none"で実際の高さに
    伸縮させる。色は「小道」らしさを出すため緑系の--color-successを使う
    (2026-08-21の人間からのスクリーンショット付きフィードバックで
-   共有された配色イメージ)。 */
+   共有された配色イメージ)。
+   2026-08-22(docs/ROADMAP.md「85」): 人間から「足跡は緑の線はいらない、
+   足跡のみを軌跡上に配置」とのフィードバックを受け、軌跡の線(<path>)は
+   描画しないようにした(src/views/itinerary.jsのbuildTrailSvg()参照)。
+   線が無くなり足あとの点在だけになった分、控えめだった不透明度
+   (0.7→0.85)を上げ、足あとが薄れて見えにくくならないようにした。 */
 .timeline-trail {
   flex: 1;
   width: 22px;
   min-height: 24px;
   margin-top: var(--space-xs);
   color: var(--color-success);
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .timeline-content {

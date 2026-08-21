@@ -217,7 +217,12 @@ export function mount(outlet, params) {
   // 呼び出しのたびにMath.randomで軌跡を生成し直すため、再描画のたびに形が変わる
   // (「同じ軌跡にならないように」との要望)。
   function buildTrailSvg() {
-    const { pathD, footprints } = createFootprintTrail(Math.random, { footprintCount: 3 });
+    // 2026-08-22(docs/ROADMAP.md「85」): 人間から「足跡は緑の線はいらない、
+    // 足跡のみを軌跡上に配置」とのフィードバックを受け、軌跡の<path>(線)を
+    // 描画しないようにした。src/footprintTrail.jsのpathD算出ロジック自体は
+    // 変更していない(足あとの位置・向きは経路上の点から算出するため、
+    // 内部的には引き続き使われている。呼び出し側でpathDを使わないだけ)。
+    const { footprints } = createFootprintTrail(Math.random, { footprintCount: 3 });
     const footprintMarks = footprints
       .map(({ x, y, rotation }) => `
         <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation.toFixed(1)}) scale(0.15) translate(-12 -14)">
@@ -229,7 +234,6 @@ export function mount(outlet, params) {
       .join('');
     return `
       <svg class="timeline-trail" viewBox="0 0 22 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="${pathD}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         ${footprintMarks}
       </svg>`;
   }
