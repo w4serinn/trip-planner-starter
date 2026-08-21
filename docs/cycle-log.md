@@ -2638,3 +2638,30 @@ docs/ROADMAP.mdに「26. ダーク全面塗りセクション追加」「27. カ
   `88`・`85`・`86`・`87`・`89`・`90`・`92`はいずれも人間の実機/実画面での
   最終確認待ち。
 - blocked / partial: なし。
+
+## 2026-08-21 20:43
+- 実装: 91(濃紺グラデーションの廃止、第15期の最終項目)。前回サイクル終了時に
+  ROADMAP.mdへ記録した際、色の置き換え方針(既存トークン流用/新規トークン)が
+  未確定だったため、実装前にAskUserQuestionで人間に確認し「暖色系の濃い色を
+  新設(推奨)」を選択してもらった。`styles/tokens.css`の`--color-primary-dark`
+  (実質ただの青#1d4ed8)/`--color-primary-deep`(藍系濃紺#16234a)を廃止し、
+  `--color-ember-deep`(#3a2116)・`--color-ember`(#8c4a24、いずれも白文字との
+  contrast比がWCAG AA基準を大きく上回る)に置き換えた。`pages/shared.css`の
+  4箇所(.page-header・.card-dark・.scratch-actions・.card-dark-accent)の
+  background-imageを更新、角度は変更していない。旧トークンの参照が残って
+  いないことをリポジトリ全体でgrep確認した。これで第15期(実機/実画面
+  フィードバック対応その6)の4件(89/90/91/92)がすべて完了。
+- 動作確認: OK。実Firestore(共有テストグループ`FMXRZYW7`)でPlaywrightにより、
+  ヘッダー・雑多メモ・企画メモそれぞれのbackground-imageの計算値が新トークン
+  (rgb(58,33,22)/rgb(140,74,36))になっており旧来の青系を含まないことを確認。
+  スクリーンショットで青みが完全に無くなり統一感のある暖色トーンになっている
+  ことを目視確認。375px幅で全7タブとも横スクロールなし(回帰なし)。
+  console/pageerror 0件。`npm run check`(lint・test、vitest47件)成功。
+- レビュー: OK。firestore-design.md・screens.mdからの逸脱なし(CSS変数の
+  置き換えのみ)。新規色トークン追加はCLAUDE.mdの方針通り、実装前に
+  AskUserQuestionで人間に確認済み。モバイル幅崩れなし。
+- 次回予定: 第15期完了。次サイクルではdocs/ROADMAP.mdを確認し、未着手
+  セクション・新規タスク提案があればそこから着手する。`68`・`44`・`72`・
+  `74`・`75`・`79`・`84`・`88`・`85`・`86`・`87`・`89`・`90`・`91`・`92`は
+  いずれも人間の実機/実画面での最終確認待ち。
+- blocked / partial: なし。
