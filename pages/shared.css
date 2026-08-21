@@ -452,9 +452,17 @@ button:disabled {
    ラベルなのにボタンだけ画面幅いっぱいに間延びして見える」という指摘の
    一因になっていた。width: autoにすることで、これまで個別に必要だった
    .card-section-header button / .trip-name-row buttonでのwidth: auto上書き
-   (実質どちらも.btn-secondaryが対象)が不要になったため削除した。 */
+   (実質どちらも.btn-secondaryが対象)が不要になったため削除した。
+   2026-08-21(docs/ROADMAP.md「89」): widthは短くなったが、高さ・padding・
+   font-sizeは無印buttonのまま(min-height: 44px等)だったため、「▲上へ/
+   ▼下へ/編集/削除」のように軽い操作が複数並ぶ箇所で、テキスト量に対して
+   ボタンが依然大きすぎるという指摘を受けた。主役ボタンとの差を幅だけで
+   なく高さ・太さでも付け、より控えめな見た目にした。 */
 .btn-secondary {
   width: auto;
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-base);
   background: transparent;
   color: var(--color-primary-strong);
