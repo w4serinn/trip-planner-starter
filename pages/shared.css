@@ -44,17 +44,16 @@ body {
   position: relative;
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--space-lg) var(--space-md) var(--space-lg) calc(var(--space-md) + 20px);
+  padding: var(--space-lg) var(--space-md);
 }
 
 .page::before {
-  content: "";
+  content: none;
   position: absolute;
   top: 0;
   bottom: 0;
   left: 8px;
   width: 12px;
-  background-image: radial-gradient(circle 4px at 6px 14px, var(--color-border) 4px, transparent 4.5px);
   background-repeat: repeat-y;
   background-size: 100% 28px;
 }
@@ -146,7 +145,7 @@ body {
 @media (width >= 768px) {
   .page {
     max-width: 700px;
-    padding: var(--space-xl) var(--space-lg) var(--space-xl) calc(var(--space-lg) + 20px);
+    padding: var(--space-xl) var(--space-lg);
     flex: 1;
     min-width: 0;
   }
@@ -209,9 +208,9 @@ body {
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-xs) 0;
   border-radius: var(--radius-md);
-  background-image: linear-gradient(135deg, var(--color-ember-deep), var(--color-ember));
+
 }
 
 h1,
@@ -228,7 +227,7 @@ h1 {
 }
 
 .page-header h1 {
-  color: var(--color-surface);
+  color: var(--color-text);
 
   /* 2026-08-19(docs/ROADMAP.md「31」): ハンバーガーボタン追加分、モバイル幅での
      横スペースが以前より狭くなったため、折り返さず省略記号で収める。 */
@@ -278,7 +277,7 @@ select {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: var(--color-field);
   color: var(--color-text);
   font-family: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -366,11 +365,11 @@ button {
   padding: var(--space-sm) var(--space-lg);
   border: none;
   border-radius: var(--radius-pill);
-  background-image: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 85%, white), var(--color-primary));
-  color: var(--color-text);
+  color: var(--color-on-accent);
   box-shadow: var(--shadow-button);
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+  background: var(--color-primary);
 }
 
 button svg {
@@ -378,12 +377,12 @@ button svg {
 }
 
 button:hover {
-  background-image: linear-gradient(180deg, color-mix(in srgb, var(--color-primary-hover) 85%, white), var(--color-primary-hover));
+  background: var(--color-primary-hover);
 }
 
 button:active {
   transform: scale(0.97);
-  box-shadow: 0 1px 4px rgb(42 30 20 / 10%);
+  box-shadow: none;
 }
 
 button:disabled {
@@ -526,7 +525,7 @@ button:disabled {
   justify-content: space-between;
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
-  transform: rotate(-0.6deg);
+  transform: none;
 }
 
 .trip-name-row h2 {
@@ -576,7 +575,8 @@ button:disabled {
        ほぼ水平の100degにした(色は変更していない)。
        2026-08-21(docs/ROADMAP.md「91」): 濃紺(--color-primary-deep/-dark)を
        暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。 */
-    background-image: linear-gradient(100deg, var(--color-ember-deep), var(--color-ember));
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
     box-shadow: 0 -4px 16px rgb(0 0 0 / 25%);
     transition: transform 0.15s ease;
   }
@@ -650,7 +650,7 @@ button:disabled {
   justify-content: center;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-on-accent);
 }
 
 /* 2026-08-21(docs/ROADMAP.md「80」): 単なる直線の連結線から、ランダムに
@@ -769,7 +769,7 @@ button:disabled {
 
 .rank-badge-top {
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
 }
 
 .score-bar {
@@ -881,7 +881,7 @@ button:disabled {
   text-align: center;
   color: var(--color-primary-strong);
   margin: var(--space-sm) 0;
-  transform: rotate(0.8deg);
+  transform: none;
 }
 
 .copy-feedback {
@@ -913,7 +913,7 @@ button:disabled {
   width: 220px;
   flex-shrink: 0;
   padding: var(--space-lg) var(--space-md);
-  border-right: 1px solid var(--color-border);
+  border-right: none;
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
@@ -940,7 +940,7 @@ button:disabled {
   flex-direction: column;
   gap: var(--space-xs);
   padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: none;
 }
 
 .sidebar-brand-name {
@@ -989,11 +989,14 @@ button:disabled {
 }
 
 @media (width >= 768px) {
+  /* 2026-09-22: 地から少し浮かせた角丸パネルとして常設する */
   .sidebar {
     position: sticky;
     inset: auto;
-    top: 0;
-    height: 100vh;
+    top: var(--space-md);
+    height: calc(100vh - var(--space-md) * 2);
+    margin: var(--space-md) 0 var(--space-md) var(--space-md);
+    border-radius: var(--radius-md);
     overflow-y: auto;
     box-shadow: none;
     z-index: auto;
@@ -1018,13 +1021,13 @@ button:disabled {
   padding: 0;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-surface);
+  color: var(--color-text);
   box-shadow: none;
   flex-shrink: 0;
 }
 
 .menu-toggle:hover {
-  background: rgb(255 255 255 / 15%);
+  background: color-mix(in srgb, var(--color-text) 12%, transparent);
 }
 
 .sidebar-link {
@@ -1035,7 +1038,7 @@ button:disabled {
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   text-decoration: none;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -1048,8 +1051,8 @@ button:disabled {
 }
 
 .sidebar-link-active {
-  background: var(--color-bg);
-  color: var(--color-primary-strong);
+  background: var(--tab-color, var(--color-primary));
+  color: var(--color-on-accent);
   font-weight: var(--font-weight-subheading);
 }
 
@@ -1074,8 +1077,8 @@ button:disabled {
    2026-08-21(docs/ROADMAP.md「91」): 濃紺(--color-primary-deep/-dark)を
    暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。 */
 .card-dark {
-  background-image: linear-gradient(160deg, var(--color-ember-deep), var(--color-ember));
-  color: var(--color-surface);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
 }
 
 /* 2026-08-20(docs/ROADMAP.md「48」): 雑多メモ・企画メモの.card-darkの見た目が
@@ -1091,7 +1094,7 @@ button:disabled {
    2026-08-21(docs/ROADMAP.md「91」): --color-primary-deepを後継の
    --color-ember-deepへ置き換えた。 */
 .card-dark-accent {
-  background-image: linear-gradient(160deg, var(--color-accent), var(--color-ember-deep));
+  background: color-mix(in srgb, var(--color-primary) 30%, var(--color-surface));
 }
 
 .card-dark .icon-heading {
@@ -1099,27 +1102,27 @@ button:disabled {
 }
 
 .card-dark textarea {
-  background: rgb(255 255 255 / 8%);
-  border-color: rgb(255 255 255 / 25%);
-  color: var(--color-surface);
+  background: var(--color-field);
+  border-color: var(--color-border);
+  color: var(--color-text);
 }
 
 .card-dark textarea::placeholder {
-  color: rgb(255 255 255 / 55%);
+  color: var(--color-text-muted);
 }
 
 .card-dark textarea:focus {
-  border-color: var(--color-surface);
-  box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);
+  border-color: var(--color-primary-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-strong) 25%, transparent);
 }
 
 .card-dark .btn-secondary {
-  color: var(--color-surface);
-  border-color: rgb(255 255 255 / 60%);
+  color: var(--color-text);
+  border-color: var(--color-border);
 }
 
 .card-dark .btn-secondary:hover {
-  background: rgb(255 255 255 / 12%);
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
 }
 
 /* --color-danger/--color-successをそのまま文字色に使うと濃紺背景とのコントラストが
@@ -1128,7 +1131,7 @@ button:disabled {
 .card-dark .error-text:not(:empty) {
   display: inline-block;
   background: var(--color-danger);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }
@@ -1136,7 +1139,7 @@ button:disabled {
 .card-dark .copy-feedback:not(:empty) {
   display: inline-block;
   background: var(--color-success);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }
@@ -1221,7 +1224,7 @@ button:disabled {
 .date-picker-selected,
 .date-picker-selected:hover {
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-on-accent);
   border-color: var(--color-primary);
 }
 
@@ -1251,17 +1254,17 @@ button:disabled {
 
 .schedule-overview-day-ok {
   background: var(--color-success);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
 }
 
 .schedule-overview-day-ng {
   background: var(--color-danger);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
 }
 
 .schedule-overview-day-pending {
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-on-accent);
 }
 
 .schedule-overview-legend {
@@ -1312,6 +1315,25 @@ button:disabled {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-on-accent);
   font-size: var(--font-size-sm);
+}
+
+/* 2026-09-22: 画面ごとの色(styles/tokens.cssの[data-tab])をサイドバーと概要のサマリー
+   カードへ反映する。data-tab属性はsrc/app.js(サイドバー・body)と
+   src/views/tripOverview.js(サマリーカード)が付与する。 */
+.sidebar-link[data-tab] svg {
+  color: var(--tab-color);
+}
+
+.sidebar-link-active[data-tab] svg {
+  color: var(--color-on-accent);
+}
+
+.trip-card[data-tab] {
+  background: color-mix(in srgb, var(--tab-color) 22%, var(--color-surface));
+}
+
+.trip-card[data-tab] .icon-heading svg {
+  color: var(--tab-color);
 }

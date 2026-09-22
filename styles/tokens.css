@@ -1,104 +1,75 @@
-/* デザイントークン(仮決定)。配色・タイポグラフィ・余白などをCSS変数として定義する。
-   すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。 */
-@import url("https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@700;900&display=swap");
+/* デザイントークン。配色・タイポグラフィ・余白などをCSS変数として定義する。
+   すべての画面はこのファイルの変数経由で色を指定し、直接カラーコードを書かないこと。
+
+   2026-09-22: デザイン全面刷新(スモーキーな中間トーン+くすみパステル)。
+   それまでの「クリーム地+暖色パステル+濃色グラデーション(紙のしおり風)」から、
+   人間との相談で確定した以下の方針へ切り替えた。
+   - 地は真っ黒ではなく、夕暮れのようなグレイッシュな中間トーン(--color-bg)。
+     カード・サイドバーはそれより一段暗いパネル色(--color-surface)。
+   - 各画面(タブ)に固有のくすみパステルを1色ずつ割り当てる(--color-tab-*)。
+     サイドバーの印・選択中タブ・その画面のボタン等がその色で揃うため、
+     どの画面にいるかが色で分かる。
+   - パステルは明るいため、パステルを「地」に使う要素(ボタン・バッジ・チップ等)の
+     文字色は--color-on-accent(濃色)にする。パステルを「文字・線」として使う
+     箇所は--color-primary-strong(より明るい派生色)を使う。
+   - 装飾(綴じ穴・グラデーション・傾き)は廃止し、色面と角丸で構成する。 */
+@import url("https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap");
 
 :root {
-  /* カラー(2026-08-19再改訂: docs/ROADMAP.md「第3期: レイアウト刷新」参照。
-     参考サイト https://tabiori.com/ の「修学旅行のしおり」的な、明るく親しみやすい
-     トーンをさらに反映。背景を寒色グレーから紙めいた温かみのある白へ、アクセントを
-     オレンジ系アンバーから、より親しみやすい暖色コーラルオレンジへ変更した。
-     ロゴ・素材自体は参照していない(雰囲気のみの参考)。
-     2026-08-22(docs/ROADMAP.md「84」): 外部レビューで「背景クリーム・
-     アクセントのコーラルオレンジ・ダーク装飾の藍系濃紺が暖色で統一されて
-     いるのに、--color-primary(ボタン等の主色)だけがBootstrap既定値に近い
-     彩度の高い寒色の青で、唯一の『よそ者』になっている」と指摘され、人間との
-     会話で「暖色系のパステル(コーラルオレンジの仲間になるような柔らかい
-     ピーチ/サーモンピンク)」へ変更する方針を確定した。
-     パステル(明度が高く彩度が低い色)は白文字とのコントラストが不足するため
-     (実測でwhiteとの contrast比は2前後、WCAG AA基準の4.5に届かない)、
-     背景として使う場所(ボタン・バッジ・チップ等)は文字色を`--color-text`
-     (暗色)に切り替えて対応する。加えて、従来--color-primaryを「文字色・
-     リンク・枠線」として使っていた箇所(フォーカスリング・.btn-secondaryの
-     文字/枠線・サイドバー選択中タブ・日付ピッカーの今日/選択マーカー等)は、
-     パステルのままだと明るい背景の上で文字として読みにくくなる(この用途は
-     背景ではなく前景色としての利用のため、必要なコントラスト方向が逆になる)
-     ため、より濃い暖色の派生色である--color-primary-strongへ切り替えた。
-     2026-08-21(docs/ROADMAP.md「91」): 「84」の時点では、ヘッダー・
-     .card-dark・.scratch-actionsの濃色グラデーション(旧--color-primary-dark/
-     --color-primary-deep、藍系濃紺)は外部レビューで「良い」と評価された
-     既存のダーク装飾として変更せず維持していた。しかしパレット全体を
-     暖色パステルへ統一した後、人間から改めて「全体的にパステルオレンジに
-     するなら青色いらなくない？」との指摘を受け、この濃紺ペアも暖色化する
-     方針へ転換した(引き締め役としての「濃色グラデーション」自体は維持し、
-     色相だけを暖色に変更)。--color-primary-dark/--color-primary-deepは
-     廃止し、独立した役割であることが名前からも分かるよう
-     --color-ember-deep/--color-emberという新しいトークンに置き換えた
-     (下記参照)。 */
-  --color-primary: #f0a98c;
+  /* 地・面・文字 */
+  --color-bg: #474c5c;
+  --color-surface: #3c4150;
 
-  /* ボタン等、--color-primaryを背景として使う要素のhover状態専用
-     (2026-08-22「84」)。--color-primaryよりわずかに濃いが、地色として使う
-     前提のため文字色は引き続き暗色のままでよい濃さに留めている
-     (--color-textとのcontrast比は実測5.68でAA基準を満たす)。 */
-  --color-primary-hover: #e08f6c;
+  /* 入力欄の地(カードと同色だと境界が消えるため一段暗くする) */
+  --color-field: #323644;
+  --color-text: #f3f0ec;
+  --color-text-muted: #c6c2cc;
+  --color-border: #5a6073;
 
-  /* --color-primaryを文字色・枠線・リンクとして(=明るい背景の上の前景として)
-     使う箇所専用(2026-08-22「84」)。パステルの--color-primaryそのままだと
-     白背景とのcontrast比が2前後しかなく文字として読めないため、より濃い
-     暖色の派生色をここに用意した(白/クリーム背景とのcontrast比は実測4.9前後
-     でAA基準を満たす)。 */
-  --color-primary-strong: #ad5a38;
-  --color-accent: #ff8c42;
-  --color-bg: #fff8f0;
-  --color-surface: #fff;
-  --color-text: #2a2a2a;
-  --color-text-muted: #6b6b6b;
+  /* パステルの上に載せる文字色(白文字だとコントラストが不足するため) */
+  --color-on-accent: #2e3140;
 
-  /* 温かみのある背景に合わせ、枠線も暖色寄りの薄ベージュにする。 */
-  --color-border: #e8dfd3;
-  --color-danger: #c0392b;
+  /* くすみパステル(画面ごとの色の元になるパレット) */
+  --color-lavender: #c7b6d8;
+  --color-mint: #a6c9bd;
+  --color-peach: #ddbba7;
+  --color-sky: #a9bdd6;
+  --color-butter: #dbd1a3;
+  --color-rose: #d6aab8;
+  --color-cloud: #d9d5de;
 
-  /* primaryを含め全体が暖色系のため、成功色は独立した緑を保つ(暖色パレットと
-     混同しないように)。 */
-  --color-success: #219653;
+  /* 画面(タブ)ごとの色の割り当て。キーはsrc/app.jsのTABS[].keyと一致させる */
+  --color-tab-overview: var(--color-cloud);
+  --color-tab-scratch: var(--color-rose);
+  --color-tab-notes: var(--color-peach);
+  --color-tab-destinations: var(--color-lavender);
+  --color-tab-schedule: var(--color-mint);
+  --color-tab-lodging: var(--color-sky);
+  --color-tab-itinerary: var(--color-butter);
 
-  /* 2026-08-21(docs/ROADMAP.md「91」): 旧--color-primary-deep(藍系濃紺
-     #16234a)の後継。ヘッダー・.card-dark・.scratch-actionsの濃色グラデーション
-     の暗い側(開始色)に使う、暖色系の最も濃い色。焦げ茶〜マホガニーに近い色相に
-     することで、寒色の濃紺だった頃と同じ「引き締め役」を暖色のまま担わせる。
-     白文字とのcontrast比は実測14.9でAA基準(4.5)を大きく上回る。 */
-  --color-ember-deep: #3a2116;
+  /* 主色。bodyのdata-tab属性に応じて画面ごとに差し替わる(下の[data-tab]・body参照)。
+     旅行に紐づかない画面(参加・旅行一覧)ではラベンダー。 */
+  --color-primary: var(--color-lavender);
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, white);
+  --color-primary-strong: color-mix(in srgb, var(--color-primary) 60%, white);
 
-  /* 2026-08-21(docs/ROADMAP.md「91」): 旧--color-primary-dark(#1d4ed8、
-     実質ただの青)の後継。上記--color-ember-deepとペアのグラデーション
-     終了色(明るい側)。焦げ茶色から炭化したシナモン/テラコッタ寄りの色へ
-     明るくすることで、--color-primary-strong(#ad5a38)・--color-accent
-     (#ff8c42)と同じ暖色ファミリーに属しつつグラデーションの奥行きを出す。
-     白文字とのcontrast比は実測6.73でAA基準を満たす。 */
-  --color-ember: #8c4a24;
+  /* 星評価・「次の予定」等、画面によらない強調色 */
+  --color-accent: var(--color-butter);
 
-  /* タイポグラフィ(2026-08-19: Zen Kaku Gothic Newを本文フォントに採用。
-     未読込時・フォールバック用に既存フォントは維持する) */
-  --font-family-base: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  /* 暗い地の上でも読める明るめの赤/緑 */
+  --color-danger: #f0a6a0;
+  --color-success: var(--color-mint);
 
-  /* 2026-08-20(docs/ROADMAP.md「67」): 外部レビューで「本文も見出しもZen Kaku
-     Gothic New一本でウェイトだけの差別化」と指摘され、見出し(h1〜h3)だけ丸みの
-     ある手書き風フォントを足すことで「しおり」らしいあたたかみを補強した。
-     本文用のZen Kaku Gothic Newは維持し、見出しにのみ適用する。 */
-  --font-family-heading: "Zen Maru Gothic", "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  /* タイポグラフィ(本文・見出しとも丸ゴシックに統一) */
+  --font-family-base: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --font-family-heading: var(--font-family-base);
   --font-size-sm: 14px;
   --font-size-base: 16px;
   --font-size-lg: 20px;
   --font-size-xl: 28px;
-
-  /* 見出しの重みを本文(400程度)とはっきり分け、階層を強める。
-     2026-08-19: 太さのジャンプ率をさらに強調(700→900 / 600→700)。 */
-  --font-weight-heading: 900;
+  --font-weight-heading: 700;
   --font-weight-subheading: 700;
-
-  /* 2026-08-22(docs/ROADMAP.md「88」): 主役ボタン(700)と軽い操作ボタン
-     (.btn-secondary)の太さをはっきり分けるために追加した通常の太さ。 */
-  --font-weight-base: 400;
+  --font-weight-base: 500;
 
   /* スペーシング */
   --space-xs: 4px;
@@ -107,30 +78,47 @@
   --space-lg: 24px;
   --space-xl: 32px;
 
-  /* 角丸・影 */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-
-  /* 完全な丸み(ピル型)。バッジ・日付ピッカー・チップ・ボタン等、丸みの強い
-     要素に使う。2026-08-21(docs/ROADMAP.md「77」): 以前はボタンだけ専用の
-     --radius-button(12px)を使っていたが、他の丸み要素と統一感が無く
-     「安っぽく見える」一因になっていたため、ボタンもこちらに統一した
-     (--radius-buttonは使用箇所が無くなったため削除)。 */
+  /* 角丸・影(影は使わず、色面の明暗差で階層を表す) */
+  --radius-sm: 12px;
+  --radius-md: 22px;
   --radius-pill: 999px;
+  --shadow-card: none;
+  --shadow-button: none;
+}
 
-  /* 2026-08-20(docs/ROADMAP.md「69」): 外部レビューで「カードの影が青みを帯びて
-     おりSaaSダッシュボードの文法に見える」と指摘され、2026-08-19時点の
-     primary-darkを薄くにじませた青みの影から、紙が浮いているような暖色寄りの
-     柔らかい黒に変更した。 */
-  --shadow-card: 0 4px 16px rgb(42 30 20 / 8%);
+/* 画面ごとの色。サイドバーのリンク・概要のサマリーカード・bodyが同じdata-tab属性を持つ */
+[data-tab="overview"] {
+  --tab-color: var(--color-tab-overview);
+}
 
-  /* 2026-08-20(docs/ROADMAP.md「69」): 外部レビューで「不透明度25%は主張が強い」と
-     指摘され、15%前後まで下げつつぼかし(blur)を広げ(10px→16px)、上品な浮遊感に
-     調整した。この時点では色相(primaryの青)は変更していなかった。
-     2026-08-21(docs/ROADMAP.md「81」): 2巡目の外部レビューで「--shadow-cardは
-     暖色化したのに--shadow-buttonだけ青系のまま残っており、カードは紙・ボタンは
-     SaaS的で世界観が割れている」と指摘され、--shadow-cardと同じ暖色
-     (rgb(42 30 20 / ...))に揃えた。不透明度はボタンの主張を保つため15%のまま
-     維持している。 */
-  --shadow-button: 0 4px 16px rgb(42 30 20 / 15%);
+[data-tab="scratch"] {
+  --tab-color: var(--color-tab-scratch);
+}
+
+[data-tab="notes"] {
+  --tab-color: var(--color-tab-notes);
+}
+
+[data-tab="destinations"] {
+  --tab-color: var(--color-tab-destinations);
+}
+
+[data-tab="schedule"] {
+  --tab-color: var(--color-tab-schedule);
+}
+
+[data-tab="lodging"] {
+  --tab-color: var(--color-tab-lodging);
+}
+
+[data-tab="itinerary"] {
+  --tab-color: var(--color-tab-itinerary);
+}
+
+/* 主色とその派生色はbody上で再計算する(:rootで計算済みの派生色は、bodyで
+   --color-primaryだけ差し替えても追従しないため、ここで改めて定義する) */
+body {
+  --color-primary: var(--tab-color, var(--color-lavender));
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 80%, white);
+  --color-primary-strong: color-mix(in srgb, var(--color-primary) 60%, white);
 }

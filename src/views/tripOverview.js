@@ -223,6 +223,7 @@ export function mount(outlet, params) {
       const link = document.createElement('a');
       link.className = 'card card-link trip-card';
       link.href = `#/trips/${encodeURIComponent(tripId)}/${tab.key}`;
+      link.dataset.tab = tab.key;
 
       const textWrap = document.createElement('div');
       const heading = document.createElement('h3');
