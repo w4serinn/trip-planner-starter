@@ -21,6 +21,16 @@ import { createDatePicker } from '../datePicker.js';
 import { appendLinkifiedText } from '../linkify.js';
 import { buildStayTimelineBars } from '../stayTimeline.js';
 
+// 2026-09-22(デザイン刷新): 候補カードのバッジに出す「どのサイトの候補か」。
+// URLのホスト名から先頭のwww.を取り除いた文字列を使う(解釈できないURLは「リンク」)。
+function siteLabel(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return 'リンク';
+  }
+}
+
 export function mount(outlet, params) {
   const session = loadSession();
   if (!session) {
@@ -140,7 +150,21 @@ export function mount(outlet, params) {
 
     for (const candidate of sorted) {
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card candidate-card';
+
+      // 2026-09-22(デザイン刷新): 候補同士を見比べやすいよう、カード上部に
+      // 「どのサイトの候補か」「誰が追加したか」を一段にまとめた見出し行を置く。
+      const head = document.createElement('div');
+      head.className = 'candidate-head';
+      const siteBadge = document.createElement('span');
+      siteBadge.className = 'site-badge';
+      siteBadge.textContent = siteLabel(candidate.url);
+      head.appendChild(siteBadge);
+      const addedBy = document.createElement('span');
+      addedBy.className = 'candidate-added-by';
+      addedBy.textContent = `${candidate.addedBy} が追加`;
+      head.appendChild(addedBy);
+      card.appendChild(head);
 
       if (isSafeUrl(candidate.url)) {
         const link = document.createElement('a');
@@ -163,16 +187,15 @@ export function mount(outlet, params) {
         card.appendChild(note);
       }
 
-      const meta = document.createElement('p');
-      meta.className = 'subtitle';
-      meta.textContent = `追加: ${candidate.addedBy}`;
-      card.appendChild(meta);
+      // 操作はカード下端に揃える(カードごとにメモの長さが違っても位置が揃うように)。
+      const actions = document.createElement('div');
+      actions.className = 'candidate-actions';
 
       if (confirmedCandidateIds.has(candidate.id)) {
-        const confirmedText = document.createElement('p');
+        const confirmedText = document.createElement('span');
         confirmedText.className = 'complete-badge';
         confirmedText.textContent = '確定済み';
-        card.appendChild(confirmedText);
+        actions.appendChild(confirmedText);
       }
 
       const confirmButton = document.createElement('button');
@@ -180,7 +203,8 @@ export function mount(outlet, params) {
       confirmButton.className = 'btn-secondary';
       confirmButton.textContent = '確定にする';
       confirmButton.addEventListener('click', () => onConfirmCandidateClick(candidate));
-      card.appendChild(confirmButton);
+      actions.appendChild(confirmButton);
+      card.appendChild(actions);
 
       candidateList.appendChild(card);
     }

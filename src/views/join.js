@@ -19,6 +19,10 @@ export function mount(outlet) {
   }
 
   outlet.innerHTML = `
+    <div class="brand-dots" aria-hidden="true">
+      <span data-tab="overview"></span><span data-tab="notes"></span><span data-tab="destinations"></span><span data-tab="schedule"></span><span data-tab="lodging"></span><span data-tab="itinerary"></span><span data-tab="scratch"></span>
+    </div>
+    <p class="lead-text">通話しながら、行き先も日程も宿もここで。</p>
     <p class="subtitle">名前と合言葉を入力して、グループに入りましょう。</p>
 
     <div class="card">
@@ -38,7 +42,7 @@ export function mount(outlet) {
 
     <div class="divider"><span>はじめての方</span></div>
 
-    <section>
+    <section class="card">
       <p class="subtitle">合言葉がまだ無い場合、ここで新しいグループを作れます。</p>
       <form id="create-form" novalidate>
         <div class="field">
@@ -53,7 +57,7 @@ export function mount(outlet) {
         <button type="submit" class="btn-secondary">${icons.plus}<span>新しいグループを作る</span></button>
       </form>
 
-      <div class="card" id="created-group" hidden>
+      <div class="card inner-card" id="created-group" hidden>
         <p class="subtitle">グループを作成しました。この合言葉をメンバーに共有してください。</p>
         <p class="passphrase" id="created-code"></p>
         <button type="button" id="copy-code">合言葉をコピーする</button>

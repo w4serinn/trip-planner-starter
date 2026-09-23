@@ -829,7 +829,9 @@ button:disabled {
 .stay-timeline-track {
   position: relative;
   flex: 1;
-  height: 20px;
+
+  /* 2026-09-22(デザイン刷新): 期間の長さを読み取りやすいよう帯を太くした */
+  height: 32px;
   border-radius: var(--radius-sm);
   background: var(--color-bg);
   overflow: hidden;
@@ -837,10 +839,10 @@ button:disabled {
 
 .stay-timeline-bar {
   position: absolute;
-  top: 0;
-  height: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-strong);
+  top: 4px;
+  height: calc(100% - 8px);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
 }
 
 .star-button:hover {
@@ -1336,4 +1338,189 @@ button:disabled {
 
 .trip-card[data-tab] .icon-heading svg {
   color: var(--tab-color);
+}
+
+/* ============================================================
+   2026-09-22(デザイン刷新の第2弾): 各機能画面の作り込み。
+   配色トークン(styles/tokens.css)はそのまま使い、画面ごとの部品の
+   並び・余白・大きさを整える。新しい色は追加していない。
+   ============================================================ */
+
+/* D(企画メモ)・I(雑多メモ): 見出しと保存状態を一段に並べ、本文は罫線ノート風の
+   面として広く取る。保存状態はこれまで本文と同じ大きさの段落として本文の下に
+   出ていたが、書いている最中に目に入る情報なので、見出しの右へ小さく移した。 */
+.memo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.memo-head .icon-heading {
+  margin-bottom: 0;
+}
+
+.card-dark .memo-status:not(:empty) {
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  background: transparent;
+  color: var(--color-success);
+  padding: 0;
+}
+
+/* 罫線は背景のグラデーションで描く。行の高さ(line-height)と罫線の間隔を同じ値に
+   揃える必要があるため、どちらも34pxで固定する(可変にすると行と罫線がずれる)。
+   background-attachment: localで、入力内容のスクロールに罫線も追従させる。 */
+.memo-input.memo-input {
+  min-height: 380px;
+  padding: 0 var(--space-sm);
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 33px,
+    color-mix(in srgb, var(--color-text) 14%, transparent) 33px,
+    color-mix(in srgb, var(--color-text) 14%, transparent) 34px
+  );
+  background-attachment: local;
+  line-height: 34px;
+}
+
+.memo-input.memo-input:focus {
+  box-shadow: none;
+}
+
+/* I(雑多メモ): 振り分けボタン。行き先のタブ色で塗り分け、どこへ送るかを色でも示す
+   (data-tab属性はsrc/views/scratch.jsが付与し、色はstyles/tokens.cssが与える)。 */
+.dispatch-caption {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.dispatch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.dispatch-button {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  background: var(--tab-color);
+  color: var(--color-on-accent);
+}
+
+.dispatch-button:hover {
+  background: color-mix(in srgb, var(--tab-color) 80%, white);
+}
+
+@media (width >= 768px) {
+  .dispatch-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* G(宿泊): 候補カード。サイト名バッジ+追加者の見出し行を上に、操作はカード下端に
+   揃え、メモの長さが違ってもボタンの位置が揃うようにする。 */
+.candidate-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.candidate-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.site-badge {
+  flex-shrink: 0;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-subheading);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.candidate-added-by {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.candidate-card p {
+  margin: 0;
+}
+
+.candidate-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: auto;
+  padding-top: var(--space-sm);
+}
+
+.candidate-actions .complete-badge {
+  margin: 0;
+}
+
+/* B(旅行一覧): カードを1行1旅行の見やすい大きさにし、参加中の名前はチップで示す。 */
+.session-chip {
+  display: inline-block;
+  margin: 0 0 var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.trip-list-card {
+  padding: var(--space-lg) var(--space-md);
+}
+
+.trip-list-card h2 {
+  font-size: var(--font-size-lg);
+}
+
+.trip-list-card .subtitle {
+  margin-top: var(--space-xs);
+}
+
+/* A(参加): 画面ごとの色を並べた点で、このアプリが何の集まりかを示す小さな目印。 */
+.brand-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+}
+
+.brand-dots span {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--tab-color);
+}
+
+.lead-text {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-subheading);
+  line-height: 1.6;
+}
+
+/* カードの中に置くカード(例: 参加画面の「作成した合言葉」)。地の面と区別するため
+   一段明るくする。 */
+.inner-card {
+  background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface));
 }

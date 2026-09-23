@@ -14,7 +14,7 @@ export function mount(outlet) {
   }
 
   outlet.innerHTML = `
-    <p class="subtitle" id="group-subtitle">${session.name}さんとして参加中</p>
+    <p class="session-chip" id="group-subtitle">${session.name}さんとして参加中</p>
     <div id="trip-list" class="card-grid"></div>
     <p class="error-text" id="error-text"></p>
     <button type="button" id="create-trip">${icons.plus}<span>新しい旅行を作る</span></button>
@@ -35,7 +35,7 @@ export function mount(outlet) {
 
     for (const trip of trips) {
       const link = document.createElement('a');
-      link.className = 'card card-link trip-card';
+      link.className = 'card card-link trip-card trip-list-card';
       link.href = `#/trips/${encodeURIComponent(trip.id)}`;
 
       const textWrap = document.createElement('div');
