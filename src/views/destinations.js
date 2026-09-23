@@ -106,7 +106,7 @@ export function mount(outlet, params) {
       const voterCount = Object.keys(votes).length;
 
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card destination-card';
 
       const headingRow = document.createElement('div');
       headingRow.className = 'destination-heading-row';
@@ -120,6 +120,13 @@ export function mount(outlet, params) {
       heading.textContent = destination.name;
       headingRow.appendChild(heading);
 
+      // 2026-09-22(デザイン刷新): 平均スコアは見出し行の右端に大きく置き、
+      // 候補同士を上下に並べたときに数字だけで比べられるようにする。
+      const score = document.createElement('span');
+      score.className = 'destination-score';
+      score.textContent = voterCount > 0 ? avg.toFixed(1) : '—';
+      headingRow.appendChild(score);
+
       card.appendChild(headingRow);
 
       if (destination.note) {
@@ -130,7 +137,8 @@ export function mount(outlet, params) {
       }
 
       const scoreText = document.createElement('p');
-      scoreText.textContent = `平均スコア: ${voterCount > 0 ? avg.toFixed(1) : '未投票'} (${voterCount}人)`;
+      scoreText.className = 'subtitle';
+      scoreText.textContent = voterCount > 0 ? `${voterCount}人が投票` : 'まだ投票がありません';
       card.appendChild(scoreText);
 
       const scoreBar = document.createElement('div');
@@ -143,6 +151,10 @@ export function mount(outlet, params) {
 
       const starRow = document.createElement('div');
       starRow.className = 'star-row';
+      const starLabel = document.createElement('span');
+      starLabel.className = 'star-label';
+      starLabel.textContent = 'あなたの評価';
+      starRow.appendChild(starLabel);
       for (let score = 1; score <= 5; score += 1) {
         const starButton = document.createElement('button');
         starButton.type = 'button';
@@ -157,7 +169,7 @@ export function mount(outlet, params) {
       const voters = Object.entries(votes);
       if (voters.length > 0) {
         const voterText = document.createElement('p');
-        voterText.className = 'subtitle';
+        voterText.className = 'subtitle voter-text';
         voterText.textContent = voters.map(([voter, score]) => `${voter}: ★${score}`).join(' / ');
         card.appendChild(voterText);
       }

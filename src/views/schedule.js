@@ -17,6 +17,10 @@ import { createDatePicker, addMonths, toDateString, parseDateString } from '../d
 import { buildOverviewCells } from '../scheduleOverview.js';
 
 const RESPONSE_SYMBOLS = ['○', '△', '×'];
+
+// 2026-09-22(デザイン刷新): 回答記号をCSSクラス名に使える英字へ対応づける
+// (○△×はそのままクラス名にできないため)。
+const RESPONSE_CLASS_NAMES = { '○': 'maru', '△': 'sankaku', '×': 'batsu' };
 const OVERVIEW_STATUS_LABELS = { ok: '○', ng: '×', pending: '△' };
 const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -69,7 +73,7 @@ export function mount(outlet, params) {
       <button type="button" id="bulk-batsu" class="btn-secondary">全部×にする</button>
     </div>
 
-    <div id="schedule-list" class="card-grid"></div>
+    <div id="schedule-list" class="schedule-list"></div>
   `;
 
   const toggleFormButton = outlet.querySelector('#toggle-date-form');
@@ -226,16 +230,22 @@ export function mount(outlet, params) {
       const isUnanswered = !responses[myKey];
 
       const card = document.createElement('div');
-      const cardClasses = ['card'];
+      const cardClasses = ['card', 'schedule-card'];
       if (isComplete) cardClasses.push('schedule-complete');
       // isCompleteが真ならmyKey分の回答も含まれているはずなので、
       // 全員回答済みと自分が未回答は基本的に同時には起きない。
       if (isUnanswered) cardClasses.push('schedule-unanswered');
       card.className = cardClasses.join(' ');
 
+      // 2026-09-22(デザイン刷新): 1候補日=1行として、左に日付・中央に各自の回答・
+      // 右に自分の回答ボタンを並べる(候補日が増えても縦に伸びすぎないように)。
+      const dateColumn = document.createElement('div');
+      dateColumn.className = 'schedule-date';
+
       const heading = document.createElement('h3');
       heading.textContent = formatDateLabel(entry.id);
-      card.appendChild(heading);
+      dateColumn.appendChild(heading);
+      card.appendChild(dateColumn);
 
       // 内訳サマリー(docs/ROADMAP.md「63」)。候補日が多いと各カードの回答者名を
       // 1件ずつ読まないと状況がわからないため、○×△の集計を先に一目で見せる。
@@ -246,44 +256,56 @@ export function mount(outlet, params) {
           if (counts[value] !== undefined) counts[value] += 1;
         }
         const tally = document.createElement('p');
-        tally.className = 'subtitle';
+        tally.className = 'subtitle schedule-tally';
         tally.textContent = RESPONSE_SYMBOLS.map((symbol) => `${symbol}${counts[symbol]}`).join(' ');
-        card.appendChild(tally);
+        dateColumn.appendChild(tally);
       }
 
       if (isUnanswered) {
         const unansweredText = document.createElement('p');
         unansweredText.className = 'unanswered-badge';
         unansweredText.textContent = 'あなたは未回答です';
-        card.appendChild(unansweredText);
-      }
-
-      const myRow = document.createElement('div');
-      myRow.className = 'button-row';
-      for (const symbol of RESPONSE_SYMBOLS) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = symbol;
-        button.className = responses[myKey] === symbol ? '' : 'btn-secondary';
-        button.addEventListener('click', () => setResponse(entry.id, symbol));
-        myRow.appendChild(button);
-      }
-      card.appendChild(myRow);
-
-      const responseEntries = Object.entries(responses);
-      if (responseEntries.length > 0) {
-        const responseText = document.createElement('p');
-        responseText.className = 'subtitle';
-        responseText.textContent = responseEntries.map(([name, value]) => `${name}: ${value}`).join(' / ');
-        card.appendChild(responseText);
+        dateColumn.appendChild(unansweredText);
       }
 
       if (isComplete) {
         const completeText = document.createElement('p');
         completeText.className = 'complete-badge';
         completeText.textContent = '全員回答済み';
-        card.appendChild(completeText);
+        dateColumn.appendChild(completeText);
       }
+
+      // 誰がどう答えたかは、名前を並べた文字列ではなく回答記号つきのチップで示す。
+      const responseEntries = Object.entries(responses);
+      const chips = document.createElement('div');
+      chips.className = 'response-chips';
+      for (const [name, value] of responseEntries) {
+        const chip = document.createElement('span');
+        chip.className = 'response-chip';
+        const mark = document.createElement('span');
+        mark.className = `response-mark response-mark-${RESPONSE_CLASS_NAMES[value] ?? 'other'}`;
+        mark.textContent = value;
+        chip.appendChild(mark);
+        chip.appendChild(document.createTextNode(name));
+        chips.appendChild(chip);
+      }
+      card.appendChild(chips);
+
+      const myRow = document.createElement('div');
+      myRow.className = 'response-buttons';
+      for (const symbol of RESPONSE_SYMBOLS) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = symbol;
+        const isMine = responses[myKey] === symbol;
+        button.className = isMine
+          ? `response-button response-button-selected response-button-${RESPONSE_CLASS_NAMES[symbol]}`
+          : 'response-button';
+        button.setAttribute('aria-pressed', String(isMine));
+        button.addEventListener('click', () => setResponse(entry.id, symbol));
+        myRow.appendChild(button);
+      }
+      card.appendChild(myRow);
 
       scheduleList.appendChild(card);
     }

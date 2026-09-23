@@ -36,10 +36,10 @@ export function mount(outlet, params) {
       <h2 id="trip-name"></h2>
       <button type="button" id="edit-name-button" class="btn-secondary">編集</button>
     </div>
-    <form id="edit-name-form" novalidate hidden>
+    <form id="edit-name-form" class="card inline-form" novalidate hidden>
       <div class="field">
         <label for="trip-name-input">旅行名</label>
-        <input type="text" id="trip-name-input" name="tripName" required />
+        <input type="text" id="trip-name-input" class="trip-name-input" name="tripName" required />
       </div>
       <p class="error-text" id="name-error-text"></p>
       <div class="button-row">
@@ -66,13 +66,15 @@ export function mount(outlet, params) {
           </dl>
         </div>
         <form id="meeting-form" novalidate hidden>
-          <div class="field">
-            <label for="meeting-place">場所</label>
-            <input type="text" id="meeting-place" name="meetingPlace" />
-          </div>
-          <div class="field">
-            <label for="meeting-time">時間</label>
-            <input type="text" id="meeting-time" name="meetingTime" />
+          <div class="field-grid">
+            <div class="field">
+              <label for="meeting-place">場所</label>
+              <input type="text" id="meeting-place" name="meetingPlace" />
+            </div>
+            <div class="field">
+              <label for="meeting-time">時間</label>
+              <input type="text" id="meeting-time" name="meetingTime" />
+            </div>
           </div>
           <div class="field">
             <label for="meeting-location-url">地図リンク(任意)</label>
