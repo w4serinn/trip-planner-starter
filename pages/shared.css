@@ -1973,3 +1973,10 @@ button:disabled {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-heading);
 }
+
+/* 2026-09-22(「97」): 概要のサマリーカードの補足行(件数の内訳など)。 */
+.summary-sub {
+  margin: auto 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
