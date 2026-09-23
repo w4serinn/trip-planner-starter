@@ -41,39 +41,51 @@ export function mount(outlet, params) {
   const myKey = sanitizeMapKey(session.name);
 
   outlet.innerHTML = `
-    <p class="subtitle">候補日を追加し、○(参加できる)・△(未定)・×(参加できない)で回答しましょう。</p>
+    <p class="subtitle screen-lead">○ 行ける ・ △ 未定 ・ × 行けない</p>
 
-    <div class="card" id="schedule-overview-card">
-      <h3 class="icon-heading">${icons.schedule}<span>候補日カレンダー</span></h3>
-      <p class="subtitle">候補日が多いときに、月ごとの状況をひと目で確認できます。</p>
-      <div class="schedule-overview-legend">
-        <span><span class="schedule-overview-dot schedule-overview-dot-ok"></span>○ 全員参加可能</span>
-        <span><span class="schedule-overview-dot schedule-overview-dot-ng"></span>× 誰か参加不可</span>
-        <span><span class="schedule-overview-dot schedule-overview-dot-pending"></span>△ 検討中・未回答あり</span>
+    <div class="side-layout">
+      <div class="side-layout-main">
+        <div class="toolbar">
+          <div id="bulk-response-row" class="bulk-row" hidden>
+            <span class="bulk-label">まとめて回答</span>
+            <button type="button" id="bulk-maru" class="pill-button">全部○</button>
+            <button type="button" id="bulk-sankaku" class="pill-button">全部△</button>
+            <button type="button" id="bulk-batsu" class="pill-button">全部×</button>
+          </div>
+          <button type="button" id="toggle-date-form" class="toolbar-primary">${icons.plus}<span>候補日を追加</span></button>
+        </div>
+
+        <form id="date-form" class="card" novalidate hidden>
+          <p class="subtitle">複数の日付をまとめて選択できます。</p>
+          <div id="date-picker-container"></div>
+          <div id="selected-dates-chips" class="chip-row"></div>
+          <p class="error-text" id="date-error-text"></p>
+          <div class="button-row">
+            <button type="submit">追加する</button>
+            <button type="button" id="cancel-date-form" class="btn-secondary">キャンセル</button>
+          </div>
+        </form>
+
+        <div id="schedule-list" class="schedule-list"></div>
       </div>
-      <div id="schedule-overview" class="date-picker"></div>
+
+      <aside class="side-layout-aside">
+        <div class="card" id="schedule-overview-card">
+          <h3 class="icon-heading">${icons.schedule}<span>候補日カレンダー</span></h3>
+          <div id="schedule-overview" class="date-picker"></div>
+          <div class="schedule-overview-legend">
+            <span><span class="schedule-overview-dot schedule-overview-dot-ok"></span>全員○</span>
+            <span><span class="schedule-overview-dot schedule-overview-dot-pending"></span>△・未回答あり</span>
+            <span><span class="schedule-overview-dot schedule-overview-dot-ng"></span>誰か×</span>
+          </div>
+        </div>
+        <div class="card" id="answer-status-card" hidden>
+          <p class="aside-label">回答状況</p>
+          <p class="aside-value" id="answer-status-count"></p>
+          <p class="subtitle" id="answer-status-rest"></p>
+        </div>
+      </aside>
     </div>
-
-    <button type="button" id="toggle-date-form" class="btn-secondary">${icons.plus}<span>候補日を追加</span></button>
-
-    <form id="date-form" novalidate hidden>
-      <p class="subtitle">複数の日付をまとめて選択できます。</p>
-      <div id="date-picker-container"></div>
-      <div id="selected-dates-chips" class="chip-row"></div>
-      <p class="error-text" id="date-error-text"></p>
-      <div class="button-row">
-        <button type="submit">追加する</button>
-        <button type="button" id="cancel-date-form" class="btn-secondary">キャンセル</button>
-      </div>
-    </form>
-
-    <div id="bulk-response-row" class="button-row" hidden>
-      <button type="button" id="bulk-maru" class="btn-secondary">全部○にする</button>
-      <button type="button" id="bulk-sankaku" class="btn-secondary">全部△にする</button>
-      <button type="button" id="bulk-batsu" class="btn-secondary">全部×にする</button>
-    </div>
-
-    <div id="schedule-list" class="schedule-list"></div>
   `;
 
   const toggleFormButton = outlet.querySelector('#toggle-date-form');
@@ -87,6 +99,9 @@ export function mount(outlet, params) {
   const bulkResponseRow = outlet.querySelector('#bulk-response-row');
   const bulkButtons = [...bulkResponseRow.querySelectorAll('button')];
   const overviewContainer = outlet.querySelector('#schedule-overview');
+  const answerStatusCard = outlet.querySelector('#answer-status-card');
+  const answerStatusCount = outlet.querySelector('#answer-status-count');
+  const answerStatusRest = outlet.querySelector('#answer-status-rest');
 
   // 初回一覧取得が終わるまで投稿を止める(src/views/notes.jsと同じ理由。取得順序の競合を避けるため)。
   submitButton.disabled = true;
@@ -128,6 +143,10 @@ export function mount(outlet, params) {
 
   let currentEntries = [];
   let memberCount = 0;
+
+  // 2026-09-22(「96」): 未回答の人も回答チップとして並べたいので、人数だけでなく
+  // メンバー名の一覧も保持する(取得できなかった場合は空配列のまま動く)。
+  let memberNames = [];
 
   // 俯瞰ビュー(docs/ROADMAP.md「52」)の表示中の年月。初回データ取得時、候補日が
   // あればその最も早い候補日の月へ自動的に合わせる(それ以降はユーザーの月送り操作を
@@ -213,9 +232,26 @@ export function mount(outlet, params) {
     return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   }
 
+  // 2026-09-22(「96」): 右側の「回答状況」パネル。1件でも回答していれば回答済みとみなす。
+  function renderAnswerStatus() {
+    if (memberNames.length === 0 || currentEntries.length === 0) {
+      answerStatusCard.hidden = true;
+      return;
+    }
+    const answered = memberNames.filter((name) => {
+      const key = sanitizeMapKey(name);
+      return currentEntries.some((entry) => (entry.responses || {})[key]);
+    });
+    const rest = memberNames.filter((name) => !answered.includes(name));
+    answerStatusCard.hidden = false;
+    answerStatusCount.textContent = `${answered.length} / ${memberNames.length}人が回答済み`;
+    answerStatusRest.textContent = rest.length > 0 ? `${rest.join('・')} が未回答` : '全員が回答しました';
+  }
+
   function renderEntries() {
     scheduleList.innerHTML = '';
     bulkResponseRow.hidden = currentEntries.length === 0;
+    renderAnswerStatus();
 
     if (currentEntries.length === 0) {
       scheduleList.innerHTML = `<div class="empty-state">${icons.empty}<p>まだ候補日がありません。最初の候補日を追加しましょう。</p></div>`;
@@ -257,7 +293,18 @@ export function mount(outlet, params) {
         }
         const tally = document.createElement('p');
         tally.className = 'subtitle schedule-tally';
-        tally.textContent = RESPONSE_SYMBOLS.map((symbol) => `${symbol}${counts[symbol]}`).join(' ');
+        // 2026-09-22(「96」): 全員○・未回答ありのように、まず状態をひとことで示す
+        // (内訳の数字は、そのどちらでもないときだけ出す)。
+        const allMaru = isComplete && counts['○'] === responseValues.length;
+        const hasUnanswered = memberCount > 0 && responseValues.length < memberCount;
+        if (allMaru) {
+          tally.textContent = '全員○';
+          tally.classList.add('schedule-tally-ok');
+        } else if (hasUnanswered) {
+          tally.textContent = '未回答あり';
+        } else {
+          tally.textContent = RESPONSE_SYMBOLS.map((symbol) => `${symbol}${counts[symbol]}`).join(' ');
+        }
         dateColumn.appendChild(tally);
       }
 
@@ -279,12 +326,16 @@ export function mount(outlet, params) {
       const responseEntries = Object.entries(responses);
       const chips = document.createElement('div');
       chips.className = 'response-chips';
-      for (const [name, value] of responseEntries) {
+      // メンバー名が取れていれば未回答の人も「−」のチップとして並べる(誰待ちかが分かる)。
+      const chipSource = memberNames.length > 0
+        ? memberNames.map((name) => [name, responses[sanitizeMapKey(name)] ?? ''])
+        : responseEntries;
+      for (const [name, value] of chipSource) {
         const chip = document.createElement('span');
-        chip.className = 'response-chip';
+        chip.className = value ? 'response-chip' : 'response-chip response-chip-empty';
         const mark = document.createElement('span');
-        mark.className = `response-mark response-mark-${RESPONSE_CLASS_NAMES[value] ?? 'other'}`;
-        mark.textContent = value;
+        mark.className = `response-mark response-mark-${RESPONSE_CLASS_NAMES[value] ?? 'none'}`;
+        mark.textContent = value || '−';
         chip.appendChild(mark);
         chip.appendChild(document.createTextNode(name));
         chips.appendChild(chip);
@@ -322,7 +373,8 @@ export function mount(outlet, params) {
   async function loadEntries() {
     try {
       const group = await getDocument(`groups/${session.groupCode}`);
-      memberCount = group?.members?.length ?? 0;
+      memberNames = Array.isArray(group?.members) ? group.members : [];
+      memberCount = memberNames.length;
     } catch (error) {
       console.error(error);
       // メンバー数が取れなくても候補日一覧自体は表示したいので、0のまま続行する

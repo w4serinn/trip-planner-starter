@@ -20,6 +20,7 @@ const sidebarLinks = document.getElementById('sidebar-links');
 const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 const menuToggle = document.getElementById('menu-toggle');
 const pageTitle = document.getElementById('page-title');
+const sidebarBrandName = document.getElementById('sidebar-brand-name');
 
 const TABS = [
   { key: 'overview', label: '概要', suffix: '', icon: icons.overview, mount: mountTripOverview },
@@ -86,9 +87,13 @@ function renderNav(tripId, activeKey) {
   closeMenu();
   // 画面ごとの色(styles/tokens.cssの[data-tab])をbody全体とサイドバーの各リンクへ反映する。
   document.body.dataset.tab = activeKey;
+  const activeTab = TABS.find((tab) => tab.key === activeKey);
+  pageTitle.innerHTML = `<span class="page-dot"></span><span>${activeTab?.label ?? DEFAULT_PAGE_TITLE}</span>`;
   for (const tab of TABS) {
     const sidebarLink = document.createElement('a');
-    sidebarLink.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
+    // 2026-09-22(「96」): アイコンではなく画面の色の点を目印にする
+    // (色とタブが1対1で対応していることを分かりやすくするため)。
+    sidebarLink.innerHTML = `<span class="sidebar-dot"></span><span>${tab.label}</span>`;
     sidebarLink.href = `#/trips/${tripId}${tab.suffix}`;
     sidebarLink.dataset.tab = tab.key;
     sidebarLink.className = tab.key === activeKey ? 'sidebar-link sidebar-link-active' : 'sidebar-link';
@@ -97,7 +102,8 @@ function renderNav(tripId, activeKey) {
 }
 
 // 2026-08-21(docs/ROADMAP.md「79」): 旅行に紐づく画面(C〜H各タブ)にいる間、
-// .page-headerの<h1>にその旅行の名前を表示する(それまでは常に固定の
+// その旅行の名前を表示する(2026-09-22「96」より、表示先は.page-headerの<h1>ではなく
+// サイドバー上部。<h1>には今いる画面の名前を出す)(それまでは常に固定の
 // 「旅行計画アプリ」という汎用アプリ名だったが、旅行の文脈が伝わらないとの
 // 指摘を受けた)。各タブビュー(例: src/views/tripOverview.js)がそれぞれ
 // trips/{tripId}を購読しているのとは別に、ヘッダー専用の購読をここで1つだけ
@@ -116,15 +122,15 @@ function subscribeTripName(tripId) {
   stopTripNameSubscription();
   const session = loadSession();
   if (!session) return; // 未参加の場合、リダイレクトは各タブのmount()側の責務
-  pageTitle.textContent = DEFAULT_PAGE_TITLE;
+  sidebarBrandName.textContent = DEFAULT_PAGE_TITLE;
   unsubscribeTripName = subscribeToDocument(
     `groups/${session.groupCode}/trips/${tripId}`,
     (trip) => {
-      pageTitle.textContent = trip?.name || DEFAULT_PAGE_TITLE;
+      sidebarBrandName.textContent = trip?.name || DEFAULT_PAGE_TITLE;
     },
     (error) => {
       console.error(error);
-      pageTitle.textContent = DEFAULT_PAGE_TITLE;
+      sidebarBrandName.textContent = DEFAULT_PAGE_TITLE;
     },
   );
 }
@@ -147,6 +153,7 @@ function hideNav() {
   menuToggle.hidden = true;
   closeMenu();
   stopTripNameSubscription();
+  sidebarBrandName.textContent = DEFAULT_PAGE_TITLE;
   pageTitle.textContent = DEFAULT_PAGE_TITLE;
 }
 

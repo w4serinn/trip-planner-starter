@@ -36,19 +36,15 @@ export function mount(outlet, params) {
       <h2 id="trip-name"></h2>
       <button type="button" id="edit-name-button" class="btn-secondary">編集</button>
     </div>
-    <form id="edit-name-form" class="card inline-form" novalidate hidden>
-      <div class="field">
+    <form id="edit-name-form" class="card name-form" novalidate hidden>
+      <div class="name-form-row">
         <label for="trip-name-input">旅行名</label>
         <input type="text" id="trip-name-input" class="trip-name-input" name="tripName" required />
-      </div>
-      <p class="error-text" id="name-error-text"></p>
-      <div class="button-row">
         <button type="submit">保存</button>
         <button type="button" id="cancel-edit-button" class="btn-secondary">キャンセル</button>
       </div>
+      <p class="error-text" id="name-error-text"></p>
     </form>
-
-    <div id="tab-summary" class="card-grid"></div>
 
     <div class="card-grid">
       <section class="card">
@@ -100,6 +96,7 @@ export function mount(outlet, params) {
         <div id="warika-display">
           <p class="subtitle" id="warika-empty">まだ設定されていません。</p>
           <a id="warika-link-display" class="candidate-link" target="_blank" rel="noopener noreferrer" hidden></a>
+          <p class="link-placeholder" id="warika-placeholder" hidden>リンク先を別タブで開きます</p>
         </div>
         <form id="warika-form" novalidate hidden>
           <div class="field">
@@ -114,6 +111,8 @@ export function mount(outlet, params) {
         </form>
       </section>
     </div>
+
+    <div id="tab-summary" class="summary-grid"></div>
   `;
 
   const tripNameHeading = outlet.querySelector('#trip-name');
@@ -144,6 +143,7 @@ export function mount(outlet, params) {
   const warikaDisplay = outlet.querySelector('#warika-display');
   const warikaEmpty = outlet.querySelector('#warika-empty');
   const warikaLinkDisplay = outlet.querySelector('#warika-link-display');
+  const warikaPlaceholder = outlet.querySelector('#warika-placeholder');
   const warikaForm = outlet.querySelector('#warika-form');
   const warikaUrlInput = outlet.querySelector('#warika-url');
   const warikaErrorText = outlet.querySelector('#warika-error-text');
@@ -187,6 +187,7 @@ export function mount(outlet, params) {
     const hasWarika = !!currentTrip.warikaUrl;
     warikaEmpty.hidden = hasWarika;
     warikaLinkDisplay.hidden = !hasWarika;
+    warikaPlaceholder.hidden = !hasWarika;
     if (hasWarika) {
       warikaLinkDisplay.href = currentTrip.warikaUrl;
       warikaLinkDisplay.textContent = currentTrip.warikaUrl;
@@ -229,12 +230,13 @@ export function mount(outlet, params) {
 
       const textWrap = document.createElement('div');
       const heading = document.createElement('h3');
-      heading.className = 'icon-heading';
-      heading.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
+      heading.className = 'summary-heading';
+      heading.innerHTML = `<span class="summary-dot"></span><span>${tab.label}</span>`;
       textWrap.appendChild(heading);
 
+      // 2026-09-22(「96」): 件数はカードの主役として大きく置く。
       const countText = document.createElement('p');
-      countText.className = 'subtitle';
+      countText.className = 'summary-value';
       countText.textContent = counts[tab.key];
       textWrap.appendChild(countText);
 
