@@ -229,6 +229,11 @@ h1 {
 .page-header h1 {
   color: var(--color-text);
 
+  /* 2026-09-22(「96」): 見出しの左に画面の色の点を置く */
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+
   /* 2026-08-19(docs/ROADMAP.md「31」): ハンバーガーボタン追加分、モバイル幅での
      横スペースが以前より狭くなったため、折り返さず省略記号で収める。 */
   min-width: 0;
@@ -473,6 +478,18 @@ button:disabled {
   box-shadow: none;
 }
 
+/* 2026-09-22(「95」): しおり項目の操作ボタンは、他の軽い操作よりさらに小さくする
+   (1項目に▲▼・編集・削除の4つが並ぶため)。 */
+.item-actions .btn-secondary {
+  min-height: 34px;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+/* 2026-09-22(「96」): 旅行名の編集行では、ボタンを幅いっぱいに広げない */
+.name-form-row button {
+  width: auto;
+}
+
 .card-section-header {
   display: flex;
   align-items: center;
@@ -538,6 +555,7 @@ button:disabled {
 
 .button-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
 }
 
@@ -608,13 +626,19 @@ button:disabled {
 
 .star-row {
   display: flex;
-  gap: var(--space-xs);
-  margin: var(--space-xs) 0;
+  align-items: center;
+
+  /* 2026-09-22(「95」): ★同士を詰めて1つの評価列として見せる */
+  gap: 2px;
+  margin: var(--space-sm) 0 var(--space-xs);
 }
 
 .star-button {
   width: auto;
-  min-height: 0;
+
+  /* 2026-09-22(「95」): 指で押しやすい大きさを確保する */
+  min-width: 36px;
+  min-height: 36px;
   background: none;
   box-shadow: none;
   color: var(--color-accent);
@@ -755,6 +779,7 @@ button:disabled {
 
 .destination-heading-row h3 {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .rank-badge {
@@ -946,6 +971,7 @@ button:disabled {
 }
 
 .sidebar-brand-name {
+  overflow-wrap: anywhere;
   font-family: var(--font-family-heading);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-heading);
@@ -1271,11 +1297,13 @@ button:disabled {
 
 .schedule-overview-legend {
   display: flex;
-  flex-wrap: wrap;
+
+  /* 2026-09-22(「96」): 補助パネルの中では縦並びにする */
+  flex-flow: column wrap;
   gap: var(--space-xs) var(--space-md);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  margin-bottom: var(--space-sm);
+  margin: var(--space-sm) 0 0;
 }
 
 .schedule-overview-legend span {
@@ -1475,10 +1503,20 @@ button:disabled {
   margin: 0;
 }
 
-/* B(旅行一覧): カードを1行1旅行の見やすい大きさにし、参加中の名前はチップで示す。 */
+/* B(旅行一覧): カードを1行1旅行の見やすい大きさにし、参加中の名前はチップで示す。
+   「グループを変える」ボタンを同じ行に並べるための行コンテナ。 */
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
 .session-chip {
   display: inline-block;
-  margin: 0 0 var(--space-md);
+  margin: 0;
   padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
@@ -1523,4 +1561,432 @@ button:disabled {
    一段明るくする。 */
 .inner-card {
   background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface));
+}
+
+/* ============================================================
+   2026-09-22(第16期「95」): 残り4画面(C/E/F/H)の作り込み。
+   配色トークンはそのまま使い、部品の並び・大きさのみ整える。
+   ============================================================ */
+
+/* F(日程調整): 1候補日=1行。左に日付と状態、中央に各自の回答チップ、右に自分の
+   回答ボタン。候補日が増えても縦に伸びにくく、日付同士を見比べやすくする。 */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.schedule-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: 0;
+}
+
+.schedule-date {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 190px;
+}
+
+.schedule-date h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.schedule-date .subtitle,
+.schedule-date .complete-badge,
+.schedule-date .unanswered-badge {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.schedule-tally {
+  letter-spacing: 0.08em;
+}
+
+.response-chips {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.response-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  font-size: var(--font-size-sm);
+}
+
+.response-mark {
+  font-weight: var(--font-weight-subheading);
+}
+
+.response-mark-maru {
+  color: var(--color-success);
+}
+
+.response-mark-sankaku {
+  color: var(--color-accent);
+}
+
+.response-mark-batsu {
+  color: var(--color-danger);
+}
+
+.response-buttons {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+/* 未選択は枠だけ、選択中はその記号の色で塗る(どれを選んだかが一目で分かるように)。 */
+.response-button {
+  width: 52px;
+  min-height: 44px;
+  padding: 0;
+  font-size: var(--font-size-lg);
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.response-button:hover {
+  background: var(--color-bg);
+}
+
+.response-button-selected {
+  color: var(--color-on-accent);
+  border-color: transparent;
+}
+
+.response-button-maru,
+.response-button-maru:hover {
+  background: var(--color-success);
+}
+
+.response-button-sankaku,
+.response-button-sankaku:hover {
+  background: var(--color-accent);
+}
+
+.response-button-batsu,
+.response-button-batsu:hover {
+  background: var(--color-danger);
+}
+
+/* 候補日カードの左端の帯(全員回答済み/自分が未回答)は、行レイアウトでも効くように
+   角丸の内側へ収める。 */
+.schedule-card.schedule-complete,
+.schedule-card.schedule-unanswered {
+  border-left-width: 6px;
+}
+
+@media (width < 768px) {
+  .schedule-date {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .response-chips {
+    flex-basis: 100%;
+  }
+}
+
+/* E(行き先決め): 見出し行に順位・名前・平均スコア。★は押しやすい大きさにする。 */
+.destination-card .destination-score {
+  margin-left: auto;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-heading);
+  line-height: 1;
+}
+
+.destination-card .subtitle {
+  margin-top: 0;
+}
+
+.star-label {
+  margin-right: var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.voter-text {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+/* H(しおり): 項目の操作は1行にまとめ、削除だけ右端へ離して誤爆を減らす。 */
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.item-move {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.item-delete {
+  margin-left: auto;
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+}
+
+.timeline-content .subtitle {
+  margin-top: var(--space-xs);
+}
+
+/* C(概要): 編集フォームはカードとして開き、短い項目は2列に並べる。 */
+.inline-form {
+  display: block;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+@media (width < 480px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.trip-name-input.trip-name-input {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-subheading);
+}
+
+
+/* ============================================================
+   2026-09-22(第16期「96」): 実画面をデザイン案に合わせ込む。
+   ・ヘッダーの<h1>は「今いる画面の名前」+画面の色の点、旅行名はサイドバー上部
+   ・広い画面ではF(日程調整)を左右2カラム(左=候補日、右=カレンダーと回答状況)
+   ・一括回答は小さなピル、追加ボタンだけを主役に
+   ・C(概要)はサマリーカードを下段へ移し、色をはっきり出す
+   ============================================================ */
+
+.page-dot,
+.sidebar-dot,
+.summary-dot {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--tab-color, var(--color-primary));
+}
+
+.page-dot {
+  width: 14px;
+  height: 14px;
+}
+
+.sidebar-link-active .sidebar-dot {
+  background: var(--color-on-accent);
+}
+
+/* 画面の説明文は見出しのすぐ下に、控えめな1行として置く */
+.screen-lead {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* 左=一覧、右=補助情報の2カラム(狭い画面では縦に積む) */
+.side-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.side-layout-main {
+  min-width: 0;
+}
+
+.side-layout-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (width >= 1024px) {
+  .side-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .side-layout-main {
+    flex: 1;
+  }
+
+  .side-layout-aside {
+    width: 280px;
+    flex-shrink: 0;
+  }
+}
+
+.side-layout-aside .card {
+  margin-bottom: 0;
+}
+
+.aside-label {
+  margin: 0 0 var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.aside-value {
+  margin: 0;
+  font-weight: var(--font-weight-subheading);
+}
+
+/* 操作列: まとめて回答は小さなピル、追加ボタンだけを塗りつぶしの主役にする */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.bulk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.bulk-label {
+  margin-right: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.pill-button {
+  width: auto;
+  min-height: 36px;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-base);
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.pill-button:hover {
+  background: var(--color-bg);
+}
+
+.toolbar-primary {
+  width: auto;
+  margin-left: auto;
+}
+
+/* 候補日カレンダーは補助情報として少し小さく置く */
+.side-layout-aside .date-picker {
+  max-width: none;
+}
+
+.schedule-tally-ok {
+  color: var(--color-success);
+}
+
+.response-chip-empty {
+  color: var(--color-text-muted);
+}
+
+.response-mark-none {
+  color: var(--color-text-muted);
+}
+
+/* C(概要): 旅行名の編集は1行に収める */
+.name-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.name-form-row label {
+  flex-shrink: 0;
+}
+
+.name-form-row input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.link-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  margin: var(--space-sm) 0 0;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* C(概要): 各画面へのサマリーカード。画面の色をはっきり敷き、件数を主役にする */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+@media (width >= 1024px) {
+  .summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.summary-card.summary-card {
+  align-items: stretch;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--tab-color) 32%, var(--color-surface));
+}
+
+.summary-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  height: 100%;
+}
+
+.summary-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.summary-value {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-heading);
+}
+
+/* 2026-09-22(「97」): 概要のサマリーカードの補足行(件数の内訳など)。 */
+.summary-sub {
+  margin: auto 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }

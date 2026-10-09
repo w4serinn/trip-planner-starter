@@ -475,9 +475,13 @@ export function mount(outlet, params) {
 
         // 時間設定の有無を問わず、その日の全項目が並び替え対象(docs/ROADMAP.md「87」。
         // 以前は時間未設定の項目同士でのみ▲▼を表示していた)。
+        // 2026-09-22(デザイン刷新): ▲▼と編集・削除は2行に分けず、1行の操作列にまとめる。
+        const itemActions = document.createElement('div');
+        itemActions.className = 'item-actions';
+
         if (dayItems.length > 1) {
           const moveRow = document.createElement('div');
-          moveRow.className = 'button-row';
+          moveRow.className = 'item-move';
 
           const moveUpButton = document.createElement('button');
           moveUpButton.type = 'button';
@@ -495,11 +499,8 @@ export function mount(outlet, params) {
           moveDownButton.addEventListener('click', () => moveItem(dayItems, item, 1));
           moveRow.appendChild(moveDownButton);
 
-          content.appendChild(moveRow);
+          itemActions.appendChild(moveRow);
         }
-
-        const itemActions = document.createElement('div');
-        itemActions.className = 'button-row';
 
         const editButton = document.createElement('button');
         editButton.type = 'button';
@@ -510,7 +511,7 @@ export function mount(outlet, params) {
 
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
-        deleteButton.className = 'btn-secondary';
+        deleteButton.className = 'btn-secondary item-delete';
         deleteButton.textContent = '削除';
         deleteButton.addEventListener('click', () => onDeleteItemClick(item, deleteButton));
         itemActions.appendChild(deleteButton);

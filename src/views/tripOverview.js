@@ -21,6 +21,37 @@ const SUMMARY_TABS = [
   { key: 'itinerary', icon: icons.itinerary, label: 'しおり' },
 ];
 
+// 2026-09-22(「97」): 概要のサマリーカードに出す「いまどうなっているか」の要約。
+// 概要タブは一度きりの取得しかしないため、ここでは取得済みの配列だけから計算する。
+function summarizeDestinations(destinations) {
+  if (destinations.length === 0) return { value: '候補地なし', sub: 'まずは行きたい場所を出そう' };
+  const scored = destinations
+    .map((destination) => {
+      const votes = Object.values(destination.votes || {});
+      const total = votes.reduce((sum, score) => sum + score, 0);
+      return { name: destination.name, voterCount: votes.length, avg: votes.length > 0 ? total / votes.length : 0 };
+    })
+    .sort((a, b) => b.avg - a.avg);
+  const top = scored[0];
+  if (top.voterCount === 0) return { value: `候補地 ${destinations.length}件`, sub: 'まだ投票がありません' };
+  return { value: `1位 ${top.name}`, sub: `★${top.avg.toFixed(1)} ・ ${top.voterCount}人が投票` };
+}
+
+function summarizeSchedule(entries) {
+  if (entries.length === 0) return { value: '候補日なし', sub: '行けそうな日を出そう' };
+  const allMaru = entries.filter((entry) => {
+    const values = Object.values(entry.responses || {});
+    return values.length > 0 && values.every((value) => value === '○');
+  });
+  if (allMaru.length === 0) return { value: `候補日 ${entries.length}件`, sub: '全員○の日はまだなし' };
+  return { value: `全員○ ${allMaru.length}日`, sub: `候補日 ${entries.length}件のうち` };
+}
+
+function summarizeItineraryDays(items) {
+  const days = new Set(items.map((item) => item.date).filter(Boolean));
+  return days.size > 0 ? `${days.size}日分` : '日付を決めて書き足そう';
+}
+
 export function mount(outlet, params) {
   const session = loadSession();
   if (!session) {
@@ -36,19 +67,15 @@ export function mount(outlet, params) {
       <h2 id="trip-name"></h2>
       <button type="button" id="edit-name-button" class="btn-secondary">編集</button>
     </div>
-    <form id="edit-name-form" novalidate hidden>
-      <div class="field">
+    <form id="edit-name-form" class="card name-form" novalidate hidden>
+      <div class="name-form-row">
         <label for="trip-name-input">旅行名</label>
-        <input type="text" id="trip-name-input" name="tripName" required />
-      </div>
-      <p class="error-text" id="name-error-text"></p>
-      <div class="button-row">
+        <input type="text" id="trip-name-input" class="trip-name-input" name="tripName" required />
         <button type="submit">保存</button>
         <button type="button" id="cancel-edit-button" class="btn-secondary">キャンセル</button>
       </div>
+      <p class="error-text" id="name-error-text"></p>
     </form>
-
-    <div id="tab-summary" class="card-grid"></div>
 
     <div class="card-grid">
       <section class="card">
@@ -66,13 +93,15 @@ export function mount(outlet, params) {
           </dl>
         </div>
         <form id="meeting-form" novalidate hidden>
-          <div class="field">
-            <label for="meeting-place">場所</label>
-            <input type="text" id="meeting-place" name="meetingPlace" />
-          </div>
-          <div class="field">
-            <label for="meeting-time">時間</label>
-            <input type="text" id="meeting-time" name="meetingTime" />
+          <div class="field-grid">
+            <div class="field">
+              <label for="meeting-place">場所</label>
+              <input type="text" id="meeting-place" name="meetingPlace" />
+            </div>
+            <div class="field">
+              <label for="meeting-time">時間</label>
+              <input type="text" id="meeting-time" name="meetingTime" />
+            </div>
           </div>
           <div class="field">
             <label for="meeting-location-url">地図リンク(任意)</label>
@@ -98,6 +127,7 @@ export function mount(outlet, params) {
         <div id="warika-display">
           <p class="subtitle" id="warika-empty">まだ設定されていません。</p>
           <a id="warika-link-display" class="candidate-link" target="_blank" rel="noopener noreferrer" hidden></a>
+          <p class="link-placeholder" id="warika-placeholder" hidden>リンク先を別タブで開きます</p>
         </div>
         <form id="warika-form" novalidate hidden>
           <div class="field">
@@ -112,6 +142,8 @@ export function mount(outlet, params) {
         </form>
       </section>
     </div>
+
+    <div id="tab-summary" class="summary-grid"></div>
   `;
 
   const tripNameHeading = outlet.querySelector('#trip-name');
@@ -142,6 +174,7 @@ export function mount(outlet, params) {
   const warikaDisplay = outlet.querySelector('#warika-display');
   const warikaEmpty = outlet.querySelector('#warika-empty');
   const warikaLinkDisplay = outlet.querySelector('#warika-link-display');
+  const warikaPlaceholder = outlet.querySelector('#warika-placeholder');
   const warikaForm = outlet.querySelector('#warika-form');
   const warikaUrlInput = outlet.querySelector('#warika-url');
   const warikaErrorText = outlet.querySelector('#warika-error-text');
@@ -185,6 +218,7 @@ export function mount(outlet, params) {
     const hasWarika = !!currentTrip.warikaUrl;
     warikaEmpty.hidden = hasWarika;
     warikaLinkDisplay.hidden = !hasWarika;
+    warikaPlaceholder.hidden = !hasWarika;
     if (hasWarika) {
       warikaLinkDisplay.href = currentTrip.warikaUrl;
       warikaLinkDisplay.textContent = currentTrip.warikaUrl;
@@ -221,20 +255,29 @@ export function mount(outlet, params) {
     tabSummary.innerHTML = '';
     for (const tab of SUMMARY_TABS) {
       const link = document.createElement('a');
-      link.className = 'card card-link trip-card';
+      link.className = 'card card-link trip-card summary-card';
       link.href = `#/trips/${encodeURIComponent(tripId)}/${tab.key}`;
       link.dataset.tab = tab.key;
 
       const textWrap = document.createElement('div');
       const heading = document.createElement('h3');
-      heading.className = 'icon-heading';
-      heading.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
+      heading.className = 'summary-heading';
+      heading.innerHTML = `<span class="summary-dot"></span><span>${tab.label}</span>`;
       textWrap.appendChild(heading);
 
-      const countText = document.createElement('p');
-      countText.className = 'subtitle';
-      countText.textContent = counts[tab.key];
-      textWrap.appendChild(countText);
+      // 2026-09-22(「97」): 件数だけでなく「いまどうなっているか」を大きく出し、
+      // その内訳を下に小さく添える(件数だけだと、開くまで状況が分からないため)。
+      const summary = counts[tab.key] ?? {};
+
+      const valueText = document.createElement('p');
+      valueText.className = 'summary-value';
+      valueText.textContent = summary.value ?? '—';
+      textWrap.appendChild(valueText);
+
+      const subText = document.createElement('p');
+      subText.className = 'summary-sub';
+      subText.textContent = summary.sub ?? '';
+      textWrap.appendChild(subText);
 
       link.appendChild(textWrap);
       link.insertAdjacentHTML('beforeend', `<span class="trip-card-chevron">${icons.chevron}</span>`);
@@ -252,10 +295,16 @@ export function mount(outlet, params) {
         listCollection(`${tripPath}/itineraryItems`),
       ]);
       renderTabSummary({
-        destinations: `候補地 ${destinations.length}件`,
-        schedule: `候補日 ${scheduleEntries.length}件`,
-        lodging: `候補 ${lodgingCandidates.length}件・確定 ${confirmedStays.length}件`,
-        itinerary: `${itineraryItems.length}件`,
+        destinations: summarizeDestinations(destinations),
+        schedule: summarizeSchedule(scheduleEntries),
+        lodging: {
+          value: confirmedStays.length > 0 ? `確定 ${confirmedStays.length}件` : '宿は未定',
+          sub: `候補 ${lodgingCandidates.length}件`,
+        },
+        itinerary: {
+          value: itineraryItems.length > 0 ? `${itineraryItems.length}件` : 'まだ空っぽ',
+          sub: summarizeItineraryDays(itineraryItems),
+        },
       });
     } catch (error) {
       console.error(error);
