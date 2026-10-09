@@ -179,7 +179,7 @@ body {
 }
 
 /* 2026-08-19(docs/ROADMAP.md「24. ヘッダーのテクスチャ強化」): 「白背景に黒文字」の
-   単調さを解消するため、--color-ember-deep系のグラデーションを持たせる。
+   単調さを解消するため、--color-ink-deep系のグラデーションを持たせる。
    .pageの内側に収まるカード状のセクションとして塗る(ページ端まではみ出す
    フルブリードにはしない)。
    2026-08-20(docs/ROADMAP.md「70」): 外部レビューで「radial-gradientのドット柄は
@@ -202,7 +202,11 @@ body {
    2026-08-21(docs/ROADMAP.md「91」): 人間から「全体的にパステルオレンジに
    するなら青色いらなくない？」との指摘を受け、この濃紺グラデーション
    (--color-primary-deep/-dark)自体を暖色系(--color-ember-deep/-ember)へ
-   置き換えた。角度は変更していない。 */
+   置き換えた。角度は変更していない。
+   2026-09-22(第16期「UIデザイン全面刷新」): 暖色クリーム基調から濃紺〜紫の
+   ダーク基調へ全面刷新した際、--color-ember-deep/-emberは紫系のグラデーション
+   になったため、暖色を連想させる名前が実態と合わなくなり
+   --color-ink-deep/-inkへ改称した(値の意味・役割・角度は変更していない)。 */
 .page-header {
   position: relative;
   display: flex;
@@ -211,7 +215,7 @@ body {
   margin-bottom: var(--space-lg);
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
-  background-image: linear-gradient(135deg, var(--color-ember-deep), var(--color-ember));
+  background-image: linear-gradient(135deg, var(--color-ink-deep), var(--color-ink));
 }
 
 h1,
@@ -228,7 +232,7 @@ h1 {
 }
 
 .page-header h1 {
-  color: var(--color-surface);
+  color: var(--color-text);
 
   /* 2026-08-19(docs/ROADMAP.md「31」): ハンバーガーボタン追加分、モバイル幅での
      横スペースが以前より狭くなったため、折り返さず省略記号で収める。 */
@@ -278,7 +282,11 @@ select {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+
+  /* 2026-09-22(第16期): カード(--color-surface)の上に置かれることが多いため、
+     同じ色だと境界線だけでしか区別がつかず沈んで見える。カードより一段明るい
+     --color-surface-raisedにして入力欄であることを視覚的に浮き上がらせる。 */
+  background: var(--color-surface-raised);
   color: var(--color-text);
   font-family: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -353,7 +361,10 @@ select:focus {
    高さ・line-heightの明示指定も無く、実測の高さがタッチターゲットの目安
    (44px前後)に届いていないと外部レビューで指摘され、min-heightを追加した。
    アイコン専用の円形ボタン(.menu-toggle等)はこの影響を受けないよう個別に
-   min-height: 0で打ち消している。 */
+   min-height: 0で打ち消している。
+   2026-09-22(第16期): ダーク基調への刷新で--color-textがオフホワイトになり、
+   逆にボタン背景(明るい紫の--color-primary)とのコントラストが不足したため、
+   文字色を暗色の--color-ink-deepへ変更した。 */
 button {
   display: inline-flex;
   align-items: center;
@@ -367,7 +378,7 @@ button {
   border: none;
   border-radius: var(--radius-pill);
   background-image: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 85%, white), var(--color-primary));
-  color: var(--color-text);
+  color: var(--color-ink-deep);
   box-shadow: var(--shadow-button);
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
@@ -575,8 +586,10 @@ button:disabled {
        見分けをつけるため、画面下部に水平に張り付く「ドック」らしさに合わせて
        ほぼ水平の100degにした(色は変更していない)。
        2026-08-21(docs/ROADMAP.md「91」): 濃紺(--color-primary-deep/-dark)を
-       暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。 */
-    background-image: linear-gradient(100deg, var(--color-ember-deep), var(--color-ember));
+       暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。
+       2026-09-22(第16期): --color-ember-deep/-emberを--color-ink-deep/-inkへ改称
+       (詳細は.page-header直前のコメント参照)。 */
+    background-image: linear-gradient(100deg, var(--color-ink-deep), var(--color-ink));
     box-shadow: 0 -4px 16px rgb(0 0 0 / 25%);
     transition: transform 0.15s ease;
   }
@@ -650,7 +663,7 @@ button:disabled {
   justify-content: center;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-ink-deep);
 }
 
 /* 2026-08-21(docs/ROADMAP.md「80」): 単なる直線の連結線から、ランダムに
@@ -769,7 +782,7 @@ button:disabled {
 
 .rank-badge-top {
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-ink-deep);
 }
 
 .score-bar {
@@ -849,7 +862,7 @@ button:disabled {
 }
 
 .btn-secondary:hover {
-  background: var(--color-bg);
+  background: var(--color-surface-raised);
 }
 
 .divider {
@@ -1018,7 +1031,7 @@ button:disabled {
   padding: 0;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--color-surface);
+  color: var(--color-text);
   box-shadow: none;
   flex-shrink: 0;
 }
@@ -1044,11 +1057,15 @@ button:disabled {
 }
 
 .sidebar-link:hover {
-  background: var(--color-bg);
+  background: var(--color-surface-raised);
 }
 
+/* 2026-09-22(第16期): 暖色テーマでは白背景の上に淡い--color-bgでくぼませて選択中を
+   示していたが、ダーク基調では--color-bgが最も暗い色になり、逆にサイドバーより
+   沈んで見えてしまう。サイドバーより明るい--color-surface-raisedを使い、選択中の
+   タブが浮き上がって見えるようにした。 */
 .sidebar-link-active {
-  background: var(--color-bg);
+  background: var(--color-surface-raised);
   color: var(--color-primary-strong);
   font-weight: var(--font-weight-subheading);
 }
@@ -1056,7 +1073,7 @@ button:disabled {
 /* 2026-08-19(docs/ROADMAP.md「26. コンテンツ内のダーク全面塗りセクション追加」):
    単一共有テキストのブレインダンプ的な画面(雑多メモ・企画メモ)は、白カード主体の
    他画面群の中でリズムを作る濃色の全面塗りセクションとして専用の見た目を持たせる
-   (ヘッダー24と同じ--color-ember-deep系グラデーション)。
+   (ヘッダー24と同じ--color-ink-deep系グラデーション)。
    2026-08-19追記(docs/ROADMAP.md「29」): 当初は雑多メモの.cardにのみ`.scratch-card`
    として適用していたが、「雑多メモだけ背景色があり企画メモは無いのは非対称」との
    指摘を受け、`.card-dark`に改称して企画メモ(src/views/notes.js)にも同様に適用する
@@ -1072,10 +1089,10 @@ button:disabled {
    角度を160deg(ヘッダーの135degより少し縦寄り)に変えて微差をつけた
    (色は変更していない)。
    2026-08-21(docs/ROADMAP.md「91」): 濃紺(--color-primary-deep/-dark)を
-   暖色系(--color-ember-deep/-ember)へ置き換えた。角度は変更していない。 */
+   暖色系(--color-ink-deep/-ember)へ置き換えた。角度は変更していない。 */
 .card-dark {
-  background-image: linear-gradient(160deg, var(--color-ember-deep), var(--color-ember));
-  color: var(--color-surface);
+  background-image: linear-gradient(160deg, var(--color-ink-deep), var(--color-ink));
+  color: var(--color-text);
 }
 
 /* 2026-08-20(docs/ROADMAP.md「48」): 雑多メモ・企画メモの.card-darkの見た目が
@@ -1089,9 +1106,9 @@ button:disabled {
    2026-08-21(docs/ROADMAP.md「83」): `.card-dark`と同じ「特別なメモ欄」の
    仲間として角度も160degに揃えた。
    2026-08-21(docs/ROADMAP.md「91」): --color-primary-deepを後継の
-   --color-ember-deepへ置き換えた。 */
+   --color-ink-deepへ置き換えた。 */
 .card-dark-accent {
-  background-image: linear-gradient(160deg, var(--color-accent), var(--color-ember-deep));
+  background-image: linear-gradient(160deg, var(--color-accent), var(--color-ink-deep));
 }
 
 .card-dark .icon-heading {
@@ -1101,7 +1118,7 @@ button:disabled {
 .card-dark textarea {
   background: rgb(255 255 255 / 8%);
   border-color: rgb(255 255 255 / 25%);
-  color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .card-dark textarea::placeholder {
@@ -1109,12 +1126,12 @@ button:disabled {
 }
 
 .card-dark textarea:focus {
-  border-color: var(--color-surface);
+  border-color: var(--color-text);
   box-shadow: 0 0 0 3px rgb(255 255 255 / 20%);
 }
 
 .card-dark .btn-secondary {
-  color: var(--color-surface);
+  color: var(--color-text);
   border-color: rgb(255 255 255 / 60%);
 }
 
@@ -1124,11 +1141,13 @@ button:disabled {
 
 /* --color-danger/--color-successをそのまま文字色に使うと濃紺背景とのコントラストが
    不十分なため、既存トークンを背景色として使うチップ表示に切り替える(新規の色は
-   追加しない)。 */
+   追加しない)。
+   2026-09-22(第16期): ダーク基調への刷新でdanger/successとも明るめの色になったため、
+   チップの文字色は白(--color-surface)ではなく暗色(--color-ink-deep)に変更した。 */
 .card-dark .error-text:not(:empty) {
   display: inline-block;
   background: var(--color-danger);
-  color: var(--color-surface);
+  color: var(--color-ink-deep);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }
@@ -1136,7 +1155,7 @@ button:disabled {
 .card-dark .copy-feedback:not(:empty) {
   display: inline-block;
   background: var(--color-success);
-  color: var(--color-surface);
+  color: var(--color-ink-deep);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
 }
@@ -1181,7 +1200,7 @@ button:disabled {
 }
 
 .date-picker-nav:hover {
-  background: var(--color-bg);
+  background: var(--color-surface-raised);
 }
 
 .date-picker-grid {
@@ -1211,7 +1230,7 @@ button:disabled {
 }
 
 .date-picker-day:hover {
-  background: var(--color-bg);
+  background: var(--color-surface-raised);
 }
 
 .date-picker-today {
@@ -1221,7 +1240,7 @@ button:disabled {
 .date-picker-selected,
 .date-picker-selected:hover {
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-ink-deep);
   border-color: var(--color-primary);
 }
 
@@ -1251,17 +1270,17 @@ button:disabled {
 
 .schedule-overview-day-ok {
   background: var(--color-success);
-  color: var(--color-surface);
+  color: var(--color-ink-deep);
 }
 
 .schedule-overview-day-ng {
   background: var(--color-danger);
-  color: var(--color-surface);
+  color: var(--color-ink-deep);
 }
 
 .schedule-overview-day-pending {
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-ink-deep);
 }
 
 .schedule-overview-legend {
@@ -1312,6 +1331,6 @@ button:disabled {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-ink-deep);
   font-size: var(--font-size-sm);
 }
