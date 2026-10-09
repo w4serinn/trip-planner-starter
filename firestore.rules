@@ -42,9 +42,12 @@ service cloud.firestore {
       // 2. creatorSecretの削除のみ(作成直後にsrc/views/join.jsが行う後始末。
       //    create時のget()比較にしか使わないフィールドのため、作成後は残さない。
       //    新しい値を設定する用途では使わせない)
+      // 3. nameの書き換え(2026-10-09追加。グループ名の表示・変更機能。
+      //    docs/firestore-design.md「グループ名の追加」参照)
       // これ以外のフィールド(createdAt等)の書き換えは許可しない。
       allow update: if
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['creatorSecret']) &&
           !('creatorSecret' in request.resource.data));
       allow delete: if false;

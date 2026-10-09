@@ -50,6 +50,10 @@ export function mount(outlet) {
           <input type="text" id="create-name" name="createName" autocomplete="name" required />
         </div>
         <div class="field">
+          <label for="group-name">グループ名（任意）</label>
+          <input type="text" id="group-name" name="groupName" autocomplete="off" />
+        </div>
+        <div class="field">
           <label for="creator-secret">作成用合言葉</label>
           <input type="text" id="creator-secret" name="creatorSecret" autocomplete="off" required />
         </div>
@@ -131,6 +135,7 @@ export function mount(outlet) {
     createErrorText.textContent = '';
 
     const name = outlet.querySelector('#create-name').value.trim();
+    const groupName = outlet.querySelector('#group-name').value.trim();
     const creatorSecret = outlet.querySelector('#creator-secret').value;
     if (!name || !creatorSecret) {
       createErrorText.textContent = '名前と作成用合言葉の両方を入力してください。';
@@ -155,6 +160,7 @@ export function mount(outlet) {
         createdAt: serverTimestamp(),
         members: [name],
         creatorSecret,
+        ...(groupName ? { name: groupName } : {}),
       });
       try {
         // グループ自体の作成はすでに成功しているため、この削除が失敗しても
