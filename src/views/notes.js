@@ -25,11 +25,13 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">旅行が固まる前の「やりたいこと」を、みんなで自由に書き足していきましょう。入力は自動的に保存されます。</p>
 
-    <div class="card card-dark card-dark-accent">
-      <h3 class="icon-heading">${icons.notes}<span>企画メモ</span></h3>
-      <textarea id="planning-notes" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
+    <div class="card card-dark card-dark-accent memo-panel">
+      <div class="memo-head">
+        <h3 class="icon-heading">${icons.notes}<span>企画メモ</span></h3>
+        <p class="copy-feedback memo-status" id="notes-saved-text"></p>
+      </div>
+      <textarea id="planning-notes" class="memo-input" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
       <p class="error-text" id="notes-error-text"></p>
-      <p class="copy-feedback" id="notes-saved-text"></p>
     </div>
   `;
 

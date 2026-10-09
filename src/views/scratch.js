@@ -31,21 +31,22 @@ export function mount(outlet, params) {
   outlet.innerHTML = `
     <p class="subtitle">まず自由に書きなぐって、後から他のタブに振り分けましょう。入力は自動的に保存されます。</p>
 
-    <div class="card card-dark">
-      <h3 class="icon-heading">${icons.scratch}<span>雑多メモ</span></h3>
-      <textarea id="scratch-text" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
+    <div class="card card-dark memo-panel">
+      <div class="memo-head">
+        <h3 class="icon-heading">${icons.scratch}<span>雑多メモ</span></h3>
+        <p class="copy-feedback memo-status" id="scratch-saved-text"></p>
+      </div>
+      <textarea id="scratch-text" class="memo-input" rows="16" placeholder="ここに自由に書き込んでください..." disabled></textarea>
       <div class="scratch-actions" id="scratch-actions">
-        <div class="button-row">
-          <button type="button" id="to-notes-button" class="btn-secondary">${icons.notes}<span>→企画メモへ</span></button>
-          <button type="button" id="to-destinations-button" class="btn-secondary">${icons.destinations}<span>→行き先決めへ</span></button>
-        </div>
-        <div class="button-row">
-          <button type="button" id="to-itinerary-button" class="btn-secondary">${icons.itinerary}<span>→しおりへ</span></button>
-          <button type="button" id="to-lodging-button" class="btn-secondary">${icons.lodging}<span>→宿泊へ</span></button>
+        <p class="dispatch-caption">選んだ文を振り分ける</p>
+        <div class="dispatch-grid">
+          <button type="button" id="to-notes-button" class="dispatch-button" data-tab="notes">${icons.notes}<span>企画メモへ</span></button>
+          <button type="button" id="to-destinations-button" class="dispatch-button" data-tab="destinations">${icons.destinations}<span>行き先決めへ</span></button>
+          <button type="button" id="to-itinerary-button" class="dispatch-button" data-tab="itinerary">${icons.itinerary}<span>しおりへ</span></button>
+          <button type="button" id="to-lodging-button" class="dispatch-button" data-tab="lodging">${icons.lodging}<span>宿泊へ</span></button>
         </div>
       </div>
       <p class="error-text" id="scratch-error-text"></p>
-      <p class="copy-feedback" id="scratch-saved-text"></p>
     </div>
 
     <form id="to-itinerary-form" class="card" novalidate hidden>

@@ -84,10 +84,13 @@ function renderNav(tripId, activeKey) {
   sidebar.hidden = false;
   menuToggle.hidden = false;
   closeMenu();
+  // 画面ごとの色(styles/tokens.cssの[data-tab])をbody全体とサイドバーの各リンクへ反映する。
+  document.body.dataset.tab = activeKey;
   for (const tab of TABS) {
     const sidebarLink = document.createElement('a');
     sidebarLink.innerHTML = `${tab.icon}<span>${tab.label}</span>`;
     sidebarLink.href = `#/trips/${tripId}${tab.suffix}`;
+    sidebarLink.dataset.tab = tab.key;
     sidebarLink.className = tab.key === activeKey ? 'sidebar-link sidebar-link-active' : 'sidebar-link';
     sidebarLinks.appendChild(sidebarLink);
   }
@@ -139,6 +142,7 @@ function registerTripTab(tab) {
 }
 
 function hideNav() {
+  delete document.body.dataset.tab;
   sidebar.hidden = true;
   menuToggle.hidden = true;
   closeMenu();
