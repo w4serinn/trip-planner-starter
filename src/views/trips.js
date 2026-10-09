@@ -2,7 +2,7 @@
 // グループ内の旅行一覧表示・新規旅行作成を行う。データモデルはdocs/firestore-design.md参照。
 // 未参加なら参加画面へ自動遷移する(docs/screens.md「画面遷移」参照)。
 import { navigate } from '../router.js';
-import { loadSession } from '../session.js';
+import { loadSession, clearSession } from '../session.js';
 import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 
@@ -14,7 +14,10 @@ export function mount(outlet) {
   }
 
   outlet.innerHTML = `
-    <p class="session-chip" id="group-subtitle">${session.name}さんとして参加中</p>
+    <div class="session-row">
+      <p class="session-chip" id="group-subtitle">${session.name}さんとして参加中</p>
+      <button type="button" id="leave-group" class="btn-secondary">グループを変える</button>
+    </div>
     <div id="trip-list" class="card-grid"></div>
     <p class="error-text" id="error-text"></p>
     <button type="button" id="create-trip">${icons.plus}<span>新しい旅行を作る</span></button>
@@ -86,9 +89,18 @@ export function mount(outlet) {
   };
   createButton.addEventListener('click', onCreateClick);
 
+  const leaveButton = outlet.querySelector('#leave-group');
+  const onLeaveClick = () => {
+    if (!window.confirm('今のグループから抜けて、別の合言葉で参加し直しますか?')) return;
+    clearSession();
+    navigate('#/');
+  };
+  leaveButton.addEventListener('click', onLeaveClick);
+
   loadTrips();
 
   return () => {
     createButton.removeEventListener('click', onCreateClick);
+    leaveButton.removeEventListener('click', onLeaveClick);
   };
 }

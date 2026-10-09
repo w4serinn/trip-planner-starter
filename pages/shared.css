@@ -1503,10 +1503,20 @@ button:disabled {
   margin: 0;
 }
 
-/* B(旅行一覧): カードを1行1旅行の見やすい大きさにし、参加中の名前はチップで示す。 */
+/* B(旅行一覧): カードを1行1旅行の見やすい大きさにし、参加中の名前はチップで示す。
+   「グループを変える」ボタンを同じ行に並べるための行コンテナ。 */
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
 .session-chip {
   display: inline-block;
-  margin: 0 0 var(--space-md);
+  margin: 0;
   padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
