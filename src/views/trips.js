@@ -3,7 +3,7 @@
 // 未参加なら参加画面へ自動遷移する(docs/screens.md「画面遷移」参照)。
 import { navigate } from '../router.js';
 import { loadSession, clearSession } from '../session.js';
-import { addDocument, listCollection, serverTimestamp } from '../firestore.js';
+import { getDocument, updateDocument, addDocument, listCollection, serverTimestamp } from '../firestore.js';
 import { icons } from '../icons.js';
 
 export function mount(outlet) {
@@ -14,6 +14,20 @@ export function mount(outlet) {
   }
 
   outlet.innerHTML = `
+    <div class="trip-name-row card card-dark">
+      <h2 id="group-name"></h2>
+      <button type="button" id="edit-group-name-button" class="btn-secondary">編集</button>
+    </div>
+    <form id="edit-group-name-form" class="card name-form" novalidate hidden>
+      <div class="name-form-row">
+        <label for="group-name-input">グループ名（任意）</label>
+        <input type="text" id="group-name-input" class="trip-name-input" name="groupName" />
+        <button type="submit">保存</button>
+        <button type="button" id="cancel-group-name-button" class="btn-secondary">キャンセル</button>
+      </div>
+      <p class="error-text" id="group-name-error-text"></p>
+    </form>
+
     <div class="session-row">
       <p class="session-chip" id="group-subtitle">${session.name}さんとして参加中</p>
       <button type="button" id="leave-group" class="btn-secondary">グループを変える</button>
@@ -27,6 +41,61 @@ export function mount(outlet) {
   const errorText = outlet.querySelector('#error-text');
   const createButton = outlet.querySelector('#create-trip');
   const tripsPath = `groups/${session.groupCode}/trips`;
+  const groupPath = `groups/${session.groupCode}`;
+
+  const groupNameHeading = outlet.querySelector('#group-name');
+  const editGroupNameButton = outlet.querySelector('#edit-group-name-button');
+  const editGroupNameForm = outlet.querySelector('#edit-group-name-form');
+  const groupNameInput = outlet.querySelector('#group-name-input');
+  const groupNameErrorText = outlet.querySelector('#group-name-error-text');
+  const cancelGroupNameButton = outlet.querySelector('#cancel-group-name-button');
+
+  let currentGroupName = '';
+
+  async function loadGroup() {
+    try {
+      const group = await getDocument(groupPath);
+      currentGroupName = group?.name || '';
+      groupNameHeading.textContent = currentGroupName || session.groupCode;
+    } catch (error) {
+      console.error(error);
+      groupNameHeading.textContent = session.groupCode;
+    }
+  }
+
+  const onEditGroupNameClick = () => {
+    groupNameInput.value = currentGroupName;
+    groupNameErrorText.textContent = '';
+    editGroupNameForm.hidden = false;
+    groupNameInput.focus();
+  };
+  editGroupNameButton.addEventListener('click', onEditGroupNameClick);
+
+  const onCancelGroupNameClick = () => {
+    editGroupNameForm.hidden = true;
+  };
+  cancelGroupNameButton.addEventListener('click', onCancelGroupNameClick);
+
+  const onEditGroupNameSubmit = async (event) => {
+    event.preventDefault();
+    groupNameErrorText.textContent = '';
+
+    const newName = groupNameInput.value.trim();
+    const submitButton = editGroupNameForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      await updateDocument(groupPath, { name: newName });
+      currentGroupName = newName;
+      groupNameHeading.textContent = newName || session.groupCode;
+      editGroupNameForm.hidden = true;
+    } catch (error) {
+      console.error(error);
+      groupNameErrorText.textContent = '保存に失敗しました。時間をおいて再度お試しください。';
+    } finally {
+      submitButton.disabled = false;
+    }
+  };
+  editGroupNameForm.addEventListener('submit', onEditGroupNameSubmit);
 
   function renderTrips(trips) {
     tripList.innerHTML = '';
@@ -97,10 +166,14 @@ export function mount(outlet) {
   };
   leaveButton.addEventListener('click', onLeaveClick);
 
+  loadGroup();
   loadTrips();
 
   return () => {
     createButton.removeEventListener('click', onCreateClick);
     leaveButton.removeEventListener('click', onLeaveClick);
+    editGroupNameButton.removeEventListener('click', onEditGroupNameClick);
+    cancelGroupNameButton.removeEventListener('click', onCancelGroupNameClick);
+    editGroupNameForm.removeEventListener('submit', onEditGroupNameSubmit);
   };
 }
